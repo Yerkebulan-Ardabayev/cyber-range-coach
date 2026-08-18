@@ -1,0 +1,1 @@
+{"id":"http-protocol","title":"HTTP как протокол","role":"Red Team","prereq_ids":["service-enumeration"],"mastery_criteria":"Объясняю, почему 302 не ошибка, и нахожу адрес назначения редиректа."}

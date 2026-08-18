@@ -1,0 +1,1 @@
+{"id":"blue-auth-triage","title":"Blue: triage событий аутентификации","role":"Blue Team","prereq_ids":["authentication-boundary"],"mastery_criteria":"Отличаю обычные ошибки входа от возможного перебора только по сохранённым HTTP-фактам."}

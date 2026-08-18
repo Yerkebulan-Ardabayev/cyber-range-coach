@@ -1,0 +1,1 @@
+{"id":"attack-surface","title":"Attack surface приложения","role":"Red Team","prereq_ids":["http-protocol"],"mastery_criteria":"Составляю список точек входа с методами и параметрами без подсказки."}

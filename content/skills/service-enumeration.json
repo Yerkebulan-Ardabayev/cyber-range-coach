@@ -1,0 +1,7 @@
+{
+  "id": "service-enumeration",
+  "title": "Service enumeration",
+  "role": "Red Team",
+  "prereq_ids": ["scope-reachability"],
+  "mastery_criteria": "На незнакомом выводе отделяю порт, сервис, версию и говорю, что из этого факт."
+}

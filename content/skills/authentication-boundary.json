@@ -1,0 +1,1 @@
+{"id":"authentication-boundary","title":"Authentication boundary","role":"Red Team","prereq_ids":["attack-surface"],"mastery_criteria":"Отличаю отсутствие аутентификации от отказа авторизации по фактам ответа."}

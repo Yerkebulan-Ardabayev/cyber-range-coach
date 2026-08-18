@@ -1,0 +1,8 @@
+{
+  "id": "track-1-first-contact",
+  "role": "Red Team",
+  "title": "Первое знакомство с целью",
+  "goal": "Собрать факты о поверхности собственного учебного стенда до любых выводов о риске.",
+  "skill_ids": ["scope-reachability", "service-enumeration", "http-protocol", "attack-surface", "authentication-boundary", "access-control", "blue-auth-triage"],
+  "lab_ids": ["lab-1-1-scope-reachability", "lab-1-2-service-enumeration", "lab-1-3-http-protocol", "lab-1-4-attack-surface", "lab-1-5-authentication-boundary", "lab-1-6-access-control", "lab-1-7-blue-auth-events"]
+}

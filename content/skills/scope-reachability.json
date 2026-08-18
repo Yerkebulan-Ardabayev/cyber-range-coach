@@ -1,0 +1,7 @@
+{
+  "id": "scope-reachability",
+  "title": "Scope и reachability",
+  "role": "Red Team",
+  "prereq_ids": [],
+  "mastery_criteria": "Называю границу и доказываю достижимость двумя независимыми способами."
+}
