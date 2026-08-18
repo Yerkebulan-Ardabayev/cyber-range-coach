@@ -1,7 +1,8 @@
 const app = document.querySelector('#app');
-const LAB_ID = 'lab-1-2-service-enumeration';
-const esc = value => String(value || '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
-let lab, phaseIndex = 0, attemptId = null, range = 'не проверен', parsedFacts, mentorFeedback, playbookMode = 'guided', playbookPhase = 0;
+const { debriefSummary, escapeHtml, resumeDecision } = globalThis.CyberRangeLearningView;
+const esc = escapeHtml;
+let labId = null, lab = null, phaseIndex = 0, attemptId = null, rangeStatus = 'не проверен';
+let parsedFacts = null, mentorFeedback = null, decisionFeedback = null, playbookMode = 'guided', playbookPhase = 0;
 
 async function api(url, options) {
   const response = await fetch(url, options);
@@ -10,66 +11,148 @@ async function api(url, options) {
   return data;
 }
 const post = (url, body) => api(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+const step = () => lab && lab.steps[phaseIndex];
+const kindTitle = kind => ({think: 'Сначала сформулируй цель', execute: 'Выполни команду у себя', analyse: 'Разбери свой вывод', decide: 'Выбери следующий шаг', debrief: 'Закрепи результат'})[kind] || kind;
+const factKinds = {port: 'порт', state: 'состояние', service: 'сервис', version: 'версия'};
+const errorBlock = message => `<p class="form-error" role="alert">${esc(message)}</p>`;
 
-function setActive(route) { document.querySelectorAll('nav a').forEach(link => link.classList.toggle('active', link.href.endsWith('#' + route))); }
-function context() { return `<aside class="lab-context"><h2>МИССИЯ</h2><p>${esc(lab.mission)}</p><h2>СОХРАНЁННАЯ ГИПОТЕЗА</h2><p>${attemptId ? 'Сохранена для текущей открытой попытки.' : 'Пока не сохранена.'}</p><h2>ПОЛИГОН</h2><p>${esc(range)}</p><nav class="context-links" aria-label="Материалы лабы"><a href="#playbooks">Playbook</a><a href="#notes">Заметки</a></nav></aside>`; }
-function header() { return `<header class="runner-header"><div class="header-primary"><span class="role">● RED TEAM</span><span class="breadcrumb">Web Pentest <b>›</b> Recon <b>›</b> Service Enumeration</span></div><div class="header-meta"><span>Шаг ${phaseIndex + 1} из ${lab.steps.length}</span><span class="assist">Помощь: серверный уровень</span></div></header>`; }
-function help() { return `<details class="help"><summary>Нужна помощь</summary><button id="hint">Запросить подсказку 1 из 3</button><button id="solution">Раскрыть solution</button><div id="help-result"></div></details>`; }
-function feedback() { return !mentorFeedback ? '' : `<section class="feedback"><h2>РАЗБОР НАСТАВНИКА</h2><p>Названо: ${esc(mentorFeedback.named.join(', ') || 'ничего')}</p><p>Пропущено: ${esc(mentorFeedback.missed.join(', ') || 'ничего')}</p><p>Гипотеза как факт: ${esc(mentorFeedback.flagged_as_fact.join(', ') || 'не отмечено')}</p><p>${esc(mentorFeedback.question)}</p></section>`; }
-
+function setActive(route) { document.querySelectorAll('.sidebar nav a').forEach(link => link.classList.toggle('active', link.getAttribute('href') === '#' + route)); }
+function runnerContext() {
+  return `<aside class="lab-context"><p class="eyebrow">ТЕКУЩАЯ МИССИЯ</p><h2>${esc(lab.objective)}</h2><p>${esc(lab.mission)}</p>
+    <dl class="context-list"><dt>Цель</dt><dd>${esc(lab.target || 'свой учебный стенд')}</dd><dt>Гипотеза</dt><dd>${attemptId ? 'Есть. Она не пропадёт после обновления страницы.' : 'Пока нет. Сначала запиши, что хочешь узнать.'}</dd><dt>Полигон</dt><dd><span class="range-dot ${rangeStatus === 'ONLINE' ? 'online' : ''}"></span>${esc(rangeStatus)}</dd></dl>
+    <p class="context-rule">Работай только с указанной собственной целью. Сайт не запускает команды и не отправляет запросы вместо тебя.</p><a class="text-link" href="#range">Проверить готовность стенда</a></aside>`;
+}
+function runnerHeader() {
+  return `<header class="runner-header"><div><p class="eyebrow">${esc(lab.role || 'LAB')} · ШАГ ${phaseIndex + 1} ИЗ ${lab.steps.length}</p><h1>${esc(kindTitle(step().kind))}</h1></div><div class="step-rail" aria-label="Прогресс по шагам">${lab.steps.map((item, index) => `<span class="${index < phaseIndex ? 'done' : index === phaseIndex ? 'now' : ''}" title="${esc(kindTitle(item.kind))}">${index + 1}</span>`).join('')}</div></header>`;
+}
+function whyBox(item) { return item.why ? `<aside class="why-box"><strong>Зачем это сейчас</strong><p>${esc(item.why)}</p><strong>Проверь себя</strong><p>${esc(item.guiding_question || '')}</p></aside>` : ''; }
+function help(item) {
+  if (!item.hints && !item.solution) return '';
+  return `<details class="help"><summary>Я застрял, нужна подсказка</summary><p>Подсказка не выполняет действие за тебя. Уровень 3 и готовый разбор сохраняются в попытке.</p><div class="help-actions"><button type="button" data-hint="1">Подсказка 1: направление</button><button type="button" data-hint="2">Подсказка 2: на что смотреть</button><button type="button" data-hint="3">Подсказка 3: почти ответ</button>${item.solution ? '<button type="button" class="danger-quiet" id="solution">Показать готовый разбор</button>' : ''}</div><div id="help-result" class="help-result"></div></details>`;
+}
+function executionDiagnosis() {
+  const diagnosis = parsedFacts && parsedFacts.diagnosis;
+  if (!diagnosis) return '';
+  return `<section class="execution-diagnosis ${esc(diagnosis.level || 'warning')}"><p class="eyebrow">РАЗБОР ОТВЕТА TERMINAL</p><h3>${esc(diagnosis.title || 'Что произошло')}</h3><p>${esc(diagnosis.message || '')}</p><p><strong>Что делать дальше:</strong> ${esc(diagnosis.next || '')}</p></section>`;
+}
 function factsTable() {
-  if (!parsedFacts) return '<p>Факты будут показаны после разбора вывода.</p>';
-  const labels = {port: 'порт', state: 'состояние', service: 'сервис', version: 'версия'};
-  const rows = parsedFacts.facts.map(fact => `<tr><td>${esc(fact.text)}</td><td>${esc(labels[fact.kind] || fact.kind)}</td><td class="source-line">стр. ${esc(fact.line)}</td></tr>`).join('');
+  if (!parsedFacts) return `<div class="empty-state"><strong>Пока нет разобранных фактов</strong><span>Вставь полный вывод команды и нажми «Разобрать».</span></div>`;
+  const facts = parsedFacts.facts || [];
+  const rows = facts.length ? facts.map(fact => `<tr><td>${esc(fact.text)}</td><td>${esc(factKinds[fact.kind] || fact.kind || 'факт')}</td><td>${fact.line ? 'стр. ' + esc(fact.line) : 'из сохранённой попытки'}</td></tr>`).join('') : '<tr><td colspan="3">Парсер не нашёл структурированных фактов. Прочитай исходный вывод и не додумывай результат.</td></tr>';
   const leftovers = (parsedFacts.unparsed || []).map(item => `<li><span>стр. ${esc(item.line)}</span><code>${esc(item.text)}</code></li>`).join('');
-  return `<table class="facts-table"><thead><tr><th>Значение</th><th>Вид</th><th>Исходная строка</th></tr></thead><tbody>${rows}</tbody></table><div class="unparsed"><span>не разобрано: ${(parsedFacts.unparsed || []).length} строк</span><button type="button" id="toggle-unparsed" aria-expanded="false">Показать</button><ul id="unparsed-lines" hidden>${leftovers}</ul></div>`;
+  return `<section class="facts-panel"><div class="section-heading"><div><p class="eyebrow">ДОКАЗАНО ТЕКСТОМ ВЫВОДА</p><h2>Вот что команда действительно сообщила</h2></div><span class="fact-count">${facts.length} факт${facts.length === 1 ? '' : facts.length < 5 ? 'а' : 'ов'}</span></div>${executionDiagnosis()}<table class="facts-table"><thead><tr><th>Значение из вывода</th><th>Тип</th><th>Источник</th></tr></thead><tbody>${rows}</tbody></table>${(parsedFacts.unparsed || []).length ? `<details class="unparsed"><summary>Неразобранные строки: ${(parsedFacts.unparsed || []).length}</summary><p>Это не ошибка и не вывод. Система показала строки дословно, потому что не может честно превратить их в факт.</p><ul>${leftovers}</ul></details>` : ''}</section>`;
 }
-function phaseBody(step) {
-  if (step.kind === 'think') return `<p>${esc(step.prompt)}</p><h2>ТВОЯ ГИПОТЕЗА</h2><textarea id="hypothesis" placeholder="Что именно ты рассчитываешь узнать?"></textarea><button id="save-hypothesis">Сохранить гипотезу и открыть шаг</button><p class="muted">Команда откроется только после гипотезы.</p>`;
-  if (step.kind === 'execute') { const command = step.command ? `<div class="command-block"><pre>${esc(step.command)}</pre><button type="button" id="copy-command">Копировать</button></div>` : `<button id="reveal-command">Раскрыть команду</button>`; return `<h2>ВЫПОЛНИ У СЕБЯ В TERMINAL</h2>${command}<details><summary>Разбор команды</summary>${(step.command_anatomy || []).map(item => `<p>${esc(item)}</p>`).join('')}</details><h2>ВСТАВЬ РЕАЛЬНЫЙ ВЫВОД</h2><textarea id="raw-output"></textarea><button id="parse-output">Разобрать вывод</button>${help()}`; }
-  if (step.kind === 'analyse') return `<h2>ЧТО ТЫ ВИДИШЬ</h2>${factsTable()}<textarea id="conclusion" placeholder="Твой вывод, сначала ты, потом система"></textarea><button id="send-conclusion">Отправить вывод</button>${help()}`;
-  if (step.kind === 'decide') return `${feedback()}<h2>РЕШЕНИЕ ЗА ТОБОЙ</h2><p>${esc(step.prompt)}</p>${(step.decision_options || []).map(option => `<label><input type="radio" name="choice" value="${esc(option)}"> ${esc(option)}</label>`).join('')}<button id="choose">Выбрать и получить разбор</button>`;
-  return `<h2>DEBRIEF</h2><p>${esc(step.prompt)}</p><button id="close-step">Закрыть шаг</button>`;
+function feedbackPanel() {
+  if (!mentorFeedback) return '';
+  const list = values => values && values.length ? `<ul>${values.map(value => `<li>${esc(value)}</li>`).join('')}</ul>` : '<p>Ничего не отмечено.</p>';
+  return `<section class="mentor-panel"><p class="eyebrow">РАЗБОР ТВОЕГО ТЕКСТА</p><h2>Не ответ за тебя, а проверка твоего вывода</h2><div class="mentor-grid"><div class="mentor-good"><h3>Ты назвал</h3>${list(mentorFeedback.named)}</div><div class="mentor-missing"><h3>Стоило добавить</h3>${list(mentorFeedback.missed)}</div><div class="mentor-careful"><h3>Пока не доказано</h3>${list(mentorFeedback.flagged_as_fact)}</div></div><p class="mentor-question"><strong>Следующий вопрос:</strong> ${esc(mentorFeedback.question)}</p></section>`;
 }
-
-async function openAttempt(step, hypothesis) { attemptId = (await post('/api/attempt', {lab_id: lab.id, step_id: step.id, hypothesis})).attempt_id; }
+function decisionPanel() {
+  if (!decisionFeedback) return '';
+  const ok = decisionFeedback.correct;
+  const noFacts = !parsedFacts || !(parsedFacts.facts || []).length;
+  const recovery = noFacts ? '<button class="danger-quiet" id="restart-lab">Начать эту лабораторную заново с новым выводом</button>' : '';
+  return `<section class="decision-result ${ok ? 'correct' : 'incorrect'}"><strong>${ok ? 'Выбор опирается на подтверждённые факты' : 'Этот выбор нельзя принять'}</strong><p>${esc(decisionFeedback.why)}</p>${noFacts ? '<p>Сейчас нет ни одного подтверждённого факта. Не закрывай лабу с догадкой: подними стенд и начни этот шаг заново с реальным выводом.</p>' : ''}${ok ? '<button id="continue-debrief">Перейти к закреплению результата</button>' : '<button id="return-analysis">Выбрать другое действие</button>'}${recovery}</section>`;
+}
+function phaseBody(item) {
+  if (item.kind === 'think') return `<p class="lead">${esc(item.prompt)}</p>${whyBox(item)}<label class="input-label" for="hypothesis">Моя гипотеза до команды</label><textarea id="hypothesis" placeholder="Например: хочу узнать, какие сервисы отвечают на этом одном учебном узле. Не пиши название уязвимости, если вывода ещё нет."></textarea><p class="input-hint">Пиши наблюдаемый результат, который ожидаешь увидеть. После сохранения появится ровно один следующий шаг.</p><button id="save-hypothesis">Сохранить гипотезу и перейти к команде</button><div id="form-error"></div>`;
+  if (item.kind === 'execute') {
+    const command = item.command ? `<div class="command-card"><div><p class="eyebrow">КОМАНДА ДЛЯ ТВОЕГО TERMINAL НА MAC</p><pre>${esc(item.command)}</pre></div><button type="button" id="copy-command">Копировать</button></div>` : `<button id="reveal-command">Показать команду для этой цели</button>`;
+    return `<p class="lead">${esc(item.prompt)}</p>${whyBox(item)}${command}<details class="command-anatomy" open><summary>Разбор команды: что вводить и как читать результат</summary><ol>${(item.command_anatomy || []).map(part => `<li>${esc(part)}</li>`).join('')}</ol></details><label class="input-label" for="raw-output">Что напечатал Terminal</label><textarea id="raw-output" spellcheck="false" placeholder="Вставь полный текст от первой до последней строки. Если команда не дала результата или выдала ошибку, вставь это тоже."></textarea><p class="input-hint">Не пересказывай вывод. Вставь его как есть: наставник отдельно объяснит успех, отказ, тайм-аут или ошибку ключа.</p><button id="parse-output">Разобрать мой вывод</button><div id="form-error"></div>${help(item)}`;
+  }
+  if (item.kind === 'analyse') return `<p class="lead">${esc(item.prompt)}</p>${factsTable()}${whyBox(item)}<label class="input-label" for="conclusion">Мой вывод по этим строкам</label><textarea id="conclusion" placeholder="Напиши: 1) какой факт увидел, 2) в какой строке он виден, 3) чего вывод пока не доказывает."></textarea><p class="input-hint">Сначала твой текст. Затем наставник покажет, что ты назвал, пропустил или выдал за факт.</p><button id="send-conclusion">Отправить мой вывод на разбор</button><div id="form-error"></div>${help(item)}`;
+  if (item.kind === 'decide') return `${feedbackPanel()}${factsTable()}<p class="lead">${esc(item.prompt)}</p>${whyBox(item)}<fieldset class="decision-options"><legend>Выбери только одно действие</legend>${(item.decision_options || []).map((option, index) => `<label><input type="radio" name="choice" value="${esc(option)}"> <span><b>${String.fromCharCode(65 + index)}.</b> ${esc(option)}</span></label>`).join('')}</fieldset><button id="choose">Проверить выбор</button><div id="form-error"></div>${decisionPanel()}`;
+  const summary = debriefSummary({lab, item, parsedFacts, mentorFeedback});
+  return `<p class="lead">${esc(item.prompt)}</p><section class="debrief-card"><p class="eyebrow">ИТОГ ЭТОЙ ПОПЫТКИ</p><h2>Что ты сделал и что теперь можешь утверждать</h2><div class="debrief-grid"><div><h3>Команда или действие</h3><p>${esc(summary.command)}</p></div><div><h3>Доказано</h3><p>${esc(summary.proven)}</p></div><div><h3>Граница вывода</h3><p>${esc(summary.caution)}</p></div><div><h3>Принцип этой лабы</h3><p>${esc(summary.principle)}</p></div></div></section><p class="input-hint">Закрытие создаст Field Note из твоей гипотезы, вывода и решения. Его можно открыть в Notes.</p><button id="close-step">Закрыть попытку и сохранить Field Note</button><div id="form-error"></div>`;
+}
+function hydrate(context) {
+  if (!context) return;
+  attemptId = context.attempt_id;
+  const index = lab.steps.findIndex(entry => entry.id === context.step_id);
+  if (index >= 0) phaseIndex = index;
+  const output = context.attempts.find(entry => entry.raw_output);
+  if (output) parsedFacts = {facts: output.facts || [], unparsed: [], diagnosis: output.diagnosis || null};
+  mentorFeedback = context.mentor_feedback || null;
+  decisionFeedback = resumeDecision(context);
+}
+async function loadLab() { lab = await api('/api/lab/' + labId + (attemptId ? '?attempt_id=' + attemptId : '')); }
 async function runner() {
   setActive('lab-runner');
-  try { range = (await api('/api/range/health')).verdict; } catch (_) { range = 'не проверен'; }
-  lab = await api('/api/lab/' + LAB_ID + (attemptId ? '?attempt_id=' + attemptId : ''));
-  const step = lab.steps[phaseIndex];
-  app.innerHTML = `<div class="lab-layout">${context()}<main class="lab-main">${header()}<section class="runner"><p class="phase">${esc(step.kind.toUpperCase())}</p>${phaseBody(step)}</section></main></div>`;
-  bind(step);
+  try { rangeStatus = (await api('/api/range/health')).verdict; } catch (_) { rangeStatus = 'не проверен'; }
+  if (!labId) { const current = await api('/api/today'); labId = current.lab; attemptId = current.resume ? current.resume.attempt_id : null; phaseIndex = 0; }
+  await loadLab();
+  if (attemptId) { const context = await api('/api/lab/' + labId + '/attempt-context?attempt_id=' + attemptId); await loadLab(); hydrate(context); }
+  if (!step()) { app.innerHTML = `<section class="page">${errorBlock('У этой лабораторной нет доступного шага. Выбери другую на странице Today.')}</section>`; return; }
+  app.innerHTML = `<div class="lab-layout">${runnerContext()}<main class="lab-main">${runnerHeader()}<section class="runner">${phaseBody(step())}</section></main></div>`;
+  bindRunner(step());
 }
-function bind(step) {
-  const copy = document.querySelector('#copy-command');
-  if (copy) copy.onclick = async () => { try { await navigator.clipboard.writeText(step.command); copy.textContent = 'Скопировано'; } catch (_) { copy.textContent = 'Не удалось скопировать'; } };
-  const revealCommand = document.querySelector('#reveal-command');
-  if (revealCommand) revealCommand.onclick = async () => { lab = await api('/api/lab/' + LAB_ID + '?attempt_id=' + attemptId + '&reveal=command'); await runner(); };
-  const toggleUnparsed = document.querySelector('#toggle-unparsed');
-  if (toggleUnparsed) toggleUnparsed.onclick = () => { const lines = document.querySelector('#unparsed-lines'); const shown = !lines.hidden; lines.hidden = shown; toggleUnparsed.textContent = shown ? 'Показать' : 'Скрыть'; toggleUnparsed.setAttribute('aria-expanded', String(!shown)); };
-  const save = document.querySelector('#save-hypothesis');
-  if (save) save.onclick = async () => { try { await openAttempt(lab.steps[1], document.querySelector('#hypothesis').value); phaseIndex = 1; await runner(); } catch (error) { alert(error.message); } };
-  const parse = document.querySelector('#parse-output');
-  if (parse) parse.onclick = async () => { try { parsedFacts = await post('/api/attempt/' + attemptId + '/output', {raw: document.querySelector('#raw-output').value}); await openAttempt(lab.steps[2], 'Разобрать факты из собственного вывода.'); phaseIndex = 2; await runner(); } catch (error) { alert(error.message); } };
-  const conclude = document.querySelector('#send-conclusion');
-  if (conclude) conclude.onclick = async () => { try { mentorFeedback = await post('/api/attempt/' + attemptId + '/conclusion', {text: document.querySelector('#conclusion').value}); await openAttempt(lab.steps[3], 'Выбрать следующий шаг по подтверждённым фактам.'); phaseIndex = 3; await runner(); } catch (error) { alert(error.message); } };
-  const choose = document.querySelector('#choose');
-  if (choose) choose.onclick = async () => { const selected = document.querySelector('input[name=choice]:checked'); if (!selected) return; try { alert((await post('/api/attempt/' + attemptId + '/decision', {choice: selected.value})).why); await openAttempt(lab.steps[4], 'Закрепить принцип перечисления до оценки риска.'); phaseIndex = 4; await runner(); } catch (error) { alert(error.message); } };
-  const close = document.querySelector('#close-step');
-  if (close) close.onclick = async () => { try { await post('/api/attempt/' + attemptId + '/debrief', {verdict: 'completed'}); alert('Шаг закрыт.'); } catch (error) { alert(error.message); } };
-  const hint = document.querySelector('#hint');
-  if (hint) hint.onclick = async () => { try { document.querySelector('#help-result').textContent = (await api('/api/hint/' + lab.id + '/' + step.id + '?level=1&attempt_id=' + attemptId)).hint; } catch (error) { alert(error.message); } };
+function showError(error) { const node = document.querySelector('#form-error'); if (node) node.innerHTML = errorBlock(error.message || error); }
+async function createAttempt(item, hypothesis) {
+  const body = {lab_id: lab.id, step_id: item.id, hypothesis};
+  if (attemptId) body.continue_attempt_id = attemptId;
+  attemptId = (await post('/api/attempt', body)).attempt_id;
+}
+function bindHelp(item) {
+  document.querySelectorAll('[data-hint]').forEach(button => button.onclick = async () => { try { const result = await api('/api/hint/' + lab.id + '/' + item.id + '?level=' + button.dataset.hint + '&attempt_id=' + attemptId); document.querySelector('#help-result').textContent = 'Подсказка ' + result.level + ': ' + result.hint; } catch (error) { showError(error); } });
   const solution = document.querySelector('#solution');
-  if (solution) solution.onclick = async () => { if (!confirm('Раскрыть solution? Это сохранится в попытке.')) return; try { document.querySelector('#help-result').textContent = (await post('/api/attempt/' + attemptId + '/solution', {confirm: true})).solution; } catch (error) { alert(error.message); } };
+  if (solution) solution.onclick = async () => { if (!confirm('Показать готовый разбор этого шага? Это сохранится в прогрессе и не даст засчитать чистое прохождение.')) return; try { document.querySelector('#help-result').textContent = (await post('/api/attempt/' + attemptId + '/solution', {confirm: true})).solution; } catch (error) { showError(error); } };
 }
-async function today() { setActive('today'); const data = await api('/api/today'); app.innerHTML = `<section class="page"><h1>Today</h1><div class="cards"><article><p>Продолжить лабу</p><h2>Service Enumeration</h2><p>Шаг: ${esc(data.step)}</p><button id="go">Продолжить</button></article><article><p>Повторить навык</p><h2>${data.review_due.length ? esc(data.review_due[0].skill_id) : 'Повторов пока нет'}</h2><p>Одна карточка повтора на сессию.</p></article></div></section>`; document.querySelector('#go').onclick = () => { location.hash = 'lab-runner'; }; }
-async function rangePage() { setActive('range'); const data = await api('/api/range/health'); app.innerHTML = `<section class="page"><h1>Range</h1><p>Статус: ${esc(data.verdict)}</p><p>Приложение не выполняет сканирование, атаки или команды по цели.</p></section>`; }
-function other(name) { setActive(name); app.innerHTML = `<section class="page"><h1>${esc(name)}</h1><p>Раздел планируется на следующих этапах.</p></section>`; }
-async function notes() { setActive('notes'); const items = await api('/api/notes'); app.innerHTML = `<section class="page"><h1>Notes</h1>${items.map(item => `<article class="note"><h2>${esc(item.date)} · ${esc(item.goal)}</h2><p><b>Гипотеза:</b> ${esc(item.hypothesis)}</p><p><b>Команды:</b> ${esc(item.commands)}</p><p><b>Результаты:</b> ${esc(item.results)}</p><p><b>Вывод:</b> ${esc(item.conclusion)}</p><textarea data-note="${item.id}" placeholder="Один абзац от руки">${esc(item.manual_paragraph)}</textarea><button data-save-note="${item.id}">Сохранить абзац</button></article>`).join('') || '<p>Закройте шаг, чтобы появилась первая Field Note.</p>'}</section>`; document.querySelectorAll('[data-save-note]').forEach(button => button.onclick = async () => { const id = button.dataset.saveNote; await post('/api/note/' + id + '/paragraph', {paragraph: document.querySelector('[data-note="' + id + '"]').value}); button.textContent = 'Сохранено'; }); }
-async function progress() { setActive('progress'); const data = await api('/api/progress'); const metric = data.closed_without_hints_2_3; app.innerHTML = `<section class="page"><h1>Progress</h1><p>Шагов закрыто без подсказок 2 и 3: ${metric.without_hints} из ${metric.closed}</p><table class="facts-table"><thead><tr><th>Навык</th><th>Уровень</th><th>Помощь</th><th>Повтор</th><th>Доступ</th></tr></thead><tbody>${data.skills.map(skill => `<tr><td>${esc(skill.title)}</td><td>${skill.level}</td><td>L${skill.assistance_level}</td><td>${esc(skill.next_review || 'нет')}</td><td>${skill.available ? 'доступен' : 'Сначала: ' + esc(skill.unlock_first.join(', '))}</td></tr>`).join('')}</tbody></table></section>`; }
-function renderPlaybook(playbook) { if (playbookMode === 'field') return `<section class="playbook-field" data-render="field"><h2>${esc(playbook.title)}</h2>${playbook.phases.map(phase => `<article><h3>${esc(phase.title)}</h3><ul>${phase.checks.map(check => `<li>${esc(check)}</li>`).join('')}</ul></article>`).join('')}</section>`; const phase = playbook.phases[playbookPhase]; return `<section class="playbook-guided" data-render="guided"><p>Фаза ${playbookPhase + 1} из ${playbook.phases.length}</p><h2>${esc(phase.title)}</h2><p>Зачем: сначала проверьте эти наблюдаемые условия, затем отвечайте на вопрос.</p><ul>${phase.checks.map(check => `<li>${esc(check)}</li>`).join('')}</ul><p>${esc(phase.decision.question)}</p>${phase.decision.branches.map(branch => `<button data-next="${esc(branch.next)}">${esc(branch.answer)}</button>`).join('')}</section>`; }
-async function playbooks() { setActive('playbooks'); const list = await api('/api/content/playbooks'); let selected = list[0]; app.innerHTML = `<section class="page"><h1>Playbooks</h1><select id="playbook-select">${list.map(book => `<option value="${esc(book.id)}">${esc(book.role)}: ${esc(book.title)}</option>`).join('')}</select><button id="guided-mode">Guided Mode</button><button id="field-mode">Field Mode</button><div id="playbook-render">${renderPlaybook(selected)}</div></section>`; const redraw = () => { document.querySelector('#playbook-render').innerHTML = renderPlaybook(selected); document.querySelectorAll('[data-next]').forEach(button => button.onclick = () => { playbookPhase = Math.max(0, selected.phases.findIndex(phase => phase.id === button.dataset.next)); redraw(); }); }; document.querySelector('#guided-mode').onclick = () => { playbookMode = 'guided'; redraw(); }; document.querySelector('#field-mode').onclick = () => { playbookMode = 'field'; redraw(); }; document.querySelector('#playbook-select').onchange = event => { selected = list.find(book => book.id === event.target.value); playbookPhase = 0; redraw(); }; redraw(); }
-function route() { const name = location.hash.slice(1) || 'today'; if (name === 'today') today(); else if (name === 'lab-runner') runner(); else if (name === 'range') rangePage(); else if (name === 'notes') notes(); else if (name === 'progress') progress(); else if (name === 'playbooks') playbooks(); else other(name); }
-window.addEventListener('hashchange', route);
-route();
+function bindRunner(item) {
+  const copy = document.querySelector('#copy-command');
+  if (copy) copy.onclick = async () => { try { await navigator.clipboard.writeText(item.command); copy.textContent = 'Скопировано. Вставь в Terminal.'; } catch (_) { copy.textContent = 'Выдели команду и скопируй вручную.'; } };
+  const reveal = document.querySelector('#reveal-command');
+  if (reveal) reveal.onclick = async () => { try { lab = await api('/api/lab/' + labId + '?attempt_id=' + attemptId + '&reveal=command'); await runner(); } catch (error) { showError(error); } };
+  const save = document.querySelector('#save-hypothesis');
+  if (save) save.onclick = async () => { const hypothesis = document.querySelector('#hypothesis').value.trim(); if (!hypothesis) { showError('Сначала напиши гипотезу: что именно команда должна помочь тебе узнать.'); return; } try { await createAttempt(lab.steps[phaseIndex + 1], hypothesis); phaseIndex += 1; await runner(); } catch (error) { showError(error); } };
+  const parse = document.querySelector('#parse-output');
+  if (parse) parse.onclick = async () => { const raw = document.querySelector('#raw-output').value.trim(); if (!raw) { showError('Вставь весь фактический вывод Terminal. Если есть ошибка или пустой результат, вставь сообщение об этом.'); return; } try { parsedFacts = await post('/api/attempt/' + attemptId + '/output', {raw}); await createAttempt(lab.steps[phaseIndex + 1], 'Разобрать факты из сохранённого вывода команды.'); phaseIndex += 1; await runner(); } catch (error) { showError(error); } };
+  const conclude = document.querySelector('#send-conclusion');
+  if (conclude) conclude.onclick = async () => { const text = document.querySelector('#conclusion').value.trim(); if (!text) { showError('Сначала напиши свой вывод. Он нужен, чтобы наставник мог проверить именно твое рассуждение.'); return; } try { mentorFeedback = await post('/api/attempt/' + attemptId + '/conclusion', {text}); await createAttempt(lab.steps[phaseIndex + 1], 'Выбрать следующий шаг только по подтверждённым фактам.'); phaseIndex += 1; await runner(); } catch (error) { showError(error); } };
+  const choose = document.querySelector('#choose');
+  if (choose) choose.onclick = async () => { const selected = document.querySelector('input[name=choice]:checked'); if (!selected) { showError('Выбери один вариант. Затем сайт объяснит, какие факты поддерживают или не поддерживают его.'); return; } try { decisionFeedback = await post('/api/attempt/' + attemptId + '/decision', {choice: selected.value}); await runner(); } catch (error) { showError(error); } };
+  const next = document.querySelector('#continue-debrief');
+  if (next) next.onclick = async () => { try { await createAttempt(lab.steps[phaseIndex + 1], 'Закрепить: перечисление подтверждённых сервисов предшествует оценке риска.'); phaseIndex += 1; await runner(); } catch (error) { showError(error); } };
+  const back = document.querySelector('#return-analysis');
+  if (back) back.onclick = () => { decisionFeedback = null; runner(); };
+  const restart = document.querySelector('#restart-lab');
+  if (restart) restart.onclick = async () => {
+    if (!confirm('Закрыть текущую незавершённую попытку как «начать заново»? Старый журнал останется в базе, но новая лабораторная начнётся с чистого шага.')) return;
+    try {
+      await post('/api/lab/' + lab.id + '/abandon', {attempt_id: attemptId});
+      attemptId = null; phaseIndex = 0; parsedFacts = null; mentorFeedback = null; decisionFeedback = null;
+      location.hash = '#today';
+    } catch (error) { showError(error); }
+  };
+  const close = document.querySelector('#close-step');
+  if (close) close.onclick = async () => { try { const result = await post('/api/attempt/' + attemptId + '/debrief', {verdict: 'completed'}); const learning = result.learning && result.learning.length ? ` Навык обновлён: уровень ${result.learning[0].level}, помощь L${result.learning[0].assistance_level}.` : ''; app.innerHTML = `<section class="page completion"><p class="eyebrow">ПОПЫТКА СОХРАНЕНА</p><h1>Лабораторная закрыта</h1><p>Field Note создана из твоей гипотезы, терминального вывода и собственного заключения.${esc(learning)}</p><div class="completion-actions"><button id="next-lab">Открыть следующий учебный шаг</button><a class="text-link" href="#notes">Посмотреть Field Note</a></div></section>`; document.querySelector('#next-lab').onclick = () => { attemptId = null; labId = null; phaseIndex = 0; parsedFacts = null; mentorFeedback = null; decisionFeedback = null; location.hash = '#today'; }; } catch (error) { showError(error); } };
+  bindHelp(item);
+}
+async function today() {
+  setActive('today');
+  const [data, labs] = await Promise.all([api('/api/today'), api('/api/content/labs')]);
+  const current = labs.find(item => item.id === data.lab);
+  const catalog = data.resume ? `<section class="resume-lock"><h2>Сначала заверши эту попытку</h2><p>Новая лабораторная пока закрыта, чтобы её не смешать с уже сохранённым выводом и решением. После debrief откроется следующий шаг трека.</p></section>` : `<section class="lab-catalog"><h2>Маршрут трека</h2><p>Выбирай лабораторную только на своём стенде. Если навык закрыт в Progress, начни с указанного предыдущего навыка.</p>${labs.map(item => `<article><p class="eyebrow">${esc(item.role || '')}</p><h3>${esc(item.objective)}</h3><p>${esc(item.mission)}</p><button data-lab="${esc(item.id)}">Открыть эту лабораторную</button></article>`).join('')}</section>`;
+  app.innerHTML = `<section class="page today-page"><p class="eyebrow">ОДНА ЯСНАЯ ТОЧКА ВХОДА</p><h1>Сегодня</h1><article class="today-card"><p class="eyebrow">${data.resume ? 'НЕЗАВЕРШЁННАЯ ПОПЫТКА' : 'СЛЕДУЮЩАЯ ЛАБОРАТОРНАЯ'}</p><h2>${esc(current ? current.objective : data.lab)}</h2><p><strong>Сейчас:</strong> ${esc(kindTitle(data.step))}. ${data.resume ? 'Сайт вернёт к тому же шагу и восстановит твои факты.' : 'Начни с цели, затем получишь ровно одну команду.'}</p><button id="go">${data.resume ? 'Продолжить с сохранённого места' : 'Начать лабораторную'}</button></article>${catalog}</section>`;
+  document.querySelector('#go').onclick = () => { labId = data.lab; attemptId = data.resume ? data.resume.attempt_id : null; phaseIndex = 0; parsedFacts = null; mentorFeedback = null; decisionFeedback = null; location.hash = '#lab-runner'; };
+  document.querySelectorAll('[data-lab]').forEach(button => button.onclick = () => { labId = button.dataset.lab; attemptId = null; phaseIndex = 0; parsedFacts = null; mentorFeedback = null; decisionFeedback = null; location.hash = '#lab-runner'; });
+}
+async function rangePage() {
+  setActive('range'); const data = await api('/api/range/health');
+  app.innerHTML = `<section class="page"><p class="eyebrow">ГОТОВНОСТЬ УЧЕБНОГО СТЕНДА</p><h1>Range: ${esc(data.verdict)}</h1><p>${data.verdict === 'ONLINE' ? 'Оба учебных сервиса отвечают. Ты можешь выполнить команду на Mac и вставить результат в лабу.' : 'Сайт не будет выдумывать вывод: сначала подними стенд или используй реальное сообщение Terminal как учебный материал.'}</p><div class="range-checks">${(data.checks || []).map(item => `<article class="range-check ${item.ok ? 'ok' : 'bad'}"><h3>${esc(item.name || ('Порт ' + item.port))}</h3><p>${esc(item.detail || '')}</p></article>`).join('')}</div><section class="diagnosis"><h2>Что проверить</h2>${(data.diagnosis || []).map(item => `<p class="${esc(item.level)}">${esc(item.message)}</p>`).join('')}</section><p class="context-rule">Эта проверка только сверяет доступность двух заранее заданных сервисов. Сканирование и атаки выполняет только человек на своей разрешённой цели.</p></section>`;
+}
+async function notes() {
+  setActive('notes'); const items = await api('/api/notes');
+  app.innerHTML = `<section class="page"><h1>Field Notes</h1><p>Твой журнал: что ожидал, какую команду выполнял, что получил и какой вывод сделал.</p>${items.map(item => `<article class="note"><h2>${esc(item.date)} · ${esc(item.goal)}</h2><dl><dt>Гипотеза</dt><dd>${esc(item.hypothesis)}</dd><dt>Команда</dt><dd><code>${esc(item.commands)}</code></dd><dt>Вывод Terminal</dt><dd><pre>${esc(item.results)}</pre></dd><dt>Твоё заключение</dt><dd>${esc(item.conclusion)}</dd></dl><label for="note-${item.id}">Личный итог одним абзацем</label><textarea id="note-${item.id}" data-note="${item.id}" placeholder="Что я сделаю иначе в следующий раз">${esc(item.manual_paragraph)}</textarea><button data-save-note="${item.id}">Сохранить мой итог</button></article>`).join('') || '<div class="empty-state"><strong>Пока нет закрытых попыток</strong><span>Одна закрытая лабораторная создаст здесь читаемую Field Note.</span></div>'}</section>`;
+  document.querySelectorAll('[data-save-note]').forEach(button => button.onclick = async () => { const id = button.dataset.saveNote; try { await post('/api/note/' + id + '/paragraph', {paragraph: document.querySelector('[data-note="' + id + '"]').value}); button.textContent = 'Сохранено'; } catch (error) { button.insertAdjacentHTML('afterend', errorBlock(error.message)); } });
+}
+async function progress() { setActive('progress'); const data = await api('/api/progress'); app.innerHTML = `<section class="page"><h1>Прогресс</h1><p>Шагов закрыто без подсказок 2 и 3: ${data.closed_without_hints_2_3.without_hints} из ${data.closed_without_hints_2_3.closed}.</p><table class="facts-table"><thead><tr><th>Навык</th><th>Уровень</th><th>Помощь</th><th>Что открыть дальше</th></tr></thead><tbody>${data.skills.map(skill => `<tr><td>${esc(skill.title)}</td><td>${skill.level} / 5</td><td>L${skill.assistance_level}</td><td>${skill.available ? 'Можно практиковать' : 'Сначала: ' + esc(skill.unlock_first.join(', '))}</td></tr>`).join('')}</tbody></table><p class="input-hint">Уровень растёт только за прохождение без готового решения. Это не оценка личности, а запись о том, сколько поддержки тебе сейчас нужно.</p></section>`; }
+function renderPlaybook(book) { if (playbookMode === 'field') return `<section class="playbook-field"><h2>${esc(book.title)}</h2>${book.phases.map(phase => `<article><h3>${esc(phase.title)}</h3><ul>${phase.checks.map(check => `<li>${esc(check)}</li>`).join('')}</ul></article>`).join('')}</section>`; const phase = book.phases[playbookPhase]; return `<section class="playbook-guided"><p class="eyebrow">ФАЗА ${playbookPhase + 1} ИЗ ${book.phases.length}</p><h2>${esc(phase.title)}</h2><p>Сначала проверь эти наблюдаемые условия, только затем выбирай ветку.</p><ul>${phase.checks.map(check => `<li>${esc(check)}</li>`).join('')}</ul><p><strong>${esc(phase.decision.question)}</strong></p>${phase.decision.branches.map(branch => `<button data-next="${esc(branch.next)}">${esc(branch.answer)}</button>`).join('')}</section>`; }
+async function playbooks() {
+  setActive('playbooks'); const books = await api('/api/content/playbooks'); let selected = books[0];
+  app.innerHTML = `<section class="page"><h1>Playbooks</h1><p>Это отдельный тренажёр решения, не замена лабораторной с твоим выводом.</p><div class="toolbar"><label>Сценарий <select id="playbook-select">${books.map(book => `<option value="${esc(book.id)}">${esc(book.role)}: ${esc(book.title)}</option>`).join('')}</select></label><button id="guided-mode">Пошагово</button><button id="field-mode">Полный список</button></div><div id="playbook-render"></div></section>`;
+  const redraw = () => { document.querySelector('#playbook-render').innerHTML = renderPlaybook(selected); document.querySelectorAll('[data-next]').forEach(button => button.onclick = () => { playbookPhase = Math.max(0, selected.phases.findIndex(phase => phase.id === button.dataset.next)); redraw(); }); };
+  document.querySelector('#guided-mode').onclick = () => { playbookMode = 'guided'; redraw(); }; document.querySelector('#field-mode').onclick = () => { playbookMode = 'field'; redraw(); }; document.querySelector('#playbook-select').onchange = event => { selected = books.find(book => book.id === event.target.value); playbookPhase = 0; redraw(); }; redraw();
+}
+function reference() { setActive('reference'); app.innerHTML = `<section class="page"><h1>Reference</h1><p>Термины и команды открывай только когда в лабораторной увидел конкретный незнакомый элемент. Основной маршрут остаётся в Lab Runner.</p><a class="text-link" href="#lab-runner">Вернуться к учебному шагу</a></section>`; }
+function route() { const name = location.hash.slice(1) || 'today'; if (name === 'today') today(); else if (name === 'lab-runner') runner(); else if (name === 'range') rangePage(); else if (name === 'notes') notes(); else if (name === 'progress') progress(); else if (name === 'playbooks') playbooks(); else if (name === 'reference') reference(); else today(); }
+window.addEventListener('hashchange', route); route();
