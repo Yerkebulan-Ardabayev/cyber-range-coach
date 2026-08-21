@@ -12,6 +12,12 @@ from cyber_range_coach.services.preflight import (
 from cyber_range_coach.services.tls import certificate_ip_addresses, generate_certificates
 
 ROOT = Path(__file__).resolve().parents[2]
+WINDOWS_POWERSHELL_SCRIPTS = (
+    ROOT / "scripts" / "package-windows.ps1",
+    ROOT / "scripts" / "prepare-ocr.ps1",
+    ROOT / "installer" / "windows" / "configure-firewall.ps1",
+    ROOT / "installer" / "windows" / "remove-firewall.ps1",
+)
 
 
 def test_certificate_generation_is_idempotent(client) -> None:
@@ -48,6 +54,13 @@ def test_packaging_builds_a_real_console_doctor_executable() -> None:
     assert "doctor_exe = EXE(" in pyinstaller
     assert "console=True" in pyinstaller
     assert 'DestName: "CyberRangeCoachDoctor.exe"' not in inno
+
+
+def test_windows_powershell_scripts_with_russian_text_have_utf8_bom() -> None:
+    for script in WINDOWS_POWERSHELL_SCRIPTS:
+        source = script.read_bytes()
+        assert any(byte > 0x7F for byte in source)
+        assert source.startswith(b"\xef\xbb\xbf"), script
 
 
 def test_firewall_script_requires_an_active_private_ipv4_profile() -> None:
