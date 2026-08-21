@@ -1,12 +1,13 @@
 # Статус приёмки v2
 
 Дата локальной проверки: 21.08.2026.
-Среда разработки: macOS. Windows hardware в этой сессии недоступен.
+Среда локальной разработки: macOS. Реальный Windows hardware в этой сессии
+недоступен, Windows source smoke выполнен на GitHub runner `windows-latest`.
 
 ## Подтверждено автоматически
 
 - Ruff и mypy проходят для backend source.
-- 46 backend tests проходят, включая negative security tests для CSRF, pairing
+- 47 backend tests проходят, включая negative security tests для CSRF, pairing
   до полного HTTPS preflight,
   конкурентного запуска lab, Docker discovery, grader, evidence lifecycle,
   type-ahead между shell-командами, relay TTL, Studio snapshots, migrations,
@@ -20,9 +21,11 @@
 - 7 Vitest tests проходят, включая безопасный LAN origin, полный HTTPS-preflight
   gate для pairing QR и fail-closed отображение отсутствующих runner tools.
 - Production frontend build проходит.
-- PyInstaller собирает два разных frozen executable на development host. Основной
-  `CyberRangeCoach`, отдельный консольный `CyberRangeCoachDoctor`, их `--help` и
-  read-only Doctor preflight завершаются успешно. Это не заменяет Windows smoke.
+- PyInstaller собирает два разных frozen executable на development host и на
+  GitHub runner `windows-latest`. Основной `CyberRangeCoach` и отдельный
+  консольный `CyberRangeCoachDoctor` собираются, их `--help` завершаются успешно.
+  Локальный read-only Doctor preflight также проходит. Это не заменяет сборку и
+  установочный smoke `CyberRangeCoach-Setup.exe` на реальном Windows-компьютере.
 - 16 Playwright tests проходят в Chromium:
   - responsive shell на 360, 390, 480, 768, 1024, 1366, 1440, 1920 и 2560 px;
   - touch targets и keyboard focus;
