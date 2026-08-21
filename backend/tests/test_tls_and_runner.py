@@ -73,8 +73,10 @@ def test_packaging_builds_a_real_console_doctor_executable() -> None:
 
 def test_windows_installer_checksum_is_portable() -> None:
     source = (ROOT / "scripts" / "package-windows.ps1").read_text(encoding="utf-8-sig")
-    assert '  CyberRangeCoach-Setup.exe" | Set-Content' in source
+    assert '  CyberRangeCoach-Setup.exe`n"' in source
+    assert "[System.IO.File]::WriteAllText" in source
     assert '  $($Artifact.Path)" | Set-Content' not in source
+    assert "Set-Content -Encoding ascii" not in source
 
 
 def test_windows_powershell_scripts_with_russian_text_have_utf8_bom() -> None:

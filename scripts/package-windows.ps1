@@ -40,6 +40,8 @@ uv run pyinstaller --noconfirm --clean installer\windows\CyberRangeCoach.spec
 iscc.exe installer\windows\CyberRangeCoach.iss
 $Artifact = Resolve-Path "dist\installer\CyberRangeCoach-Setup.exe"
 $Hash = Get-FileHash -Algorithm SHA256 -LiteralPath $Artifact
-"$($Hash.Hash.ToLowerInvariant())  CyberRangeCoach-Setup.exe" | Set-Content -Encoding ascii "dist\installer\CyberRangeCoach-Setup.exe.sha256"
+$ChecksumPath = Join-Path $ProjectRoot "dist\installer\CyberRangeCoach-Setup.exe.sha256"
+$ChecksumLine = "$($Hash.Hash.ToLowerInvariant())  CyberRangeCoach-Setup.exe`n"
+[System.IO.File]::WriteAllText($ChecksumPath, $ChecksumLine, [System.Text.Encoding]::ASCII)
 Write-Output "Установщик Windows: $($Artifact.Path)"
 Write-Output "SHA256: $($Hash.Hash.ToLowerInvariant())"
