@@ -1,61 +1,122 @@
-# Cyber Range Coach
+# Cyber Range Coach v2
 
-Локальное офлайн-приложение-наставник для одного человека. Тренирует не память на
-команды, а цикл принятия решений специалиста Red Team, Blue Team и DFIR на
-собственном учебном стенде.
+Локальная учебная академия. Windows-ноутбук хранит данные и подключает уже
+существующие цели Docker Desktop. Отдельная Linux VM выполняет команды ученика.
+Mac работает как полный браузерный клиент, телефон получает теорию, заметки,
+повторения и прогресс без интерактивного терминала.
 
-Два свойства отличают его от учебника или шпаргалки:
+Главный контракт системы находится в [`spec.md`](spec.md), а официальные
+технические источники собраны в
+[`docs/official-sources.md`](docs/official-sources.md). Состояние v1 сохранено
+локальной аннотированной меткой `v1-archive-b53e6dd`; проверяемая копия базы
+находится в игнорируемом каталоге `backups/v1-20260820/`. Старый `start.command`
+остаётся маршрутом v1 до реального Windows-пилота. После успешного пилота
+канонический запуск v2 будет один:
 
-1. **Гипотеза до команды.** Пока не записано, что ты ожидаешь узнать, команда
-   физически отсутствует в ответе сервера. Это гейт в коде, а не просьба в тексте.
-2. **Помощь убывает.** Уровень подсказок снижается за каждое чистое прохождение,
-   от 100% Guided до полностью самостоятельного. Это поле в базе, а не дисциплина.
-
-## Запуск
-
-Двойной клик по `start.command` в Finder. Или из терминала:
-
-```bash
-./start.command
+```text
+Пуск -> Cyber Range Coach
 ```
 
-Откроется `http://127.0.0.1:8899/`. Остановка: Control-C в окне терминала.
+## Что реализовано в исходном коде v2
 
-Зависимостей нет. Нужен только системный `python3` macOS (проверено на 3.9.6).
-Ни pip, ни venv, ни node_modules, ни сборщика.
+- FastAPI backend, SQLAlchemy, Alembic, SQLite и FTS5.
+- Docker Desktop discovery только для чтения через `docker version`, `context`,
+  `ps`, `inspect` и `port`.
+- Подтверждаемые `TargetProfile`, создаваемые из фактических bindings контейнера.
+- Временный TCP Training Relay с allowlist точного IP Linux VM и временем жизни.
+- SSH host-key pinning, интерактивный терминал `student` и отдельный
+  forced-command `range-runner` без общего shell.
+- Проверка фактических прав `student`: lab блокируется при доступном
+  non-interactive sudo или чтении/записи известных system/rootless Docker sockets.
+- Детерминированный grader, обязательные объяснение, вопрос наставника,
+  исправление и debrief до записи evidence. Для transcript-проверки утверждённая
+  команда должна быть первой командой чистого lab run, а после эксперимента
+  интерфейс создаёт новую попытку.
+- Интервальные reviews с завершением старого задания и одним следующим due item.
+- Пошаговый рост каждого навыка до `independent`. Для практик с Docker-целью
+  доступен отдельный этап `transfer`, который требует второй fingerprint цели.
+- Базовый курс из 19 практик: Linux, сеть, HTTP, authentication,
+  authorization, evidence reporting и Blue/DFIR по общей трассе событий.
+- Локальные методические подсказки, не влияющие на grader. Внешние AI CLI в
+  Windows-релизе отключены до появления доказуемой файловой изоляции.
+- Studio для content-addressed read-only snapshots DOCX, Markdown, TXT, LOG и
+  изображений с SHA-256, source blocks, локальным OCR, validation и публикацией
+  только владельцем. Это tamper detection, а не обещание абсолютной
+  неизменяемости файловой системы.
+- Одноразовое pairing Mac и телефона только после полного LAN/HTTPS preflight,
+  роли `owner`, `operator`, `viewer`, ручная сверка fingerprint и CSRF-защита
+  аутентифицированных изменений.
+- Адаптивный React-интерфейс для ширин 360..2560 px. На телефоне терминал
+  заменяется read-only transcript.
+- Windows PyInstaller и Inno Setup pipeline, SHA-256 artifact, отдельные явные
+  задачи доверия к CA и правила Private Firewall. Обычный quality gate собирает
+  и запускает оба frozen executable, а Windows CI отдельно повторяет source smoke.
 
-## Учебный стенд
+Факт: исходный код и автоматические проверки запускаются на текущем Mac.
+Открытый gate: installer, DPAPI, Docker Desktop, Linux VM, Mac-клиент и телефон
+ещё надо проверить на реальном оборудовании. Подробности находятся в
+[`docs/acceptance-status.md`](docs/acceptance-status.md).
 
-Приложение рассчитано на собственный полигон в локальной сети:
+## Локальная разработка
 
-- WebGoat `http://192.168.10.10:8080/WebGoat/`
-- OWASP Juice Shop `http://192.168.10.10:3000/`
-
-Экран Range проверяет их лестницей TCP connect, затем HTTP, и при отказе выдаёт
-адресную диагностику, а не общее «ошибка».
-
-**Приложение ничего не сканирует и не атакует.** Команды выполняет человек в
-своём терминале, приложение помогает прочитать результат.
-
-## Устройство
-
-- `server.py` локальный сервер на стандартной библиотеке Python, API и статика.
-- `web/` интерфейс на vanilla JS с ES-модулями, без сборщика.
-- `content/` учебный контент в JSON: треки, навыки, лаборатории, playbooks, команды, глоссарий.
-- `parsers/` разбор вставленного вывода `nmap`, `curl` и HTTP по регулярным выражениям.
-- `tools/validate_content.py` проверка контента и ссылочной целостности.
-- `tools/test_mentor.py` проверка наставника на реалистичных текстах.
-- `state.sqlite` прогресс, попытки, наблюдения, заметки. Не в git.
-
-## Документы
-
-- `spec.md` канонический контракт системы.
-- `blueprint.md` диагноз задачи, архитектура, движок обучения, макеты экранов.
-- `source-inventory.md` ревизия прежних учебных материалов.
-- `docs/codex-tasks/` задания, по которым писался код.
-
-## Проверка
+Python и Node нужны только разработчику. Пользователь Windows должен получить
+self-contained installer.
 
 ```bash
-python3 tools/validate_content.py && python3 tools/test_mentor.py
+uv sync --extra dev
+cd frontend && npm install && npm run build && cd ..
+./scripts/dev.sh
 ```
+
+Локальный backend открывается на `http://127.0.0.1:8443`. В development-режиме
+используется локальный тестовый secret provider, потому что DPAPI доступен только
+на Windows. Production installer не использует этот fallback.
+
+## Полная проверка
+
+```bash
+./scripts/quality.sh
+```
+
+Команда запускает Ruff, mypy, backend tests, repository secret scan, ESLint,
+TypeScript, Vitest, production build и Playwright на контрольных ширинах.
+
+Windows artifact собирается только на Windows:
+
+```powershell
+.\scripts\package-windows.ps1 -PrepareOcr
+```
+
+Сценарий скачивает pinned Tesseract и языковые модели, проверяет SHA-256,
+запускает gates и формирует `dist\installer\CyberRangeCoach-Setup.exe` с
+соседним `.sha256`. Версии и хэши перечислены в
+[`vendor/tesseract/README.md`](vendor/tesseract/README.md).
+
+## Границы безопасности
+
+- Discovery не запускает, не останавливает и не пересоздаёт контейнеры.
+- Relay не меняет Docker и закрывается при stop, reset, timeout или остановке
+  приложения.
+- Firewall-скрипт требует `-Approve`, активный профиль Private и точный режим.
+- Сертификат не перегенерируется, если комплект уже существует.
+- SSH host key становится доверенным только после ручной сверки fingerprint.
+- `range-runner` принимает только `tools`, `relay`, ограниченный `nmap` одного
+  порта и ограниченный HTTP GET через relay.
+- Snapshot Studio хранится read-only и проверяется по SHA-256 перед публикацией.
+- Production-секреты защищаются Windows DPAPI текущего пользователя.
+- Интернет-публикация, UPnP, port forwarding и облачная синхронизация отсутствуют.
+
+## Структура
+
+```text
+backend/               FastAPI, модель данных, адаптеры, проверки и тесты
+frontend/              React, адаптивный интерфейс, Vitest и Playwright
+curriculum/            версионируемый детерминированный учебный материал
+installer/linux/       проверенный bootstrap для student и range-runner
+installer/windows/     PyInstaller, Inno Setup и скрипты Firewall
+scripts/               локальная разработка и воспроизводимая упаковка
+vendor/tesseract/      provenance; бинарные файлы готовятся на Windows build host
+docs/                  реестр источников и инструкции по эксплуатации
+```
+
+Ни одно изменение не отправляется в GitHub без отдельного подтверждения владельца.

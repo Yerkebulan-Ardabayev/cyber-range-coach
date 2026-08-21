@@ -1,0 +1,166 @@
+from __future__ import annotations
+
+import asyncio
+import ipaddress
+import logging
+from dataclasses import dataclass, field
+
+from ..errors import AppError
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class RelayHandle:
+    target_id: int
+    bind_host: str
+    port: int
+    upstream_host: str
+    upstream_port: int
+    allowed_source_ip: str
+    server: asyncio.AbstractServer
+    connections: set[asyncio.Task[None]] = field(default_factory=set)
+    timeout_task: asyncio.Task[None] | None = None
+
+
+class RelayManager:
+    def __init__(self, bind_host: str, port_start: int, port_end: int, ttl_seconds: int):
+        self.bind_host = bind_host
+        self.port_start = port_start
+        self.port_end = port_end
+        self.ttl_seconds = ttl_seconds
+        self._handles: dict[int, RelayHandle] = {}
+        self._lock = asyncio.Lock()
+
+    async def start(
+        self,
+        target_id: int,
+        upstream_host: str,
+        upstream_port: int,
+        allowed_source_ip: str,
+    ) -> RelayHandle:
+        parsed_source = ipaddress.ip_address(allowed_source_ip)
+        parsed_upstream = ipaddress.ip_address(upstream_host)
+        if parsed_source.is_unspecified or parsed_source.is_multicast or parsed_source.is_loopback:
+            raise AppError(400, "invalid_vm_ip", "Нужен отдельный IP Linux VM, не loopback.")
+        if not parsed_upstream.is_loopback:
+            raise AppError(
+                400, "unsafe_upstream", "Relay может обращаться только к loopback Windows."
+            )
+        async with self._lock:
+            existing = self._handles.get(target_id)
+            if existing:
+                if existing.allowed_source_ip != allowed_source_ip:
+                    raise AppError(
+                        409,
+                        "relay_already_active",
+                        "Relay уже активен для другого IP Linux VM.",
+                    )
+                return existing
+            for port in range(self.port_start, self.port_end + 1):
+                try:
+                    server = await asyncio.start_server(
+                        lambda reader, writer: self._accept(
+                            target_id,
+                            reader,
+                            writer,
+                            upstream_host,
+                            upstream_port,
+                            allowed_source_ip,
+                        ),
+                        self.bind_host,
+                        port,
+                        reuse_address=False,
+                    )
+                except OSError:
+                    continue
+                handle = RelayHandle(
+                    target_id=target_id,
+                    bind_host=self.bind_host,
+                    port=port,
+                    upstream_host=upstream_host,
+                    upstream_port=upstream_port,
+                    allowed_source_ip=allowed_source_ip,
+                    server=server,
+                )
+                self._handles[target_id] = handle
+                handle.timeout_task = asyncio.create_task(self._expire(target_id))
+                return handle
+        raise AppError(503, "relay_ports_exhausted", "Нет свободного безопасного relay-порта.")
+
+    async def _expire(self, target_id: int) -> None:
+        try:
+            await asyncio.sleep(self.ttl_seconds)
+            await self.stop(target_id)
+        except asyncio.CancelledError:
+            return
+
+    async def _accept(
+        self,
+        target_id: int,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+        upstream_host: str,
+        upstream_port: int,
+        allowed_source_ip: str,
+    ) -> None:
+        peer = writer.get_extra_info("peername")
+        peer_ip = str(peer[0]) if isinstance(peer, tuple) and peer else ""
+        if peer_ip != allowed_source_ip:
+            writer.close()
+            await writer.wait_closed()
+            return
+        task = asyncio.current_task()
+        handle = self._handles.get(target_id)
+        if task and handle:
+            handle.connections.add(task)
+        try:
+            upstream_reader, upstream_writer = await asyncio.open_connection(
+                upstream_host, upstream_port
+            )
+            await asyncio.gather(
+                self._pipe(reader, upstream_writer),
+                self._pipe(upstream_reader, writer),
+            )
+        except OSError:
+            writer.close()
+            await writer.wait_closed()
+        finally:
+            if task and handle:
+                handle.connections.discard(task)
+
+    @staticmethod
+    async def _pipe(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+        try:
+            while data := await reader.read(65_536):
+                writer.write(data)
+                await writer.drain()
+        finally:
+            writer.close()
+            try:
+                await writer.wait_closed()
+            except OSError as exc:
+                logger.debug("Relay peer closed during shutdown: %s", type(exc).__name__)
+
+    async def stop(self, target_id: int) -> None:
+        async with self._lock:
+            handle = self._handles.pop(target_id, None)
+        if handle is None:
+            return
+        handle.server.close()
+        await handle.server.wait_closed()
+        if handle.timeout_task and handle.timeout_task is not asyncio.current_task():
+            handle.timeout_task.cancel()
+        for task in tuple(handle.connections):
+            task.cancel()
+        if handle.connections:
+            await asyncio.gather(*handle.connections, return_exceptions=True)
+        if handle.timeout_task and handle.timeout_task is not asyncio.current_task():
+            await asyncio.gather(handle.timeout_task, return_exceptions=True)
+
+    async def stop_all(self) -> None:
+        for target_id in tuple(self._handles):
+            await self.stop(target_id)
+
+    def get(self, target_id: int) -> RelayHandle | None:
+        return self._handles.get(target_id)

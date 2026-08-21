@@ -1,0 +1,36 @@
+# Реестр официальных технических источников
+
+Проверено: 21.08.2026. Этот файл фиксирует источник и то, какое утверждение он
+подтверждает. Он не заменяет реальные Windows/Linux acceptance tests.
+
+| Область | Официальный источник | Что подтверждено |
+|---|---|---|
+| Docker Desktop networking | [Docker Desktop networking](https://docs.docker.com/desktop/features/networking/) | Published port доступен Windows host; binding без loopback-ограничения может принимать LAN traffic; трафик проходит через backend Docker Desktop. Поэтому discovery читает фактические bindings и предупреждает о `0.0.0.0`. |
+| Windows DPAPI | [CryptProtectData](https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata) | Без дополнительных flags данные обычно расшифровывает тот же пользователь на том же компьютере. Поэтому installer создаёт user-bound secrets в контексте обычного пользователя, а не администратора UAC. |
+| Windows Firewall | [Configure Windows Firewall with the command line](https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/configure-with-command-line) | Правило может быть ограничено профилем и remote address. Скрипт академии допускает только активный `Private` profile и отдельный owner-approved режим. |
+| FastAPI WebSocket | [FastAPI WebSockets](https://fastapi.tiangolo.com/advanced/websockets/) | FastAPI поддерживает двусторонние WebSocket endpoints. Browser terminal использует WebSocket только как transport до SSH session. |
+| xterm.js | [xterm.js documentation](https://xtermjs.org/docs/) | Документация подтверждает назначение xterm.js как terminal component в браузере. Маршрут `browser -> WebSocket -> SSH -> Linux VM` является свойством реализации академии и проверяется её code/tests, а не утверждением документации xterm.js. |
+| SQLite FTS5 | [SQLite FTS5 extension](https://www.sqlite.org/fts5.html) | FTS5 предоставляет полнотекстовые virtual tables. Frozen Alembic revision создаёт и симметрично удаляет FTS virtual tables и triggers. |
+| Nmap `-Pn` | [Nmap host discovery](https://nmap.org/book/man-host-discovery.html) | `-Pn` пропускает обычный IP-level host discovery и сканирует указанный host как online; на local Ethernet Nmap всё ещё может использовать ARP/Neighbor Discovery без `--disable-arp-ping` или `--send-ip`. |
+| curl verbose | [curl command-line manual, `--verbose`](https://curl.se/docs/manpage.html#-v) | Verbose output может содержать sensitive data. Урок предупреждает не запускать его с реальными credentials, cookies и secret headers и не сохранять такой вывод без redaction. |
+| HTTP status line | [RFC 9112, HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112.html), [RFC 9113, HTTP/2 section 8.3.2](https://www.rfc-editor.org/rfc/rfc9113.html#section-8.3.2) | Reason phrase в HTTP/1.1 status line optional. Forced probe фиксирует request HTTP/1.1, response protocol и numeric status, но не требует reason phrase. RFC 9113 определяет HTTP/2 `:status`. |
+| TCP и порты | [RFC 9293, TCP](https://www.rfc-editor.org/rfc/rfc9293.html) | TCP предоставляет надёжный упорядоченный поток байтов, а номера портов идентифицируют сервисы и разделяют потоки. Урок не приравнивает успешное TCP-соединение к доказательству прикладного протокола. |
+| DNS | [RFC 1034](https://www.rfc-editor.org/rfc/rfc1034.html) и [RFC 1035](https://www.rfc-editor.org/rfc/rfc1035.html) | Эти спецификации задают понятия доменных имён, resolver и форматы DNS. Учебная проверка отделяет полученный адрес от гипотез о доступности сервиса. |
+| Linux shell и базовые команды | [POSIX Shell Command Language](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html), [upstream mirror GNU Coreutils](https://github.com/coreutils/coreutils/blob/master/doc/coreutils.texi), [официальный сайт `less`](https://www.greenwoodsoftware.com/less/), [POSIX `grep`](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/grep.html), [POSIX `find`](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/find.html), [POSIX `awk`](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/awk.html) | POSIX определяет shell, pipes, redirection, `grep`, `find` и `awk`; upstream mirror GNU Coreutils содержит руководство для файловых команд и `install`; сайт автора `less` документирует pager. Все шесть ссылок вернули HTTP 200 при прямой проверке 21.08.2026. |
+| Authentication | [NIST SP 800-63-4](https://pages.nist.gov/800-63-4/) | Текущая серия NIST Digital Identity Guidelines разделяет identity proofing, authentication и federation. Урок использует синтетический trace и не утверждает, что authentication success доказывает authorization. |
+| Access control | [NIST SP 800-162 Rev. 2](https://csrc.nist.gov/pubs/sp/800/162/upd2/final) | Решение о доступе зависит от субъекта, объекта, операции, политики и контекста. Учебный trace не объявляет различающийся outcome уязвимостью без ожидаемой policy. |
+| OpenSSH forced command | [OpenBSD `sshd(8)`, AUTHORIZED_KEYS](https://man.openbsd.org/sshd#AUTHORIZED_KEYS) | Bootstrap использует options `restrict,command="..."` в ключе `range-runner`. Они запрещают общий shell и принудительно запускают только проверяющий скрипт для этого ключа. |
+| Codex sandbox on Windows | [OpenAI Codex core README](https://github.com/openai/codex/blob/main/codex-rs/core/README.md) | Описанные Windows sandbox modes не дают проекту достаточного доказательства запрета чтения других local files. Поэтому external Codex provider для Windows v2 fail-closed. |
+| Tesseract OCR release | [Tesseract 5.5.3](https://github.com/tesseract-ocr/tesseract/releases/tag/5.5.3) и [закреплённый Windows asset](https://github.com/tesseract-ocr/tesseract/releases/download/5.5.3/tesseract-ocr-w64-setup-5.5.3.20260724.exe) | Windows packaging принимает только этот release asset и проверяет его SHA-256, записанный в `vendor/tesseract/README.md`. Release page и asset URL проверены 21.08.2026; бинарный asset не является текстовой документацией. |
+| Tesseract language data | [`tessdata_fast` commit](https://github.com/tesseract-ocr/tessdata_fast/tree/87416418657359cb625c412a48b6e1d6d41c29bd), [`eng.traineddata`](https://github.com/tesseract-ocr/tessdata_fast/blob/87416418657359cb625c412a48b6e1d6d41c29bd/eng.traineddata), [`rus.traineddata`](https://github.com/tesseract-ocr/tessdata_fast/blob/87416418657359cb625c412a48b6e1d6d41c29bd/rus.traineddata) | Языковые модели закреплены по точному commit и SHA-256 до добавления в artifact. |
+
+## Ограничения доказательства
+
+- Документация подтверждает возможности платформы, но не подтверждает, что
+  конкретный Windows Firewall rule, certificate, Docker binding или SSH route уже
+  работает на ноутбуке пользователя.
+- Такое подтверждение появляется только после запуска doctor, installer smoke и
+  реального маршрута `Linux VM -> Training Relay -> Docker target`.
+- Термины HTTP, TCP, DNS, authentication, authorization, fingerprint, transcript
+  и evidence оставлены на английском там, где это имя протокола, поля интерфейса
+  или точного учебного понятия. При первом использовании в уроке даётся определение.

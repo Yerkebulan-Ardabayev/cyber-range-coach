@@ -1,0 +1,111 @@
+name: quality
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      build_windows_installer:
+        description: Build the unsigned local Windows installer
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: uv sync --extra dev --locked
+      - run: uv run ruff check backend
+      - run: uv run mypy backend/src
+      - run: uv run pytest
+      - run: uv run python scripts/secret_scan.py
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run lint
+        working-directory: frontend
+      - run: npm run typecheck
+        working-directory: frontend
+      - run: npm run test
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run test:e2e
+        working-directory: frontend
+
+  windows-source-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: uv sync --extra dev --locked
+      - run: uv run pytest backend/tests/test_instance.py
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - name: Build and smoke frozen executables
+        shell: powershell
+        run: |
+          uv run pyinstaller --noconfirm --clean installer\windows\CyberRangeCoach.spec
+          $Application = Resolve-Path "dist\CyberRangeCoach\CyberRangeCoach.exe"
+          $Doctor = Resolve-Path "dist\CyberRangeCoach\CyberRangeCoachDoctor.exe"
+          & $Application --help
+          if ($LASTEXITCODE -ne 0) { throw "Application frozen smoke failed with $LASTEXITCODE" }
+          & $Doctor --help
+          if ($LASTEXITCODE -ne 0) { throw "Doctor frozen smoke failed with $LASTEXITCODE" }
+
+  windows-installer:
+    if: github.event_name == 'workflow_dispatch' && inputs.build_windows_installer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: choco install innosetup 7zip --yes --no-progress
+      - run: uv sync --extra dev --locked
+      - run: npm ci
+        working-directory: frontend
+      - name: Build installer with pinned local OCR
+        shell: powershell
+        run: .\scripts\package-windows.ps1 -PrepareOcr
+      - name: Smoke install and canonical executable
+        shell: powershell
+        run: |
+          $InstallDir = Join-Path $env:RUNNER_TEMP "CyberRangeCoach-Smoke"
+          $Installer = Resolve-Path "dist\installer\CyberRangeCoach-Setup.exe"
+          $Install = Start-Process -FilePath $Installer -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/TASKS=", "/DIR=$InstallDir" -Wait -PassThru
+          if ($Install.ExitCode -ne 0) { throw "Installer exited with $($Install.ExitCode)" }
+          $Application = Join-Path $InstallDir "CyberRangeCoach.exe"
+          if (-not (Test-Path -LiteralPath $Application -PathType Leaf)) { throw "Installed executable is missing" }
+          $Cli = Start-Process -FilePath $Application -ArgumentList "--help" -Wait -PassThru
+          if ($Cli.ExitCode -ne 0) { throw "Installed CLI smoke exited with $($Cli.ExitCode)" }
+          $Uninstaller = Join-Path $InstallDir "unins000.exe"
+          $Uninstall = Start-Process -FilePath $Uninstaller -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait -PassThru
+          if ($Uninstall.ExitCode -ne 0) { throw "Uninstaller exited with $($Uninstall.ExitCode)" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CyberRangeCoach-Windows-unsigned
+          path: |
+            dist/installer/CyberRangeCoach-Setup.exe
+            dist/installer/CyberRangeCoach-Setup.exe.sha256

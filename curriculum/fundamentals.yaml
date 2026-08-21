@@ -1,0 +1,528 @@
+track:
+  id: fundamentals-to-pentesting
+  title: Основы, которые выдерживают практику
+  summary: От факта и Linux до HTTP, границ доступа и доказательного отчёта.
+  role: foundation
+  version: 1
+
+lessons:
+  - id: scope-fact-hypothesis
+    order: 10
+    title: Факт, гипотеза и разрешённая область
+    summary: Учимся не выдавать предположение за наблюдение и держать работу внутри своего стенда.
+    estimated_minutes: 15
+    skill_id: evidence-reasoning
+    stage: introduced
+    target_tags: []
+    requires_target: false
+    term:
+      name: разрешённая область
+      definition: Заранее зафиксированные цель, допустимые действия, время работы и условие остановки. Всё вне этих границ запрещено до нового разрешения владельца.
+    worked_example: В домашнем стенде разрешена только цель `127.0.0.1:8080`, только TCP/HTTP-проверки, 15 минут. Работа останавливается, если команда уходит на другой адрес. Путь, который вернул `pwd`, будет фактом о текущем каталоге, а предположение о web-приложении на цели останется гипотезой до сетевой проверки.
+    prediction_question: Какие четыре границы разрешения и какие два типа утверждений появятся в выводе?
+    command: "current_dir=\"$(pwd)\" && printf 'SCOPE TARGET: 127.0.0.1:8080\\nSCOPE ACTIONS: TCP and HTTP read-only checks\\nSCOPE WINDOW: 15 minutes\\nSCOPE STOP: any other address\\nFACT: current directory %s\\nHYPOTHESIS: target may be a web application\\n' \"$current_dir\""
+    command_explanation:
+      - "pwd наблюдает текущий каталог, а printf оформляет результат вместе с границами работы."
+      - "SCOPE фиксирует цель, действия, время и условие остановки."
+      - "FACT содержит путь, реально возвращённый pwd."
+      - "HYPOTHESIS обозначает вывод, который ещё надо проверить."
+    grader:
+      source: transcript
+      required_patterns: ["SCOPE TARGET:.*127\\.0\\.0\\.1:8080", "SCOPE ACTIONS:.*read-only", "SCOPE WINDOW:.*15 minutes", "SCOPE STOP:.*other address", "FACT: current directory /[^\\r\\n]*", "HYPOTHESIS:.*web application"]
+      forbidden_patterns: ["command not found"]
+      fact_template: Вы зафиксировали цель, действия, время и условие остановки, подтвердили текущий каталог командой pwd и отделили этот факт от гипотезы о приложении.
+    explanation_prompt: Назовите четыре границы разрешения. Почему наблюдение текущего каталога ничего не доказывает о сервисе на учебной цели?
+    review_question: Назовите цель, допустимые действия, время, условие остановки, один факт и одну гипотезу последней лаборатории.
+
+  - id: linux-navigation-pwd
+    order: 20
+    title: Где я нахожусь в Linux
+    summary: Связываем текущий каталог, абсолютный путь и безопасную ориентацию перед действием.
+    estimated_minutes: 15
+    skill_id: linux-navigation
+    stage: guided
+    target_tags: []
+    requires_target: false
+    term:
+      name: абсолютный путь
+      definition: Полный адрес файла или каталога, начинающийся от корня `/`.
+    worked_example: Перед чтением или поиском `pwd` фиксирует текущую точку и не даёт ошибиться каталогом.
+    prediction_question: С какого символа начнётся вывод `pwd` и почему?
+    command: pwd
+    command_explanation:
+      - "pwd означает print working directory."
+      - "Команда ничего не изменяет."
+      - "Вывод должен быть одним абсолютным путём."
+    grader:
+      source: transcript
+      required_patterns: ["(?:^|\\n)/[^\\r\\n]*"]
+      forbidden_patterns: ["pwd:.*error", "command not found"]
+      fact_template: Терминал вернул абсолютный путь текущего каталога.
+    explanation_prompt: Что именно доказал вывод `pwd`, а что он не говорит о содержимом каталога?
+    review_question: Какая команда фиксирует текущий каталог без изменения состояния?
+
+  - id: linux-files-listing
+    order: 30
+    title: Читать структуру файлов, а не угадывать
+    summary: Разбираем тип, владельца, permissions, размер и имя в длинном листинге.
+    estimated_minutes: 20
+    skill_id: linux-files
+    stage: guided
+    target_tags: []
+    requires_target: false
+    term:
+      name: metadata файла
+      definition: Свойства объекта, например тип, permissions, владелец, группа, размер и время изменения.
+    worked_example: Первый символ `d` в `drwxr-xr-x` означает каталог, а не право доступа.
+    prediction_question: Какие поля появятся у каждой строки после `ls -la`?
+    command: "ls -la"
+    command_explanation:
+      - "-l включает подробный формат."
+      - "-a показывает скрытые имена, включая начинающиеся с точки."
+      - "Команда читает metadata и не изменяет файлы."
+    grader:
+      source: transcript
+      required_patterns: ["(?:^|\\n)[bcdlps-][rwxStTs-]{9}", "\\s+\\.\\.?\\s*(?:\\r?\\n|$)"]
+      forbidden_patterns: ["ls:.*(?:cannot access|No such file)"]
+      fact_template: Получен длинный листинг с типом объекта и permissions.
+    explanation_prompt: Чем первый символ строки отличается от следующих девяти символов permissions?
+    review_question: Что добавляют флаги `-l` и `-a`?
+
+  - id: linux-change-and-read
+    order: 35
+    title: Перейти, прочитать и не потерять контекст
+    summary: Связываем cd, pwd, cat и less в безопасный маршрут чтения системных файлов.
+    estimated_minutes: 25
+    skill_id: linux-reading
+    stage: guided
+    target_tags: []
+    requires_target: false
+    term:
+      name: pager
+      definition: Программа постраничного чтения, которая показывает длинный текст без изменения исходного файла.
+    worked_example: После `cd /etc` команда `pwd` подтверждает каталог, `cat` печатает короткий файл, а `less` подходит для просмотра более длинного.
+    prediction_question: Какая команда изменит текущий каталог, а какие только прочитают данные?
+    command: "cd /etc && pwd && printf '\nCAT_HOSTNAME\n' && cat hostname && printf '\nLESS_OS_RELEASE\n' && less -FX os-release"
+    command_explanation:
+      - "cd меняет текущий каталог shell на `/etc`."
+      - "pwd сразу проверяет, что переход действительно состоялся."
+      - "cat печатает короткий файл целиком, а less открывает управляемый просмотр."
+    grader:
+      source: transcript
+      required_patterns: ["(?:^|\\n)/etc(?:\\r?\\n|$)", "CAT_HOSTNAME", "LESS_OS_RELEASE", "(?:PRETTY_NAME|NAME)="]
+      forbidden_patterns: ["No such file", "command not found", "Permission denied"]
+      fact_template: Ученик перешёл в `/etc`, подтвердил каталог и прочитал файлы двумя способами.
+    explanation_prompt: Почему после cd полезно сразу выполнить pwd и когда less удобнее cat?
+    review_question: Какая команда меняет текущий каталог, а какая подтверждает новый путь?
+
+  - id: text-pipes-grep
+    order: 40
+    title: Поток данных и фильтрация
+    summary: Понимаем pipe как передачу stdout одной команды во stdin следующей.
+    estimated_minutes: 20
+    skill_id: linux-text-processing
+    stage: guided
+    target_tags: []
+    requires_target: false
+    term:
+      name: pipe
+      definition: Оператор `|`, который передаёт стандартный вывод слева на стандартный ввод справа.
+    worked_example: "`printf` создаёт три строки, а `grep` оставляет только строку с `LISTEN`."
+    prediction_question: Сколько строк останется после фильтра и почему?
+    command: "printf 'CLOSED 22\\nLISTEN 8080\\nCLOSED 9000\\n' | grep 'LISTEN'"
+    command_explanation:
+      - "Левая команда создаёт входные данные."
+      - "Pipe передаёт их без промежуточного файла."
+      - "grep печатает только совпавшую строку."
+    grader:
+      source: transcript
+      required_patterns: ["LISTEN 8080"]
+      forbidden_patterns: ["(?:^|\\n)CLOSED (?:22|9000)(?:\\r?\\n|$)", "grep:.*error"]
+      fact_template: Pipe передал поток, а grep оставил строку по условию.
+    explanation_prompt: Что сделал pipe, а что сделал именно grep?
+    review_question: Какая сторона pipe создаёт данные и какая фильтрует?
+
+  - id: text-redirection
+    order: 45
+    title: Перенаправление без потери исходных данных
+    summary: Сравниваем stdout, перезапись через > и добавление через >> на временном файле.
+    estimated_minutes: 20
+    skill_id: linux-redirection
+    stage: guided
+    target_tags: []
+    requires_target: false
+    term:
+      name: redirection
+      definition: Направление стандартного потока команды в файл или из файла вместо терминала.
+    worked_example: Одинарный `>` создаёт или перезаписывает файл, а `>>` добавляет данные в конец.
+    prediction_question: Какие две строки останутся после последовательности с > и >>?
+    command: 'tmp_file="$(mktemp)" && printf "FIRST\n" > "$tmp_file" && printf "SECOND\n" >> "$tmp_file" && cat "$tmp_file"; rm -f "$tmp_file"'
+    command_explanation:
+      - "mktemp создаёт уникальный файл в каталоге временных данных."
+      - "> записывает первую строку, а >> добавляет вторую."
+      - "Последняя команда удаляет только созданный этим упражнением временный файл."
+    grader:
+      source: transcript
+      required_patterns: ["FIRST(?:\\r?\\n)SECOND"]
+      forbidden_patterns: ["Permission denied", "No such file", "command not found"]
+      fact_template: Временный файл показал различие между перезаписью и добавлением stdout.
+    explanation_prompt: Что произошло бы со строкой FIRST, если второй оператор тоже был бы одиночным >?
+    review_question: Чем > отличается от >>?
+
+  - id: files-find-safe
+    order: 50
+    title: Поиск файлов с ограниченной областью
+    summary: Ищем по имени внутри явного каталога и не сканируем всю систему без причины.
+    estimated_minutes: 20
+    skill_id: linux-search
+    stage: independent
+    target_tags: []
+    requires_target: false
+    term:
+      name: область поиска
+      definition: Каталог, внутри которого find разрешено обходить дерево.
+    worked_example: "`find /etc -maxdepth 1 -name 'hosts'` ограничивает обход одним уровнем."
+    prediction_question: Почему `-maxdepth 1` делает результат и нагрузку предсказуемее?
+    command: "find /etc -maxdepth 1 -name 'hosts' -print"
+    command_explanation:
+      - "/etc задаёт явный корень поиска."
+      - "-maxdepth 1 запрещает глубокий обход."
+      - "-name сравнивает имя, а -print выводит найденный путь."
+    grader:
+      source: transcript
+      required_patterns: ["/etc/hosts"]
+      forbidden_patterns: ["Permission denied", "find:.*error"]
+      fact_template: Файл найден внутри ограниченной области `/etc`.
+    explanation_prompt: Какой флаг ограничил глубину и почему это важно в рабочей системе?
+    review_question: Как задать find явный каталог и максимальную глубину?
+
+  - id: linux-permissions-read
+    order: 60
+    title: Permissions как проверяемая граница
+    summary: Читаем права пользователя, группы и остальных без автоматического chmod.
+    estimated_minutes: 25
+    skill_id: linux-permissions
+    stage: independent
+    target_tags: []
+    requires_target: false
+    term:
+      name: mode bits
+      definition: Набор прав read, write и execute для owner, group и others.
+    worked_example: "`-rw-r--r--` разрешает владельцу запись, а группе и остальным только чтение."
+    prediction_question: Какая тройка permissions относится к группе?
+    command: "stat -c '%A %U %G %n' /etc/hosts"
+    command_explanation:
+      - "stat читает metadata одного указанного файла."
+      - "%A выводит символьные permissions."
+      - "%U и %G выводят владельца и группу."
+    grader:
+      source: transcript
+      required_patterns: ["[bcdlps-][rwxStTs-]{9}\\s+\\S+\\s+\\S+\\s+/etc/hosts"]
+      forbidden_patterns: ["stat:.*(?:failed|No such file)"]
+      fact_template: Получены permissions, owner и group файла `/etc/hosts`.
+    explanation_prompt: Какие права относятся к owner, group и others в полученной строке?
+    review_question: Почему просмотр permissions безопаснее начинать со stat, а не с chmod?
+
+  - id: linux-users-groups
+    order: 65
+    title: Пользователь, primary group и дополнительные группы
+    summary: Читаем effective identity до рассуждения о доступе к файлам и процессам.
+    estimated_minutes: 20
+    skill_id: linux-identity
+    stage: independent
+    target_tags: []
+    requires_target: false
+    term:
+      name: effective identity
+      definition: UID и группы, с которыми текущий процесс проходит проверки доступа Linux.
+    worked_example: "`id` показывает uid, primary gid и дополнительные groups, но не доказывает право на конкретный файл без его metadata."
+    prediction_question: Какие три набора идентификаторов появятся в выводе id?
+    command: 'id; printf "PRIMARY_GROUP="; id -gn; getent group "$(id -gn)"'
+    command_explanation:
+      - "id показывает uid, gid и список groups текущего student."
+      - "id -gn возвращает имя primary group."
+      - "getent читает запись группы из настроенного системного источника."
+    grader:
+      source: transcript
+      required_patterns: ["uid=[0-9]+", "gid=[0-9]+", "groups=", "PRIMARY_GROUP=\\S+"]
+      forbidden_patterns: ["command not found", "Permission denied"]
+      fact_template: Получены uid, primary gid и дополнительные группы текущего student.
+    explanation_prompt: Почему членство в группе ещё надо сопоставить с group bits конкретного файла?
+    review_question: Какая команда показывает uid, gid и дополнительные группы одной строкой?
+
+  - id: network-ip-route
+    order: 70
+    title: IP и маршрут до цели
+    summary: Находим адрес интерфейса и default route, не смешивая их с адресом Docker-контейнера.
+    estimated_minutes: 25
+    skill_id: network-addressing
+    stage: guided
+    target_tags: []
+    requires_target: false
+    term:
+      name: default route
+      definition: Маршрут, используемый, когда для адреса назначения нет более точного правила.
+    worked_example: "`ip route` показывает `default via`, но не доказывает доступность приложения."
+    prediction_question: Какие две разные сущности покажут команды `ip -brief address` и `ip route`?
+    command: "ip -brief address; ip route"
+    command_explanation:
+      - "ip -brief address показывает интерфейсы и их адреса."
+      - "ip route показывает правила выбора следующего узла."
+      - "Команды читают локальную сетевую конфигурацию."
+    grader:
+      source: transcript
+      required_patterns: ["(?:UP|UNKNOWN).*\\d+\\.\\d+\\.\\d+\\.\\d+", "default(?:\\s+via|\\s+dev)"]
+      forbidden_patterns: ["ip: command not found"]
+      fact_template: Получены адрес интерфейса и default route Linux VM.
+    explanation_prompt: Почему наличие default route не доказывает доступность конкретного TCP-порта?
+    review_question: Чем адрес интерфейса отличается от next hop в default route?
+
+  - id: network-dns-resolution
+    order: 80
+    title: DNS до TCP
+    summary: Отделяем разрешение имени от соединения с полученным адресом.
+    estimated_minutes: 20
+    skill_id: dns-resolution
+    stage: independent
+    target_tags: []
+    requires_target: false
+    term:
+      name: name resolution
+      definition: Преобразование имени в один или несколько сетевых адресов.
+    worked_example: Успешный `getent hosts localhost` доказывает разрешение имени, но не открытый порт.
+    prediction_question: Какой факт появится в выводе и какого факта там не будет?
+    command: "getent hosts localhost"
+    command_explanation:
+      - "getent обращается к системной базе hosts и настроенным источникам имён."
+      - "localhost не требует внешней цели."
+      - "Вывод содержит адрес и имя, но не состояние TCP-порта."
+    grader:
+      source: transcript
+      required_patterns: ["(?:(?:127\\.0\\.0\\.1)|(?:::1)).*localhost"]
+      forbidden_patterns: ["not found", "command not found"]
+      fact_template: Имя localhost разрешено в loopback-адрес.
+    explanation_prompt: Почему разрешённое имя ещё не означает, что нужный сервис работает?
+    review_question: Что проверяет getent hosts и что надо проверить следующим шагом?
+
+  - id: tcp-reachability
+    order: 90
+    title: TCP-достижимость учебной цели
+    summary: Проверяем только согласованный relay endpoint и различаем success, refused и timeout.
+    estimated_minutes: 30
+    skill_id: tcp-reachability
+    stage: independent
+    target_tags: [web]
+    requires_target: true
+    term:
+      name: TCP connect
+      definition: Установление транспортного соединения с конкретной парой IP и port.
+    worked_example: Success подтверждает установленное TCP-соединение с endpoint. Refused подтверждает активный отказ при этой попытке, но сам по себе не устанавливает причину или источник отказа. Timeout также не локализует причину.
+    prediction_question: Как будут отличаться success, refused и timeout в выводе nc?
+    command: "nc -vz {{target_host}} {{target_port}}"
+    command_explanation:
+      - "-v просит подробный результат."
+      - "-z проверяет соединение без передачи прикладных данных."
+      - "Адрес и port подставляются только из подтверждённого target profile."
+    grader:
+      source: probe
+      probe: relay
+      required_patterns: ['"check": "relay"', '"reachable": true']
+      forbidden_patterns: ['"reachable": false']
+      fact_template: Ограниченный range-runner независимо установил TCP-соединение с relay выбранной учебной цели.
+    explanation_prompt: Что доказал успешный TCP connect и почему название приложения пока остаётся гипотезой?
+    review_question: Что можно утверждать после refused и какие причина и источник отказа всё ещё остаются гипотезами?
+
+  - id: service-enumeration
+    order: 100
+    title: Сервисная enumeration без лишнего охвата
+    summary: Получаем сервисные признаки только на одном подтверждённом relay-порту.
+    estimated_minutes: 35
+    skill_id: service-enumeration
+    stage: independent
+    target_tags: [web]
+    requires_target: true
+    term:
+      name: service fingerprint
+      definition: Набор наблюдаемых признаков, позволяющий осторожно предположить тип и версию сервиса.
+    worked_example: "`-sV` может назвать сервис, но это результат probes и он требует сверки с фактическим ответом."
+    prediction_question: Какие поля появятся у строки порта после ограниченного nmap?
+    command: "nmap -sV -Pn -p {{target_port}} {{target_host}}"
+    command_explanation:
+      - "-sV включает определение сервиса."
+      - "-Pn пропускает обычный IP-level host discovery для уже подтверждённой цели, не только ICMP-проверки. На локальном Ethernet Nmap всё ещё может выполнить ARP или Neighbor Discovery."
+      - "-p ограничивает проверку одним relay-портом."
+    grader:
+      source: probe
+      probe: nmap
+      required_patterns: ['"check": "nmap"', '"state": "open"', '"reachable": true']
+      forbidden_patterns: ['"state": "not_open"']
+      fact_template: Ограниченный range-runner независимо подтвердил nmap-состояние open на одном relay-порту.
+    explanation_prompt: Какая часть вывода является фактом о порте, а название продукта требует осторожности?
+    review_question: Как ограничить nmap одним известным портом и зачем это делать?
+
+  - id: http-request-structure
+    order: 105
+    title: Из чего состоит HTTP-запрос
+    summary: Наблюдаем request line, Host и ответ сервера на одной разрешённой цели.
+    estimated_minutes: 30
+    skill_id: http-request
+    stage: guided
+    target_tags: [web]
+    requires_target: true
+    term:
+      name: request line
+      definition: Первая строка HTTP-запроса, содержащая method, request target и protocol version.
+    worked_example: В verbose-выводе curl строки с `>` относятся к запросу, а строки с `<` относятся к ответу.
+    prediction_question: Какие method, path и protocol version появятся в request line?
+    command: "curl --http1.1 -v -o /dev/null --max-time 8 {{target_url}} 2>&1"
+    command_explanation:
+      - "-v показывает обмен протокола. Не запускайте verbose с реальными credentials, cookies или secret headers. Перед сохранением и публикацией удалите секреты из вывода."
+      - "--http1.1 фиксирует версию запроса, которую проверяет этот урок."
+      - "-o /dev/null убирает body и оставляет focus на request и response headers."
+      - "URL создаётся только из подтверждённого target profile и временного relay."
+    grader:
+      source: probe
+      probe: http
+      required_patterns: ['"check": "http"', '"method": "GET"', '"path": "{{target_path}}"', '"request_protocol": "HTTP/1\.1"', '"host_header": true', '"status": [1-5][0-9]{2}']
+      forbidden_patterns: ['"reachable": false']
+      fact_template: Ограниченный range-runner независимо выполнил GET к подтверждённому relay path и получил HTTP status.
+    explanation_prompt: Какие строки принадлежат запросу, какие ответу и что означает каждый из трёх элементов request line?
+    review_question: Из каких трёх частей состоит request line?
+
+  - id: http-response
+    order: 110
+    title: HTTP/1.1-запрос и настоящий ответ
+    summary: Не называем HTTP/1.1 status, headers или redirect, пока их нет в полученном ответе.
+    estimated_minutes: 35
+    skill_id: http-protocol
+    stage: independent
+    target_tags: [web]
+    requires_target: true
+    term:
+      name: HTTP/1.1 status line
+      definition: Первая строка HTTP/1.1-ответа с версией протокола, status code и необязательной reason phrase. В HTTP/2 вместо текстовой строки передаётся поле `:status`.
+    worked_example: TCP success без строки `HTTP/...` не является HTTP-ответом.
+    prediction_question: Какие две обязательные части и какую необязательную часть status line вы ожидаете увидеть?
+    command: "curl --http1.1 -i --max-time 8 {{target_url}}"
+    command_explanation:
+      - "-i добавляет response headers к выводу."
+      - "--http1.1 ограничивает практику текстовой status line HTTP/1.1."
+      - "--max-time ограничивает ожидание."
+      - "URL создаётся из подтверждённого relay endpoint."
+    grader:
+      source: probe
+      probe: http
+      required_patterns: ['"check": "http"', '"response_protocol": "HTTP/1\.1"', '"status": [1-5][0-9]{2}', '"has_header": true']
+      forbidden_patterns: ['"reachable": false']
+      fact_template: Ограниченный range-runner независимо получил HTTP status и минимум один response header.
+    explanation_prompt: Какой status code реально получен и какой header помогает понять следующий шаг?
+    review_question: Почему TCP success нельзя пересказать как HTTP 200?
+
+  - id: authentication-boundary
+    order: 120
+    title: Authentication и признаки сессии
+    summary: Отделяем проверку контроля аутентификатора от последующего решения о доступе.
+    estimated_minutes: 35
+    skill_id: authentication-boundary
+    stage: guided
+    target_tags: []
+    requires_target: false
+    term:
+      name: authentication
+      definition: Процесс проверки контроля над аутентификатором, связанным с учётной записью. Он не равен установлению реальной личности человека.
+    worked_example: Контролируемый журнал разделяет `outcome=denied reason=bad_secret` и `outcome=success session=s-17`, но сам по себе не доказывает доступ к объекту.
+    prediction_question: Какие поля журнала доказывают попытку authentication и её outcome, но ещё не authorization?
+    command: 'install -d -m 700 "$HOME/.crc-labs" && printf "time=10:00 event=auth src=10.0.0.5 user=student outcome=denied reason=bad_secret\ntime=10:02 event=auth src=10.0.0.5 user=student outcome=success session=s-17\n" > "$HOME/.crc-labs/security-events.log" && awk ''{print $2, $3, $4, $5, $6}'' "$HOME/.crc-labs/security-events.log"'
+    command_explanation:
+      - "install создаёт закрытый учебный каталог в home пользователя student."
+      - "printf создаёт контролируемый authentication trace без реальных credentials."
+      - "awk извлекает event, source, user, outcome и причину или session marker."
+    grader:
+      source: transcript
+      required_patterns: ["event=auth src=10\\.0\\.0\\.5 user=student outcome=denied reason=bad_secret", "event=auth src=10\\.0\\.0\\.5 user=student outcome=success session=s-17"]
+      forbidden_patterns: ["Permission denied", "command not found"]
+      fact_template: В контролируемом trace различены authentication failure и success без вывода об authorization.
+    explanation_prompt: Какие наблюдения доказывают authentication outcome и почему доступ к объекту пока не доказан?
+    review_question: Чем authentication отличается от authorization одним предложением?
+
+  - id: authorization-access-control
+    order: 130
+    title: Authorization и object-level access control
+    summary: Строим проверку решения о доступе без заявления об уязвимости до ответа сервера.
+    estimated_minutes: 40
+    skill_id: access-control
+    stage: guided
+    target_tags: []
+    requires_target: false
+    term:
+      name: authorization
+      definition: Решение, разрешено ли уже определённому субъекту выполнить действие над конкретным объектом.
+    worked_example: Два access events фиксируют subject, object, action и outcome. Разный outcome ещё не является уязвимостью, пока policy ожидает именно такое решение.
+    prediction_question: Какие четыре поля надо сравнить до вывода о нарушении access control?
+    command: 'install -d -m 700 "$HOME/.crc-labs" && touch "$HOME/.crc-labs/security-events.log" && printf "time=10:03 event=access subject=student object=profile-7 action=read outcome=allowed\ntime=10:04 event=access subject=student object=profile-8 action=read outcome=denied\n" >> "$HOME/.crc-labs/security-events.log" && tail -n 2 "$HOME/.crc-labs/security-events.log"'
+    command_explanation:
+      - "Команда добавляет к тому же trace два решения access control."
+      - "subject, object и action задают контекст решения."
+      - "outcome фиксирует allowed или denied, но не объявляет vulnerability без policy."
+    grader:
+      source: transcript
+      required_patterns: ["event=access subject=student object=profile-7 action=read outcome=allowed", "event=access subject=student object=profile-8 action=read outcome=denied"]
+      forbidden_patterns: ["Permission denied", "command not found"]
+      fact_template: В том же trace сопоставлены subject, два object, action и два access-control outcome без недоказанного вывода об уязвимости.
+    explanation_prompt: Какую policy надо знать, чтобы решить, ожидаемы ли различающиеся outcomes?
+    review_question: Почему смена ID сама по себе не является доказательством уязвимости?
+
+  - id: evidence-report
+    order: 140
+    title: Короткий доказательный отчёт
+    summary: Собираем scope, шаг, наблюдение, вывод, ограничение и следующий тест.
+    estimated_minutes: 30
+    skill_id: evidence-reporting
+    stage: independent
+    target_tags: []
+    requires_target: false
+    term:
+      name: reproducibility
+      definition: Возможность повторить проверку по записанному адресу, команде и условиям.
+    worked_example: Хороший вывод содержит не только status, но и команду, target fingerprint и границу интерпретации.
+    prediction_question: Какие шесть частей не позволят превратить отчёт в мнение?
+    command: 'read -r -p "SCOPE: " scope && read -r -p "STEP: " step && read -r -p "OBSERVATION: " observation && read -r -p "CONCLUSION: " conclusion && read -r -p "LIMITATION: " limitation && read -r -p "NEXT TEST: " next_test && printf "SCOPE: %s\nSTEP: %s\nOBSERVATION: %s\nCONCLUSION: %s\nLIMITATION: %s\nNEXT TEST: %s\n" "$scope" "$step" "$observation" "$conclusion" "$limitation" "$next_test"'
+    command_explanation:
+      - "read запрашивает шесть ответов ученика."
+      - "LIMITATION фиксирует границу доказанного."
+      - "NEXT TEST превращает неизвестность в проверяемый шаг."
+    grader:
+      source: transcript
+      response_count: 6
+      required_patterns: ["(?:^|\\n)SCOPE: \\S.+", "(?:^|\\n)STEP: \\S.+", "(?:^|\\n)OBSERVATION: \\S.+", "(?:^|\\n)CONCLUSION: \\S.+", "(?:^|\\n)LIMITATION: \\S.+", "(?:^|\\n)NEXT TEST: \\S.+"]
+      forbidden_patterns: ["REPLACE_ME", "command not found"]
+      fact_template: Создан доказательный отчёт с непустыми scope, step, observation, conclusion, limitation и next test.
+    explanation_prompt: Какое ограничение было самым важным в последней проверке?
+    review_question: Почему LIMITATION обязательна рядом с CONCLUSION?
+
+  - id: blue-auth-log-triage
+    order: 150
+    title: Blue/DFIR-зеркало authentication событий
+    summary: Создаём воспроизводимую копию тех же четырёх учебных traces и группируем её по событию, источнику, субъекту и outcome.
+    estimated_minutes: 40
+    skill_id: blue-auth-triage
+    stage: guided
+    target_tags: []
+    requires_target: false
+    term:
+      name: event correlation
+      definition: Сопоставление событий по времени, источнику, субъекту и результату.
+    worked_example: Каноническая копия четырёх trace records становится серией только после группировки по event, source, subject и outcome.
+    prediction_question: Какие поля нужны, чтобы отличить одну ошибку от повторяющейся серии?
+    command: 'install -d -m 700 "$HOME/.crc-labs" && log="$HOME/.crc-labs/security-events.log" && printf "time=10:00 event=auth src=10.0.0.5 user=student outcome=denied reason=bad_secret\ntime=10:02 event=auth src=10.0.0.5 user=student outcome=success session=s-17\ntime=10:03 event=access subject=student object=profile-7 action=read outcome=allowed\ntime=10:04 event=access subject=student object=profile-8 action=read outcome=denied\n" > "$log" && awk ''{event=source=actor=outcome=""; for(i=1;i<=NF;i++){split($i,a,"="); if(a[1]=="event")event=a[2]; else if(a[1]=="src")source=a[2]; else if(a[1]=="user" || a[1]=="subject")actor=a[2]; else if(a[1]=="outcome")outcome=a[2]} if(source=="")source="local"; key=event "|" source "|" actor "|" outcome; count[key]++} END{for(key in count) print key, "count=" count[key]}'' "$log" | sort'
+    command_explanation:
+      - "Команда сначала пересоздаёт каноническую копию четырёх событий из двух предыдущих уроков, поэтому практика работает и при прямом открытии."
+      - "awk формирует ключ event, source, actor и outcome и считает одинаковые ключи."
+      - "sort делает отчёт воспроизводимым, но не объявляет причину событий автоматически."
+    grader:
+      source: transcript
+      required_patterns: ["auth\\|10\\.0\\.0\\.5\\|student\\|denied count=1", "auth\\|10\\.0\\.0\\.5\\|student\\|success count=1", "access\\|local\\|student\\|allowed count=1", "access\\|local\\|student\\|denied count=1"]
+      forbidden_patterns: ["No such file", "awk:.*error"]
+      fact_template: Каноническая копия тех же authentication и access-control traces сгруппирована по event, source, actor и outcome.
+    explanation_prompt: Что в серии является фактом, а что остаётся гипотезой о причине?
+    review_question: Какие четыре измерения нужны для первичной correlation authentication событий?

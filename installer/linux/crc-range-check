@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+set -u
+
+readonly PROTOCOL="crc-range-check/v1"
+readonly CONFIG_FILE="/etc/cyber-range-coach/relay-host"
+readonly original_command="${SSH_ORIGINAL_COMMAND:-}"
+readonly allowed_path_re='^/[A-Za-z0-9._~/?%&=+-]*$'
+
+json_tools() {
+  local command_name
+  local first=1
+  printf '{"protocol":"%s","check":"tools","tools":{' "$PROTOCOL"
+  for command_name in awk base64 bash cat curl find getent grep id ip install less ls mktemp nc nmap pwd rm sort stat tail timeout touch tr; do
+    if [[ $first -eq 0 ]]; then printf ','; fi
+    first=0
+    if command -v "$command_name" >/dev/null 2>&1; then
+      printf '"%s":true' "$command_name"
+    else
+      printf '"%s":false' "$command_name"
+    fi
+  done
+  printf '}}\n'
+}
+
+json_relay() {
+  local port="$1"
+  local relay_host
+  if [[ ! -r "$CONFIG_FILE" ]]; then
+    printf '{"protocol":"%s","check":"relay","reachable":false,"reason":"relay_host_not_configured"}\n' "$PROTOCOL"
+    return
+  fi
+  IFS= read -r relay_host < "$CONFIG_FILE"
+  if [[ ! "$relay_host" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+    printf '{"protocol":"%s","check":"relay","reachable":false,"reason":"relay_host_invalid"}\n' "$PROTOCOL"
+    return
+  fi
+  if timeout 4 bash -c ': >/dev/tcp/$1/$2' _ "$relay_host" "$port" 2>/dev/null; then
+    printf '{"protocol":"%s","check":"relay","reachable":true,"host":"%s","port":%s}\n' "$PROTOCOL" "$relay_host" "$port"
+  else
+    printf '{"protocol":"%s","check":"relay","reachable":false,"host":"%s","port":%s}\n' "$PROTOCOL" "$relay_host" "$port"
+  fi
+}
+
+relay_host() {
+  if [[ ! -r "$CONFIG_FILE" ]]; then return 1; fi
+  local value
+  IFS= read -r value < "$CONFIG_FILE"
+  if [[ ! "$value" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then return 1; fi
+  printf '%s' "$value"
+}
+
+json_nmap() {
+  local port="$1"
+  local host output line service
+  host="$(relay_host)" || {
+    printf '{"protocol":"%s","check":"nmap","reachable":false,"reason":"relay_host_invalid"}\n' "$PROTOCOL"
+    return
+  }
+  output="$(timeout 15 nmap -sV -Pn -p "$port" "$host" 2>&1)" || true
+  line="$(printf '%s\n' "$output" | awk -v port="$port/tcp" '$1 == port && $2 == "open" {print; exit}')"
+  if [[ -n "$line" ]]; then
+    service="$(printf '%s\n' "$line" | awk '{print $3}' | tr -cd 'A-Za-z0-9?_.-')"
+    printf '{"protocol":"%s","check":"nmap","reachable":true,"port":%s,"state":"open","service":"%s"}\n' "$PROTOCOL" "$port" "$service"
+  else
+    printf '{"protocol":"%s","check":"nmap","reachable":false,"port":%s,"state":"not_open"}\n' "$PROTOCOL" "$port"
+  fi
+}
+
+json_http() {
+  local port="$1"
+  local scheme="$2"
+  local encoded_path="$3"
+  local host path padding padded_path headers result status response_version has_header
+  host="$(relay_host)" || {
+    printf '{"protocol":"%s","check":"http","reachable":false,"reason":"relay_host_invalid"}\n' "$PROTOCOL"
+    return
+  }
+  padding=$(( (4 - ${#encoded_path} % 4) % 4 ))
+  padded_path="$encoded_path"
+  case "$padding" in
+    1) padded_path="${encoded_path}=" ;;
+    2) padded_path="${encoded_path}==" ;;
+    3) padded_path="${encoded_path}===" ;;
+  esac
+  path="$(printf '%s' "$padded_path" | tr '_-' '/+' | base64 -d 2>/dev/null)" || path=""
+  if [[ ! "$path" =~ $allowed_path_re ]]; then
+    printf '{"protocol":"%s","check":"http","reachable":false,"reason":"path_denied"}\n' "$PROTOCOL"
+    return
+  fi
+  headers="$(mktemp)"
+  result="$(curl --silent --show-error --insecure --http1.1 --max-time 8 --output /dev/null --dump-header "$headers" --write-out '%{http_code} %{http_version}' "$scheme://$host:$port$path" 2>/dev/null)" || result="000 unknown"
+  read -r status response_version <<< "$result"
+  if grep -Eq '^[A-Za-z0-9-]+:[[:space:]]*' "$headers"; then has_header=true; else has_header=false; fi
+  rm -f "$headers"
+  if [[ "$status" =~ ^[1-5][0-9][0-9]$ ]]; then
+    printf '{"protocol":"%s","check":"http","reachable":true,"method":"GET","path":"%s","request_protocol":"HTTP/1.1","host_header":true,"response_protocol":"HTTP/%s","status":%s,"has_header":%s}\n' "$PROTOCOL" "$path" "$response_version" "$status" "$has_header"
+  else
+    printf '{"protocol":"%s","check":"http","reachable":false,"status":null,"has_header":%s}\n' "$PROTOCOL" "$has_header"
+  fi
+}
+
+case "$original_command" in
+  tools)
+    json_tools
+    ;;
+  "relay "*)
+    port="${original_command#relay }"
+    if [[ "$port" =~ ^[0-9]+$ ]] && (( port >= 47000 && port <= 47100 )); then
+      json_relay "$port"
+    else
+      printf '{"protocol":"%s","check":"relay","reachable":false,"reason":"port_denied"}\n' "$PROTOCOL"
+    fi
+    ;;
+  "nmap "*)
+    port="${original_command#nmap }"
+    if [[ "$port" =~ ^[0-9]+$ ]] && (( port >= 47000 && port <= 47100 )); then
+      json_nmap "$port"
+    else
+      printf '{"protocol":"%s","check":"nmap","reachable":false,"reason":"port_denied"}\n' "$PROTOCOL"
+    fi
+    ;;
+  "http "*)
+    read -r verb port scheme encoded_path extra <<< "$original_command"
+    if [[ -z "${extra:-}" && "$port" =~ ^[0-9]+$ ]] && (( port >= 47000 && port <= 47100 )) && [[ "$scheme" =~ ^https?$ ]] && [[ "$encoded_path" =~ ^[A-Za-z0-9_-]+$ ]]; then
+      json_http "$port" "$scheme" "$encoded_path"
+    else
+      printf '{"protocol":"%s","check":"http","reachable":false,"reason":"arguments_denied"}\n' "$PROTOCOL"
+    fi
+    ;;
+  *)
+    printf '{"protocol":"%s","check":"denied","reason":"command_denied"}\n' "$PROTOCOL"
+    exit 64
+    ;;
+esac
