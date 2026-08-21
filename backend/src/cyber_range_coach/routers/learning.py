@@ -43,6 +43,7 @@ from ..security import Principal, require_role
 from ..services.grader import grade_run, record_evidence
 from ..services.network import verify_target
 from ..services.preflight import missing_learning_tools
+from ..services.relay import configured_relay_source_ip
 from .targets import _connect_host
 
 router = APIRouter(prefix="/api/v2", tags=["learning"])
@@ -215,7 +216,10 @@ async def _new_run_unlocked(
         upstream_host = parsed.hostname or "127.0.0.1"
         upstream_port = parsed.port or (443 if parsed.scheme == "https" else 80)
         handle = await request.app.state.relays.start(
-            target.id, upstream_host, upstream_port, linux_host.host
+            target.id,
+            upstream_host,
+            upstream_port,
+            configured_relay_source_ip(linux_host),
         )
         try:
             runner_check = await request.app.state.range_runner.relay(handle.port)

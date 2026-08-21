@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 from datetime import datetime
 from typing import Any, Literal
 
@@ -124,6 +125,7 @@ class LinuxHostCreate(ApiModel):
     name: str = Field(default="Linux VM", min_length=2, max_length=120)
     host: str = Field(min_length=1, max_length=255)
     port: int = Field(default=22, ge=1, le=65535)
+    relay_source_ip: str | None = Field(default=None, max_length=45)
     username: str = Field(default="student", min_length=1, max_length=80)
     runner_username: str = Field(default="range-runner", min_length=1, max_length=80)
 
@@ -136,12 +138,23 @@ class LinuxHostCreate(ApiModel):
             raise ValueError("privileged account is not allowed")
         return value
 
+    @field_validator("relay_source_ip")
+    @classmethod
+    def safe_relay_source_ip(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        address = ipaddress.ip_address(value)
+        if address.version != 4 or address.is_loopback or address.is_unspecified:
+            raise ValueError("relay_source_ip must be a non-loopback IPv4 address")
+        return str(address)
+
 
 class LinuxHostResponse(ApiModel):
     id: int
     name: str
     host: str
     port: int
+    relay_source_ip: str | None
     username: str
     runner_username: str
     public_key: str
@@ -158,6 +171,17 @@ class LinuxProbeResponse(ApiModel):
     fingerprint: str | None
     host_key: str | None
     detail: str
+
+
+class WslUbuntuPrepareResponse(ApiModel):
+    status: Literal["ready_for_probe", "sudo_password_required", "blocked"]
+    distribution: str | None
+    host: str
+    port: int
+    relay_source_ip: str | None = None
+    ssh_reachable: bool
+    detail: str
+    sudo_command: str | None = None
 
 
 class FingerprintConfirm(ApiModel):

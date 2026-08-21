@@ -224,6 +224,7 @@ export interface LinuxHost {
   name: string
   host: string
   port: number
+  relay_source_ip: string | null
   username: string
   runner_username: string
   public_key: string
@@ -231,6 +232,17 @@ export interface LinuxHost {
   host_key_fingerprint: string | null
   confirmed: boolean
   last_preflight_at: string | null
+}
+
+export interface WslUbuntuPrepare {
+  status: 'ready_for_probe' | 'sudo_password_required' | 'blocked'
+  distribution: string | null
+  host: string
+  port: number
+  relay_source_ip: string | null
+  ssh_reachable: boolean
+  detail: string
+  sudo_command: string | null
 }
 
 export interface PairingCreated {

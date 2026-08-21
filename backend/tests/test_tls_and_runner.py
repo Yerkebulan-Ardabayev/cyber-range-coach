@@ -1,15 +1,22 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import AsyncMock
 
 import pytest
 
+from cyber_range_coach.doctor import doctor_settings
 from cyber_range_coach.errors import AppError
+from cyber_range_coach.services.commands import CommandResult
 from cyber_range_coach.services.preflight import (
     has_active_private_profile,
     missing_learning_tools,
 )
-from cyber_range_coach.services.tls import certificate_ip_addresses, generate_certificates
+from cyber_range_coach.services.tls import (
+    certificate_fingerprint,
+    certificate_ip_addresses,
+    generate_certificates,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 WINDOWS_POWERSHELL_SCRIPTS = (
@@ -27,6 +34,14 @@ def test_certificate_generation_is_idempotent(client) -> None:
     assert second["changed"] == "false"
     assert second["fingerprint"] == first["fingerprint"]
     assert "127.0.0.1" in certificate_ip_addresses(client.app.state.settings)
+
+
+def test_windows_doctor_checks_canonical_lan_mode(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("CRC_DATA_DIR", str(tmp_path))
+    settings = doctor_settings("win32")
+    assert settings.lan_mode is True
+    assert settings.tls_enabled is True
+    assert settings.bind_host == "0.0.0.0"
 
 
 @pytest.mark.asyncio
@@ -56,6 +71,12 @@ def test_packaging_builds_a_real_console_doctor_executable() -> None:
     assert 'DestName: "CyberRangeCoachDoctor.exe"' not in inno
 
 
+def test_windows_installer_checksum_is_portable() -> None:
+    source = (ROOT / "scripts" / "package-windows.ps1").read_text(encoding="utf-8-sig")
+    assert '  CyberRangeCoach-Setup.exe" | Set-Content' in source
+    assert '  $($Artifact.Path)" | Set-Content' not in source
+
+
 def test_windows_powershell_scripts_with_russian_text_have_utf8_bom() -> None:
     for script in WINDOWS_POWERSHELL_SCRIPTS:
         source = script.read_bytes()
@@ -68,7 +89,8 @@ def test_firewall_script_requires_an_active_private_ipv4_profile() -> None:
         encoding="utf-8"
     )
     assert '@("Subnet", "LocalNetwork", "Internet")' in source
-    assert '$_.NetworkCategory -eq "Private"' in source
+    assert "[uint16]$_.NetworkCategory -eq 1" in source
+    assert '$_.NetworkCategory -eq "Private"' not in source
     assert "-Profile Private" in source
 
 
@@ -96,7 +118,37 @@ def test_ocr_language_hashes_are_identical_in_script_and_manifest() -> None:
 
 
 def test_windows_private_profile_must_be_active_on_ipv4() -> None:
-    disconnected = [{"NetworkCategory": "Private", "IPv4Connectivity": "Disconnected"}]
-    active = [{"NetworkCategory": "Private", "IPv4Connectivity": "Internet"}]
+    disconnected = [{"NetworkCategoryValue": 1, "IPv4Active": False}]
+    active = [{"NetworkCategoryValue": 1, "IPv4Active": True}]
+    public = [{"NetworkCategoryValue": 0, "IPv4Active": True}]
     assert has_active_private_profile(disconnected) is False
     assert has_active_private_profile(active) is True
+    assert has_active_private_profile(public) is False
+
+
+def test_windows_private_profile_does_not_accept_plain_category_name() -> None:
+    plain_string = [{"NetworkCategory": "Private", "IPv4Active": True}]
+    assert has_active_private_profile(plain_string) is False
+
+
+@pytest.mark.asyncio
+async def test_doctor_checks_root_ca_thumbprint_not_leaf_fingerprint(client) -> None:
+    generate_certificates(client.app.state.settings, client.app.state.protector)
+    leaf_fingerprint = certificate_fingerprint(client.app.state.settings).replace(":", "")
+    client.app.state.preflight.runner.run = AsyncMock(
+        return_value=CommandResult(
+            argv=("powershell.exe",),
+            returncode=0,
+            stdout='{"Trusted":true,"Store":"CurrentUser\\\\Root"}',
+            stderr="",
+        )
+    )
+
+    result = await client.app.state.preflight._windows_ca_trust()
+
+    called = client.app.state.preflight.runner.run.await_args.args
+    assert result["trusted"] is True
+    assert result["store"] == "CurrentUser\\Root"
+    assert Path(called[-1]).name == "cyber-range-coach-ca.crt"
+    assert Path(called[-1]).name != "cyber-range-coach.crt"
+    assert called[-1] != leaf_fingerprint

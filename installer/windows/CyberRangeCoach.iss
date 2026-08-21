@@ -1,5 +1,5 @@
 #define AppName "Cyber Range Coach"
-#define AppVersion "2.0.0-alpha.1"
+#define AppVersion "2.0.0-alpha.2"
 #define AppPublisher "Cyber Range Coach"
 #define AppExeName "CyberRangeCoach.exe"
 

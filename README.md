@@ -26,6 +26,9 @@ Mac работает как полный браузерный клиент, те
 - Временный TCP Training Relay с allowlist точного IP Linux VM и временем жизни.
 - SSH host-key pinning, интерактивный терминал `student` и отдельный
   forced-command `range-runner` без общего shell.
+- Готовый мастер WSL Ubuntu для `127.0.0.1:22`: создаёт app-owned SSH-ключи,
+  устанавливает только отсутствующие учебные пакеты после явного действия и
+  объясняет ввод sudo-пароля только внутри Ubuntu.
 - Проверка фактических прав `student`: lab блокируется при доступном
   non-interactive sudo или чтении/записи известных system/rootless Docker sockets.
 - Детерминированный grader, обязательные объяснение, вопрос наставника,
@@ -91,6 +94,16 @@ Windows artifact собирается только на Windows:
 запускает gates и формирует `dist\installer\CyberRangeCoach-Setup.exe` с
 соседним `.sha256`. Версии и хэши перечислены в
 [`vendor/tesseract/README.md`](vendor/tesseract/README.md).
+
+После настройки реального Windows-ноутбука полная цепочка проверяется командой:
+
+```powershell
+.\scripts\windows-integration-test.ps1
+```
+
+Тест требует уже настроенные Private Wi-Fi, доверие к app-owned root CA, правило
+Firewall TCP 8443 для `LocalSubnet`, WSL SSH на `127.0.0.1:22` и завершённый
+профиль Linux в базе. Он завершается успешно только при `Doctor ready=true`.
 
 ## Границы безопасности
 

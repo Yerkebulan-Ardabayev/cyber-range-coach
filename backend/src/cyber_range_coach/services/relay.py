@@ -6,8 +6,23 @@ import logging
 from dataclasses import dataclass, field
 
 from ..errors import AppError
+from ..models import LinuxHost
 
 logger = logging.getLogger(__name__)
+
+
+def validate_relay_source_ip(value: str) -> str:
+    try:
+        parsed = ipaddress.ip_address(value)
+    except ValueError as exc:
+        raise AppError(400, "invalid_vm_ip", "Нужен фактический IP Linux VM.") from exc
+    if parsed.is_unspecified or parsed.is_multicast or parsed.is_loopback:
+        raise AppError(400, "invalid_vm_ip", "Нужен отдельный IP Linux VM, не loopback.")
+    return str(parsed)
+
+
+def configured_relay_source_ip(host: LinuxHost) -> str:
+    return validate_relay_source_ip(host.relay_source_ip or host.host)
 
 
 @dataclass
@@ -39,10 +54,8 @@ class RelayManager:
         upstream_port: int,
         allowed_source_ip: str,
     ) -> RelayHandle:
-        parsed_source = ipaddress.ip_address(allowed_source_ip)
+        allowed_source_ip = validate_relay_source_ip(allowed_source_ip)
         parsed_upstream = ipaddress.ip_address(upstream_host)
-        if parsed_source.is_unspecified or parsed_source.is_multicast or parsed_source.is_loopback:
-            raise AppError(400, "invalid_vm_ip", "Нужен отдельный IP Linux VM, не loopback.")
         if not parsed_upstream.is_loopback:
             raise AppError(
                 400, "unsafe_upstream", "Relay может обращаться только к loopback Windows."

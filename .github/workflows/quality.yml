@@ -55,7 +55,17 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: uv sync --extra dev --locked
-      - run: uv run pytest backend/tests/test_instance.py
+      - run: >-
+          uv run pytest
+          backend/tests/test_instance.py
+          backend/tests/test_tls_and_runner.py
+          backend/tests/test_wsl.py
+          backend/tests/test_windows_integration.py
+      - name: Parse real Windows integration test
+        shell: powershell
+        run: |
+          $Source = Get-Content -LiteralPath scripts\windows-integration-test.ps1 -Raw
+          [void][scriptblock]::Create($Source)
       - run: npm ci
         working-directory: frontend
       - run: npm run build

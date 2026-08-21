@@ -21,8 +21,8 @@ if (-not $Approve) {
 }
 
 $privateProfiles = @(Get-NetConnectionProfile | Where-Object {
-    $_.NetworkCategory -eq "Private" -and
-    @("Subnet", "LocalNetwork", "Internet") -contains $_.IPv4Connectivity
+    [uint16]$_.NetworkCategory -eq 1 -and
+    @("Subnet", "LocalNetwork", "Internet") -contains $_.IPv4Connectivity.ToString()
 })
 if ($privateProfiles.Count -eq 0) {
     throw "Активный частный сетевой профиль не найден. Публичные профили никогда не разрешаются."

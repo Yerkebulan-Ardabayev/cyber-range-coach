@@ -6,13 +6,30 @@ from contextlib import suppress
 
 import pytest
 
-from cyber_range_coach.services.relay import RelayManager
+from cyber_range_coach.models import LinuxHost
+from cyber_range_coach.services.relay import RelayManager, configured_relay_source_ip
 
 
 def free_port() -> int:
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         return int(sock.getsockname()[1])
+
+
+def test_wsl_ssh_loopback_uses_separate_relay_source_ip() -> None:
+    host = LinuxHost(
+        name="WSL Ubuntu",
+        host="127.0.0.1",
+        port=22,
+        relay_source_ip="172.24.64.22",
+        username="student",
+        runner_username="range-runner",
+        encrypted_private_key="test",
+        public_key="test",
+        encrypted_runner_private_key="test",
+        runner_public_key="test",
+    )
+    assert configured_relay_source_ip(host) == "172.24.64.22"
 
 
 @pytest.mark.asyncio

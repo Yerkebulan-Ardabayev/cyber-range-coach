@@ -128,11 +128,14 @@ def generate_certificates(
 
 
 def certificate_fingerprint(settings: Settings) -> str:
-    path = settings.certificates_dir / SERVER_CERT
+    return certificate_file_fingerprint(settings.certificates_dir / SERVER_CERT, hashes.SHA256())
+
+
+def certificate_file_fingerprint(path: Path, algorithm: hashes.HashAlgorithm) -> str:
     if not path.exists():
         return "DEV-NO-TLS"
     certificate = x509.load_pem_x509_certificate(path.read_bytes())
-    digest = certificate.fingerprint(hashes.SHA256()).hex().upper()
+    digest = certificate.fingerprint(algorithm).hex().upper()
     return ":".join(digest[index : index + 2] for index in range(0, len(digest), 2))
 
 

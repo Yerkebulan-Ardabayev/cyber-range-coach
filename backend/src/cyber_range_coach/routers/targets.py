@@ -19,6 +19,7 @@ from ..schemas import (
 )
 from ..security import Principal, require_role
 from ..services.network import local_interfaces, verify_target
+from ..services.relay import configured_relay_source_ip
 
 router = APIRouter(prefix="/api/v2/targets", tags=["targets"])
 
@@ -145,14 +146,17 @@ async def start_relay(
         linux_host = session.scalars(select(LinuxHost).order_by(LinuxHost.id)).first()
         if target is None:
             raise AppError(404, "target_not_found", "Учебная цель не найдена.")
-        if linux_host is None or payload.linux_vm_ip != linux_host.host:
+        if linux_host is None:
+            raise AppError(409, "vm_ip_mismatch", "Relay разрешён только для настроенной Linux VM.")
+        relay_source_ip = configured_relay_source_ip(linux_host)
+        if payload.linux_vm_ip != relay_source_ip:
             raise AppError(409, "vm_ip_mismatch", "Relay разрешён только для настроенной Linux VM.")
         session.expunge(target)
     parsed = urlparse(target.host_endpoint)
     upstream_host = parsed.hostname or "127.0.0.1"
     upstream_port = parsed.port or (443 if parsed.scheme == "https" else 80)
     handle = await request.app.state.relays.start(
-        target.id, upstream_host, upstream_port, payload.linux_vm_ip
+        target.id, upstream_host, upstream_port, relay_source_ip
     )
     try:
         runner_check = await request.app.state.range_runner.relay(handle.port)

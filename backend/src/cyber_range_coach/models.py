@@ -110,6 +110,7 @@ class LinuxHost(Base):
     name: Mapped[str] = mapped_column(String(120), default="Linux VM")
     host: Mapped[str] = mapped_column(String(255))
     port: Mapped[int] = mapped_column(Integer, default=22)
+    relay_source_ip: Mapped[str | None] = mapped_column(String(45))
     username: Mapped[str] = mapped_column(String(80), default="student")
     runner_username: Mapped[str] = mapped_column(String(80), default="range-runner")
     encrypted_private_key: Mapped[str] = mapped_column(Text)

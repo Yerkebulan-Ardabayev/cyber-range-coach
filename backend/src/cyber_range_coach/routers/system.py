@@ -17,11 +17,13 @@ from ..schemas import (
     LinuxProbeResponse,
     NetworkResponse,
     PreflightResponse,
+    WslUbuntuPrepareResponse,
 )
 from ..security import Principal, require_role
 from ..services.preflight import network_response
 from ..services.secrets import SecretProtectionError
 from ..services.ssh import create_linux_host_keypair, probe_linux_host
+from ..services.wsl import prepare_wsl_ubuntu
 
 router = APIRouter(prefix="/api/v2/system", tags=["system"])
 
@@ -31,7 +33,7 @@ def linux_bootstrap_file(
     filename: str,
     _principal: Principal = Depends(require_role("owner")),
 ) -> FileResponse:
-    allowed = {"bootstrap-linux.sh", "crc-range-check"}
+    allowed = {"bootstrap-linux.sh", "bootstrap-wsl-ubuntu.sh", "crc-range-check"}
     if filename not in allowed:
         raise AppError(404, "bootstrap_file_not_found", "Linux bootstrap file не найден.")
     path = project_root() / "installer" / "linux" / filename
@@ -155,6 +157,34 @@ async def probe(
             if stored:
                 stored.pending_host_key = result.host_key
                 stored.last_preflight_at = datetime.now(UTC)
+                session.commit()
+    return result
+
+
+@router.post(
+    "/linux-host/{host_id}/wsl-ubuntu/prepare",
+    response_model=WslUbuntuPrepareResponse,
+)
+async def prepare_wsl(
+    host_id: int,
+    request: Request,
+    _principal: Principal = Depends(require_role("owner")),
+) -> WslUbuntuPrepareResponse:
+    with request.app.state.db.session_factory() as session:
+        host = session.get(LinuxHost, host_id)
+        if host is None:
+            raise AppError(404, "linux_host_not_found", "Linux VM profile не найден.")
+        session.expunge(host)
+    result = await prepare_wsl_ubuntu(
+        request.app.state.settings,
+        request.app.state.runner,
+        host,
+    )
+    if result.relay_source_ip:
+        with request.app.state.db.session_factory() as session:
+            stored = session.get(LinuxHost, host_id)
+            if stored:
+                stored.relay_source_ip = result.relay_source_ip
                 session.commit()
     return result
 

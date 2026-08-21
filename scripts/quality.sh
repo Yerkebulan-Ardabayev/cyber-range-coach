@@ -10,6 +10,7 @@ uv run pytest
 uv run python scripts/secret_scan.py
 /bin/bash -n \
   installer/linux/bootstrap-linux.sh \
+  installer/linux/bootstrap-wsl-ubuntu.sh \
   installer/linux/crc-range-check \
   scripts/dev.sh \
   scripts/frozen-smoke.sh \

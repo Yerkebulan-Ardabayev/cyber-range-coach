@@ -63,8 +63,12 @@ def test_runtime_database_uses_alembic_head_and_fts(client: TestClient) -> None:
         fts = connection.exec_driver_sql(
             "SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('notes_fts', 'source_blocks_fts')"
         ).scalar_one()
-    assert revision == "20260820_0001"
+        linux_host_columns = {
+            row[1] for row in connection.exec_driver_sql("PRAGMA table_info(linux_hosts)")
+        }
+    assert revision == "20260821_0002"
     assert fts == 2
+    assert "relay_source_ip" in linux_host_columns
 
 
 def test_alembic_downgrade_removes_fts_and_application_schema(client: TestClient) -> None:
