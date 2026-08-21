@@ -27,6 +27,15 @@ from .services.tls import (
 )
 
 
+def configure_console_encoding() -> None:
+    """Keep Russian CLI output usable on legacy Windows console code pages."""
+    for name in ("stdout", "stderr"):
+        stream = getattr(sys, name, None)
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(prog="cyber-range-coach")
     subcommands = root.add_subparsers(dest="command")
@@ -101,6 +110,7 @@ def serve(lan: bool, no_browser: bool) -> int:
 
 
 def main() -> None:
+    configure_console_encoding()
     argv = sys.argv[1:]
     if not argv and Path(sys.argv[0]).stem.lower().endswith("doctor"):
         argv = ["doctor"]
