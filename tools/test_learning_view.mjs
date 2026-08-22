@@ -52,4 +52,38 @@ assert.equal(execute.command, 'ping -c 4 192.168.10.10\nnc -vz 192.168.10.10 808
 assert.match(execute.command_anatomy.join(' '), /nc -VZ/i);
 assert.match(execute.command_anatomy.join(' '), /-v.*строчн|строчн.*-v/i);
 assert.match(execute.command_anatomy.join(' '), /succeeded/);
+
+const attackSurface = await readJson('lab-1-4-attack-surface.json');
+const browserObservation = attackSurface.steps.find(step => step.id === 'execute');
+assert.equal(browserObservation.interaction, 'browser-observation');
+assert.equal(browserObservation.parser, 'log');
+assert.ok(browserObservation.browser_steps.length >= 3);
+assert.match(browserObservation.browser_steps.join(' '), /Option \+ Command \+ I/);
+assert.match(appSource, /ДЕЙСТВИЕ.*ИЗ.*CHROME/);
+assert.match(appSource, /Я сделал это, показать следующий шаг/);
+assert.match(appSource, /Это не команда и не вывод Terminal/);
+assert.match(appSource, /item\.interaction \? 'Сначала запиши наблюдаемые поля из Chrome или Coach\.'/);
+assert.doesNotMatch(appSource, /item\.interaction \?[^:]*Terminal/);
+assert.doesNotMatch(appSource, /Field Note создана.*терминального вывода/);
+assert.doesNotMatch(appSource, /получишь ровно одну команду/);
+assert.match(appSource, /actionNoun\(executeStep\)/);
+
+const interactionExpectations = {
+  'lab-1-1-scope-reachability.json': null,
+  'lab-1-2-service-enumeration.json': null,
+  'lab-1-3-http-protocol.json': null,
+  'lab-1-4-attack-surface.json': 'browser-observation',
+  'lab-1-5-authentication-boundary.json': 'browser-observation',
+  'lab-1-6-access-control.json': 'browser-observation',
+  'lab-1-7-blue-auth-events.json': 'guided-observation',
+};
+for (const [name, expectedInteraction] of Object.entries(interactionExpectations)) {
+  const exercise = await readJson(name);
+  const execution = exercise.steps.find(step => step.kind === 'execute');
+  assert.equal(execution.interaction || null, expectedInteraction, name + ' must name the real place of action');
+  if (expectedInteraction) {
+    assert.equal(execution.parser, 'log', name + ' must accept a learner observation, not demand a raw terminal response');
+    assert.ok(execution.browser_steps.length >= 3, name + ' must guide the learner one action at a time');
+  }
+}
 console.log('LEARNING VIEW REGRESSION PASSED');

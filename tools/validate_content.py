@@ -100,6 +100,11 @@ def main():
             kind = step.get("kind")
             if kind == "execute":
                 need(checked_step, {"command", "command_anatomy"}, errors)
+                if step.get("interaction") in {"browser-observation", "guided-observation"}:
+                    need(checked_step, {"browser_steps"}, errors)
+                    browser_steps = step.get("browser_steps")
+                    if not isinstance(browser_steps, list) or len(browser_steps) < 3 or not all(isinstance(value, str) and value.strip() for value in browser_steps):
+                        errors.append("%s: browser-observation step %r needs at least 3 clear browser_steps" % (lab["__path"].relative_to(ROOT), step.get("id")))
             if kind == "decide":
                 need(checked_step, {"decision_options"}, errors)
                 if not isinstance(step.get("decision_options"), list) or not step.get("decision_options"):
