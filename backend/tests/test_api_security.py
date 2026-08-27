@@ -64,6 +64,52 @@ def test_paired_mutation_requires_csrf(client: TestClient) -> None:
     assert response.json()["code"] == "csrf_failed"
 
 
+def test_command_practice_mutation_preserves_role_and_csrf_guards(client: TestClient) -> None:
+    client.cookies.set("crc_csrf", "test-csrf")
+    payload = {
+        "technique_id": "linux-pwd-current-directory",
+        "shell": "bash",
+        "timezone": "Asia/Almaty",
+        "answer": "pwd",
+    }
+    viewer = client.put(
+        "/api/v2/command-practice/attempts/security-attempt-01/draft",
+        headers=csrf_headers("viewer"),
+        json=payload,
+    )
+    assert viewer.status_code == 403
+    csrf = client.put(
+        "/api/v2/command-practice/attempts/security-attempt-02/draft",
+        headers={"x-test-role": "operator", "x-csrf-token": ""},
+        json=payload,
+    )
+    assert csrf.status_code == 403
+    assert csrf.json()["code"] == "csrf_failed"
+
+
+def test_mission_mutation_preserves_role_and_csrf_guards(client: TestClient) -> None:
+    client.cookies.set("crc_csrf", "test-csrf")
+    payload = {
+        "mission_id": "magpie-missing-clue",
+        "variant_id": "magpie-aurora",
+        "artifact": "trace: marker=ORBIT-41",
+        "explanation": "Маркер связан с сектором west.",
+    }
+    viewer = client.put(
+        "/api/v2/missions/attempts/mission-security-attempt-01/draft",
+        headers=csrf_headers("viewer"),
+        json=payload,
+    )
+    assert viewer.status_code == 403
+    csrf = client.put(
+        "/api/v2/missions/attempts/mission-security-attempt-02/draft",
+        headers={"x-test-role": "operator", "x-csrf-token": ""},
+        json=payload,
+    )
+    assert csrf.status_code == 403
+    assert csrf.json()["code"] == "csrf_failed"
+
+
 def test_pairing_code_requires_complete_https_preflight(client: TestClient) -> None:
     response = client.post("/api/v2/devices/pairing-codes", json={"role": "viewer"})
     assert response.status_code == 409

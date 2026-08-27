@@ -6,6 +6,8 @@ import { api, jsonBody } from '../api'
 import { ArrowIcon, CheckIcon, RepeatIcon, TerminalIcon } from '../icons'
 import type { Curriculum, Evidence, LabRun, LearningSession, Principal, Review, SessionPlan } from '../types'
 import { EmptyState, ErrorNotice, Eyebrow, LoadingBlock, PageHeader, StatusPill, formatDate } from '../components/Common'
+import { CommandPracticePanel } from '../components/CommandPracticePanel'
+import { MissionPanel } from '../components/MissionPanel'
 
 export function TodayPage({ principal }: { principal: Principal }) {
   const [duration, setDuration] = useState<15 | 45 | 90>(45)
@@ -56,6 +58,10 @@ export function TodayPage({ principal }: { principal: Principal }) {
           <div className="plan-sheet__body"><Eyebrow>СОХРАНЁННЫЙ МАРШРУТ #{currentSession.id}</Eyebrow><ol>{currentSession.lesson_ids.map((lessonId) => { const lesson = lessonIndex.get(lessonId); return <li key={lessonId}><span>{lesson ? `${lesson.estimated_minutes} мин` : 'урок'}</span><div><strong>{lesson?.title ?? lessonId}</strong><p>{lesson?.summary ?? 'Откройте урок, чтобы продолжить сессию.'}</p></div><Link to={`/lesson/${lessonId}?sessionId=${currentSession.id}`} aria-label={`Продолжить ${lesson?.title ?? lessonId}`}><ArrowIcon /></Link></li> })}</ol></div>
         </section>
       ) : null}
+
+      <CommandPracticePanel principal={principal} />
+
+      <MissionPanel principal={principal} />
 
       <section className="session-composer">
         <div className="session-composer__intro">

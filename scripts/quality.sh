@@ -7,6 +7,8 @@ cd "$PROJECT_ROOT"
 uv run ruff check backend scripts/secret_scan.py
 uv run mypy backend/src
 uv run pytest
+uv run python tools/validate_command_techniques.py
+uv run python tools/validate_missions.py
 uv run python scripts/secret_scan.py
 /bin/bash -n \
   installer/linux/bootstrap-linux.sh \

@@ -182,6 +182,107 @@ export interface Review {
   completed_at: string | null
 }
 
+export type RecallReason = 'correct' | 'correct_with_help' | 'wrong_tool' | 'wrong_flag' | 'wrong_shell' | 'insufficient_data'
+
+export interface CommandTechnique {
+  id: string
+  family: string
+  shell: 'bash'
+  purpose: string
+  significant_flags: string[]
+  typical_error: string
+  mnemonic_image: string
+  source_refs: Array<{ source: string; address: string }>
+  version: number
+}
+
+export interface CommandPracticeChallenge {
+  id: string
+  prompt: string
+  estimated_minutes: number
+  hints: Array<{ level: 1 | 2 | 3 | 4; label: string }>
+  observation_prompt: string
+  version: number
+}
+
+export interface CommandPracticeItem {
+  technique_id: string
+  shell: 'bash'
+  challenge: CommandPracticeChallenge
+  due_at: string | null
+  overdue: boolean
+  retry_in_session: boolean
+  draft_answer: string
+  draft_observation_answer: string
+}
+
+export interface CommandPracticePlan {
+  items: CommandPracticeItem[]
+  due_total: number
+  new_total: number
+  debt_remaining: number
+  session_limit: number
+}
+
+export interface CommandPracticeResult {
+  attempt_id: number
+  technique_id: string
+  reason: RecallReason
+  correct: boolean
+  independent: boolean
+  observation_correct: boolean
+  next_due_at: string | null
+  interval_days: number | null
+  retry_in_session: boolean
+  duplicate: boolean
+}
+
+export type MissionGradeStatus = 'solved' | 'wrong_artifact' | 'unexplained' | 'needs_review'
+
+export interface MissionPreparedDataEntry {
+  path: string
+  kind: 'directory' | 'text' | 'note'
+  content: string
+}
+
+export interface MissionPlanItem {
+  mission_id: string
+  title: string
+  story: string
+  allowed_environment: string
+  prepared_data_description: string
+  required_actions: string[]
+  final_artifact_prompt: string
+  explanation_prompt: string
+  technique_ids: string[]
+  techniques: CommandTechnique[]
+  variant_rule: string
+  requires_free_text: boolean
+  version: number
+  variant_id: string
+  scenario: string
+  prepared_data: MissionPreparedDataEntry[]
+  draft_attempt_key: string | null
+  draft_artifact: string
+  draft_explanation: string
+}
+
+export interface MissionPlan {
+  items: MissionPlanItem[]
+}
+
+export interface MissionResult {
+  run_id: number
+  mission_id: string
+  variant_id: string
+  status: MissionGradeStatus
+  reason: string
+  explanation_accepted: boolean
+  debrief: string
+  evidence_kind: string
+  duplicate: boolean
+}
+
 export interface Note {
   id: number
   title: string

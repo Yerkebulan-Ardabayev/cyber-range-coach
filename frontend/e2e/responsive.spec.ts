@@ -12,6 +12,8 @@ async function mockAcademy(page: Page) {
       '/api/v2/evidence': [],
       '/api/v2/sessions': [],
       '/api/v2/curriculum': { tracks: [], lessons: [] },
+      '/api/v2/command-practice/plan': { items: [], due_total: 0, new_total: 0, debt_remaining: 0, session_limit: 5 },
+      '/api/v2/missions/plan': { items: [] },
     }
     const key = path === '/api/v2/lab-runs' ? path : path
     await route.fulfill({
@@ -32,6 +34,63 @@ async function mockSavedSession(page: Page) {
       body = [{ id: 7, duration_minutes: 45, lesson_ids: ['linux-navigation-pwd'], status: 'planned', current_lesson_id: null, created_at: '2026-08-20T00:00:00Z', started_at: null, completed_at: null }]
     } else if (path === '/api/v2/curriculum') {
       body = { tracks: [], lessons: [{ id: 'linux-navigation-pwd', order: 20, title: 'Где я нахожусь в Linux', summary: 'Ориентация перед действием', estimated_minutes: 15, skill_id: 'linux-navigation', stage: 'guided', target_tags: [], requires_target: false }] }
+    } else if (path === '/api/v2/command-practice/plan') {
+      body = { items: [], due_total: 0, new_total: 0, debt_remaining: 0, session_limit: 5 }
+    } else if (path === '/api/v2/missions/plan') {
+      body = { items: [] }
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
+  })
+}
+
+async function mockCommandPractice(page: Page) {
+  await page.route('**/api/v2/**', async (route) => {
+    const path = new URL(route.request().url()).pathname
+    let body: unknown = []
+    if (path === '/api/v2/devices/me') {
+      body = { role: 'owner', device_id: null, local_owner: true }
+    } else if (path === '/api/v2/command-practice/plan') {
+      body = {
+        items: [{
+          technique_id: 'linux-find-executable-files',
+          shell: 'bash',
+          challenge: {
+            id: 'linux-find-executable-files-recall',
+            prompt: 'Найдите обычные исполняемые файлы в синтетическом дереве.', estimated_minutes: 5,
+            hints: [
+              { level: 1, label: 'Смысл и образ' },
+              { level: 2, label: 'Название команды' },
+              { level: 3, label: 'Скелет' },
+              { level: 4, label: 'Полный пример' },
+            ],
+            observation_prompt: 'Что подтверждает результат?',
+            version: 1,
+          },
+          due_at: '2026-08-26T00:00:00Z', overdue: true, retry_in_session: false,
+          draft_answer: '', draft_observation_answer: '',
+        }],
+        due_total: 1, new_total: 72, debt_remaining: 0, session_limit: 5,
+      }
+    } else if (path === '/api/v2/missions/plan') {
+      body = { items: [] }
+    } else if (path.includes('/hints/')) {
+      const parts = path.split('/')
+      const level = Number(parts[parts.length - 1])
+      const hints = [
+        { level: 1, label: 'Смысл и образ', text: 'Флажок x выделяет исполняемый файл.' },
+        { level: 2, label: 'Название команды', text: 'Начните с команды find.' },
+        { level: 3, label: 'Скелет', text: 'find <путь> -type <тип> -perm <маска>' },
+        { level: 4, label: 'Полный пример', text: 'find . -type f -perm -111' },
+      ].slice(0, level)
+      body = { attempt_id: 1, revealed_help: hints.map((hint) => hint.level), hints }
+    } else if (path.endsWith('/draft')) {
+      body = { attempt_id: 1, saved: true }
+    } else if (path.endsWith('/complete')) {
+      body = {
+        attempt_id: 1, technique_id: 'linux-find-executable-files', reason: 'correct_with_help',
+        correct: true, independent: false, observation_correct: true,
+        next_due_at: '2026-08-28T00:00:00Z', interval_days: null, retry_in_session: false, duplicate: false,
+      }
     }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
   })
@@ -190,6 +249,26 @@ test('saved learning session survives a page reload', async ({ page }) => {
   await page.reload()
   await expect(page.getByText('СОХРАНЁННЫЙ МАРШРУТ #7')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Продолжить Где я нахожусь в Linux' })).toHaveAttribute('href', '/lesson/linux-navigation-pwd?sessionId=7')
+})
+
+test('command recall records help and keeps output interpretation separate', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 1000 })
+  await mockCommandPractice(page)
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Открыть: Смысл и образ' }).click()
+  await expect(page.getByText('Флажок x выделяет исполняемый файл.')).toBeVisible()
+  await page.getByLabel('Команда в Bash').fill('find . -type f -perm -111')
+  await page.getByLabel('Отдельно: что должен означать результат?').fill('Вывод содержит путь найденного файла.')
+  const completion = page.waitForRequest((request) => request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/complete'))
+  await page.getByRole('button', { name: 'Проверить на сервере' }).click()
+  const request = await completion
+  expect(request.postDataJSON()).toMatchObject({
+    answer: 'find . -type f -perm -111',
+    observation_answer: 'Вывод содержит путь найденного файла.',
+    dont_remember: false,
+  })
+  await expect(page.getByText('Верно с помощью. Самостоятельный интервал не вырос.')).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
 })
 
 test('field note is autosaved after editing', async ({ page }) => {

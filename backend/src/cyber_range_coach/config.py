@@ -79,6 +79,14 @@ class Settings(BaseSettings):
     def published_content_dir(self) -> Path:
         return self.data_dir / "content"
 
+    @property
+    def command_catalog_dir(self) -> Path:
+        return self.curriculum_dir / "commands"
+
+    @property
+    def mission_catalog_dir(self) -> Path:
+        return self.curriculum_dir / "missions"
+
     def ensure_directories(self) -> None:
         for directory in (
             self.data_dir / "data",

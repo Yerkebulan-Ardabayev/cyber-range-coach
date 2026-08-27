@@ -213,6 +213,79 @@ class ReviewItem(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class CommandPracticeState(Base):
+    __tablename__ = "command_practice_states"
+
+    technique_id: Mapped[str] = mapped_column(String(120), primary_key=True)
+    challenge_version: Mapped[int] = mapped_column(Integer)
+    data_version: Mapped[int] = mapped_column(Integer)
+    timezone: Mapped[str] = mapped_column(String(80))
+    practice_cycle: Mapped[int] = mapped_column(Integer, default=0)
+    current_help_levels: Mapped[list[int]] = mapped_column(JSON, default=list)
+    interval_index: Mapped[int] = mapped_column(Integer, default=0)
+    next_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    retry_in_session: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    draft_answer: Mapped[str] = mapped_column(Text, default="")
+    draft_observation_answer: Mapped[str] = mapped_column(Text, default="")
+    draft_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    recalled_without_help_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    recalled_with_help_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    output_interpreted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    applied_in_environment_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    applied_variant_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class CommandAttempt(Base):
+    __tablename__ = "command_attempts"
+    __table_args__ = (
+        UniqueConstraint("idempotency_key", name="uq_command_attempt_idempotency_key"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    idempotency_key: Mapped[str] = mapped_column(String(80))
+    technique_id: Mapped[str] = mapped_column(String(120), index=True)
+    challenge_version: Mapped[int] = mapped_column(Integer)
+    data_version: Mapped[int] = mapped_column(Integer)
+    practice_cycle: Mapped[int] = mapped_column(Integer)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    shell: Mapped[str] = mapped_column(String(30))
+    answer: Mapped[str] = mapped_column(Text, default="")
+    observation_answer: Mapped[str] = mapped_column(Text, default="")
+    revealed_help: Mapped[list[int]] = mapped_column(JSON, default=list)
+    error_kind: Mapped[str | None] = mapped_column(String(40))
+    result: Mapped[str] = mapped_column(String(40), default="draft")
+    evidence_kind: Mapped[str] = mapped_column(String(40), default="recall")
+    observation_correct: Mapped[bool] = mapped_column(Boolean, default=False)
+    dont_remember: Mapped[bool] = mapped_column(Boolean, default=False)
+    next_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    interval_days: Mapped[int | None] = mapped_column(Integer)
+
+
+class MissionRun(Base):
+    __tablename__ = "mission_runs"
+    __table_args__ = (
+        UniqueConstraint("idempotency_key", name="uq_mission_run_idempotency_key"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    idempotency_key: Mapped[str] = mapped_column(String(80))
+    mission_id: Mapped[str] = mapped_column(String(120), index=True)
+    mission_version: Mapped[int] = mapped_column(Integer)
+    data_version: Mapped[int] = mapped_column(Integer)
+    data_variant: Mapped[str] = mapped_column(String(120))
+    declared_artifact: Mapped[str] = mapped_column(Text, default="")
+    explanation: Mapped[str] = mapped_column(Text, default="")
+    grader_status: Mapped[str] = mapped_column(String(30), default="draft")
+    grader_reason: Mapped[str | None] = mapped_column(Text)
+    explanation_accepted: Mapped[bool] = mapped_column(Boolean, default=False)
+    evidence_kind: Mapped[str] = mapped_column(String(40), default="mission_final_artifact")
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    draft_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+
+
 class Note(Base):
     __tablename__ = "notes"
 

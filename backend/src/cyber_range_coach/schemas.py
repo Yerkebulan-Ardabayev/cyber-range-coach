@@ -3,6 +3,7 @@ from __future__ import annotations
 import ipaddress
 from datetime import datetime
 from typing import Any, Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -310,6 +311,51 @@ class ReviewResponse(ApiModel):
     due_at: datetime
     reason: str
     completed_at: datetime | None
+
+
+class CommandAttemptBase(ApiModel):
+    technique_id: str = Field(min_length=2, max_length=120, pattern=r"^[a-z0-9][a-z0-9-]+$")
+    shell: Literal["bash"]
+    timezone: str = Field(min_length=1, max_length=80)
+
+    @field_validator("timezone")
+    @classmethod
+    def known_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as error:
+            raise ValueError("unknown IANA timezone") from error
+        return value
+
+
+class CommandDraftRequest(CommandAttemptBase):
+    answer: str = Field(max_length=4000)
+    observation_answer: str = Field(default="", max_length=4000)
+
+
+class CommandHintRequest(CommandAttemptBase):
+    pass
+
+
+class CommandCompleteRequest(CommandAttemptBase):
+    answer: str = Field(default="", max_length=4000)
+    observation_answer: str = Field(default="", max_length=4000)
+    dont_remember: bool = False
+
+
+class MissionAttemptBase(ApiModel):
+    mission_id: str = Field(min_length=2, max_length=120, pattern=r"^[a-z0-9][a-z0-9-]+$")
+    variant_id: str = Field(min_length=2, max_length=120, pattern=r"^[a-z0-9][a-z0-9-]+$")
+
+
+class MissionDraftRequest(MissionAttemptBase):
+    artifact: str = Field(max_length=4000)
+    explanation: str = Field(default="", max_length=4000)
+
+
+class MissionCompleteRequest(MissionAttemptBase):
+    artifact: str = Field(default="", max_length=4000)
+    explanation: str = Field(default="", max_length=4000)
 
 
 class NoteCreate(ApiModel):

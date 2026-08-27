@@ -135,8 +135,8 @@ class Curriculum:
                 if total > lesson_budget:
                     continue
                 score = (
-                    total,
                     sum(lesson.id in due_ids for lesson in option),
+                    total,
                     sum(lesson.skill_id not in states for lesson in option),
                     -sum(lesson.order for lesson in option),
                 )

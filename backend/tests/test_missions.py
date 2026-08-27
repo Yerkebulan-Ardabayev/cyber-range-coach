@@ -1,0 +1,147 @@
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+from fastapi.testclient import TestClient
+from sqlalchemy import func, select
+
+from cyber_range_coach.models import MissionRun
+from cyber_range_coach.services.mission_grader import (
+    MissionGradeStatus,
+    MissionGradingContract,
+    grade_mission,
+)
+from cyber_range_coach.services.missions import (
+    complete_mission_run,
+    plan_missions,
+)
+
+
+def _mission_item(plan: object, mission_id: str):
+    return next(item for item in plan.items if item.mission_id == mission_id)
+
+
+def _correct_submission(client: TestClient, mission_id: str, variant_id: str) -> tuple[str, str]:
+    variant = client.app.state.mission_catalog.variant(mission_id, variant_id)
+    artifact = variant.grading.artifact.accepted_values[0]
+    explanation = "Маркер trace указывает на нужный сектор."
+    if mission_id == "why-command-failed":
+        explanation = "Это ошибка оболочки: в Bash нужен правильный флаг или аргумент."
+    return artifact, explanation
+
+
+def test_mission_catalog_has_the_two_stage2_scenarios_and_existing_techniques(client) -> None:
+    catalog = client.app.state.mission_catalog
+    assert set(catalog.missions) == {"magpie-missing-clue", "why-command-failed"}
+    assert sum(len(mission.variants) for mission in catalog.missions.values()) == 7
+    assert all(
+        technique_id in client.app.state.command_catalog.techniques
+        for mission in catalog.missions.values()
+        for technique_id in mission.technique_ids
+    )
+    assert all(mission.requires_free_text for mission in catalog.missions.values())
+
+
+def test_mission_grader_accepts_only_known_artifact_and_requires_explanation() -> None:
+    contract = MissionGradingContract.model_validate(
+        {
+            "artifact": {
+                "accepted_values": ["trace: marker=ORBIT-41"],
+                "review_patterns": [r"^trace:\s*marker=[A-Z]+-[0-9]+$"],
+            },
+            "explanation": {
+                "expected_concepts": [["маркер", "marker"], ["сектор", "sector"]],
+                "debrief": "Разбор открывается только после отправки.",
+            },
+        }
+    )
+    solved = grade_mission("trace: marker=ORBIT-41", "Маркер ведёт в нужный сектор.", contract)
+    fake = grade_mission("fabricated terminal output", "Маркер и сектор.", contract)
+    unknown = grade_mission("trace: marker=OTHER-99", "Маркер и сектор.", contract)
+    unexplained = grade_mission("trace: marker=ORBIT-41", "", contract)
+    assert solved.status == MissionGradeStatus.solved
+    assert fake.status == MissionGradeStatus.wrong_artifact
+    assert fake.status != MissionGradeStatus.solved
+    assert unknown.status == MissionGradeStatus.needs_review
+    assert unexplained.status == MissionGradeStatus.unexplained
+
+
+def test_completed_mission_uses_next_synthetic_variant_without_needing_command_history(client) -> None:
+    now = datetime(2026, 8, 27, 12, 0, tzinfo=UTC)
+    catalog = client.app.state.mission_catalog
+    with client.app.state.db.session_factory() as session:
+        first_plan = plan_missions(session, catalog)
+        first = _mission_item(first_plan, "magpie-missing-clue")
+        first_variant = catalog.variant(first.mission_id, first.variant_id)
+        result = complete_mission_run(
+            session,
+            catalog,
+            attempt_key="magpie-variant-attempt-0001",
+            mission_id=first.mission_id,
+            variant_id=first.variant_id,
+            artifact=first_variant.grading.artifact.accepted_values[0],
+            explanation="Маркер trace связан с сектором west.",
+            now=now,
+        )
+        second = _mission_item(plan_missions(session, catalog), "magpie-missing-clue")
+        row = session.scalar(select(MissionRun).where(MissionRun.id == result.run_id))
+    assert result.status == MissionGradeStatus.solved
+    assert second.variant_id != first.variant_id
+    assert second.title == first.title
+    assert second.final_artifact_prompt == first.final_artifact_prompt
+    assert row is not None
+    assert row.evidence_kind == "mission_final_artifact"
+    assert not hasattr(row, "command_sequence")
+
+
+def test_mission_api_saves_a_draft_hides_solution_until_response_and_is_idempotent(
+    client: TestClient,
+) -> None:
+    plan = client.get("/api/v2/missions/plan")
+    assert plan.status_code == 200
+    item = next(value for value in plan.json()["items"] if value["mission_id"] == "magpie-missing-clue")
+    serialized = str(item)
+    assert "grading" not in item
+    assert "debrief" not in serialized
+    artifact, explanation = _correct_submission(client, item["mission_id"], item["variant_id"])
+    payload = {
+        "mission_id": item["mission_id"],
+        "variant_id": item["variant_id"],
+        "artifact": artifact,
+        "explanation": explanation,
+    }
+    attempt_key = "mission-api-attempt-0001"
+    draft = client.put(f"/api/v2/missions/attempts/{attempt_key}/draft", json=payload)
+    assert draft.status_code == 200
+    restored = client.get("/api/v2/missions/plan")
+    restored_item = next(
+        value for value in restored.json()["items"] if value["mission_id"] == item["mission_id"]
+    )
+    assert restored_item["draft_attempt_key"] == attempt_key
+    assert restored_item["draft_artifact"] == artifact
+    completed = client.post(f"/api/v2/missions/attempts/{attempt_key}/complete", json=payload)
+    duplicate = client.post(f"/api/v2/missions/attempts/{attempt_key}/complete", json=payload)
+    assert completed.status_code == 200
+    assert completed.json()["status"] == "solved"
+    assert "debrief" in completed.json()
+    assert duplicate.status_code == 200
+    assert duplicate.json()["duplicate"] is True
+    with client.app.state.db.session_factory() as session:
+        count = session.scalar(select(func.count()).select_from(MissionRun))
+    assert count == 1
+
+
+def test_unknown_mission_variant_needs_review_without_becoming_a_success(client: TestClient) -> None:
+    plan = client.get("/api/v2/missions/plan").json()
+    item = next(value for value in plan["items"] if value["mission_id"] == "magpie-missing-clue")
+    response = client.post(
+        "/api/v2/missions/attempts/mission-review-attempt-0001/complete",
+        json={
+            "mission_id": item["mission_id"],
+            "variant_id": item["variant_id"],
+            "artifact": "trace: marker=UNKNOWN-99",
+            "explanation": "Маркер связан с сектором.",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "needs_review"

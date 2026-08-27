@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import shutil
 import sqlite3
 from pathlib import Path
 
@@ -66,9 +67,116 @@ def test_runtime_database_uses_alembic_head_and_fts(client: TestClient) -> None:
         linux_host_columns = {
             row[1] for row in connection.exec_driver_sql("PRAGMA table_info(linux_hosts)")
         }
-    assert revision == "20260821_0002"
+    assert revision == "20260827_0004"
     assert fts == 2
     assert "relay_source_ip" in linux_host_columns
+
+
+def test_command_practice_migration_is_additive_on_a_disposable_copy(tmp_path: Path) -> None:
+    source = tmp_path / "source.db"
+    disposable = tmp_path / "disposable-copy.db"
+    config = Config(str(project_root() / "alembic.ini"))
+    config.set_main_option("script_location", str(project_root() / "backend" / "migrations"))
+    config.set_main_option("prepend_sys_path", str(project_root() / "backend" / "src"))
+    config.set_main_option("sqlalchemy.url", f"sqlite:///{source.as_posix()}")
+    command.upgrade(config, "20260821_0002")
+    with sqlite3.connect(source) as connection:
+        connection.execute(
+            "INSERT INTO devices (name, role, token_hash, created_at) VALUES (?, ?, ?, ?)",
+            ("existing-owner", "owner", "a" * 64, "2026-08-27 00:00:00"),
+        )
+        connection.commit()
+        tables_before = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+            )
+        }
+    shutil.copy2(source, disposable)
+    config.set_main_option("sqlalchemy.url", f"sqlite:///{disposable.as_posix()}")
+    command.upgrade(config, "20260827_0003")
+    with sqlite3.connect(disposable) as connection:
+        tables_after = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+            )
+        }
+        assert tables_after - tables_before == {
+            "command_practice_states",
+            "command_attempts",
+        }
+        assert connection.execute("SELECT count(*) FROM devices").fetchone() == (1,)
+        assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+        assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
+            "20260827_0003",
+        )
+    command.downgrade(config, "20260821_0002")
+    with sqlite3.connect(disposable) as connection:
+        tables_downgraded = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+            )
+        }
+        assert tables_downgraded == tables_before
+        assert connection.execute("SELECT count(*) FROM devices").fetchone() == (1,)
+        assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+        assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
+            "20260821_0002",
+        )
+
+
+def test_mission_run_migration_is_additive_on_a_disposable_copy(tmp_path: Path) -> None:
+    source = tmp_path / "stage1.db"
+    disposable = tmp_path / "stage2-copy.db"
+    config = Config(str(project_root() / "alembic.ini"))
+    config.set_main_option("script_location", str(project_root() / "backend" / "migrations"))
+    config.set_main_option("prepend_sys_path", str(project_root() / "backend" / "src"))
+    config.set_main_option("sqlalchemy.url", f"sqlite:///{source.as_posix()}")
+    command.upgrade(config, "20260827_0003")
+    with sqlite3.connect(source) as connection:
+        connection.execute(
+            "INSERT INTO devices (name, role, token_hash, created_at) VALUES (?, ?, ?, ?)",
+            ("existing-stage1-owner", "owner", "b" * 64, "2026-08-27 00:00:00"),
+        )
+        connection.commit()
+        tables_before = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+            )
+        }
+    shutil.copy2(source, disposable)
+    config.set_main_option("sqlalchemy.url", f"sqlite:///{disposable.as_posix()}")
+    command.upgrade(config, "20260827_0004")
+    with sqlite3.connect(disposable) as connection:
+        tables_after = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+            )
+        }
+        assert tables_after - tables_before == {"mission_runs"}
+        assert connection.execute("SELECT count(*) FROM devices").fetchone() == (1,)
+        assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+        assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
+            "20260827_0004",
+        )
+    command.downgrade(config, "20260827_0003")
+    with sqlite3.connect(disposable) as connection:
+        tables_downgraded = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+            )
+        }
+        assert tables_downgraded == tables_before
+        assert connection.execute("SELECT count(*) FROM devices").fetchone() == (1,)
+        assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+        assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
+            "20260827_0003",
+        )
 
 
 def test_alembic_downgrade_removes_fts_and_application_schema(client: TestClient) -> None:

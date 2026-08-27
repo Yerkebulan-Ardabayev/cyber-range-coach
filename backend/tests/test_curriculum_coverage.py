@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
+from cyber_range_coach.models import ReviewItem
 from cyber_range_coach.services.curriculum import Curriculum
 
 
@@ -42,6 +45,42 @@ def test_session_plans_fit_their_timebox_and_ninety_minutes_end_with_report(clie
         assert sum(lesson.estimated_minutes for lesson in plan.lessons) == minutes
         assert plan.lessons
     assert plans[-1].lessons[-1].id == "evidence-report"
+
+
+def test_overdue_lesson_has_unconditional_priority_over_time_fill(client) -> None:
+    with client.app.state.db.session_factory() as session:
+        session.add(
+            ReviewItem(
+                skill_id="linux-navigation",
+                lesson_id="linux-navigation-pwd",
+                due_at=datetime.now(UTC) - timedelta(days=1),
+                reason="addressed priority regression",
+            )
+        )
+        session.commit()
+        plan = client.app.state.curriculum.plan(session, 15)
+    assert [lesson.id for lesson in plan.lessons] == ["linux-navigation-pwd"]
+    assert plan.rationale == ["Повторение просрочено: Где я нахожусь в Linux."]
+
+
+def test_overdue_lesson_beats_larger_time_fill(client) -> None:
+    # Discriminating scenario against time-fill. An overdue 35-minute technique
+    # has no <=10-minute partner in a 45-minute box, so a time-fill planner would
+    # pick 20+25=45 without it. Unconditional overdue priority must include it.
+    with client.app.state.db.session_factory() as session:
+        session.add(
+            ReviewItem(
+                skill_id="service-enumeration",
+                lesson_id="service-enumeration",
+                due_at=datetime.now(UTC) - timedelta(days=2),
+                reason="overdue must beat fuller time fill",
+            )
+        )
+        session.commit()
+        plan = client.app.state.curriculum.plan(session, 45)
+    ids = [lesson.id for lesson in plan.lessons]
+    assert "service-enumeration" in ids
+    assert any("просрочено" in line for line in plan.rationale)
 
 
 def test_http_lessons_and_blue_mirror_have_reproducible_contracts(settings) -> None:

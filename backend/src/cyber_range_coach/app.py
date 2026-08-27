@@ -13,11 +13,22 @@ from . import __version__
 from .config import Settings, get_settings
 from .database import Database
 from .errors import install_error_handlers
-from .routers import devices, learning, studio, system, targets, terminal
+from .routers import (
+    command_practice,
+    devices,
+    learning,
+    missions,
+    studio,
+    system,
+    targets,
+    terminal,
+)
 from .services.ai import AIBroker
+from .services.command_practice import CommandCatalog
 from .services.commands import SafeCommandRunner
 from .services.curriculum import Curriculum
 from .services.docker import DockerDiscovery
+from .services.missions import MissionCatalog
 from .services.preflight import PreflightService
 from .services.relay import RelayManager
 from .services.secrets import SecretProtectionError, build_secret_protector
@@ -34,6 +45,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     runner = SafeCommandRunner(settings.subprocess_timeout_seconds)
     docker = DockerDiscovery(runner)
     curriculum = Curriculum(settings.curriculum_dir)
+    command_catalog = CommandCatalog(settings.command_catalog_dir)
+    mission_catalog = MissionCatalog(settings.mission_catalog_dir, command_catalog)
     try:
         protector = build_secret_protector(
             settings.data_dir, settings.allow_insecure_dev_secrets or settings.testing
@@ -69,6 +82,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.runner = runner
     app.state.docker = docker
     app.state.curriculum = curriculum
+    app.state.command_catalog = command_catalog
+    app.state.mission_catalog = mission_catalog
     app.state.protector = protector
     app.state.relays = relays
     app.state.terminals = terminals
@@ -107,6 +122,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(system.router)
     app.include_router(targets.router)
     app.include_router(learning.router)
+    app.include_router(command_practice.router)
+    app.include_router(missions.router)
     app.include_router(devices.router)
     app.include_router(studio.router)
     app.include_router(terminal.router)
