@@ -5,8 +5,6 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
-from .recall_grader import grade_observation
-
 
 class MissionGradeStatus(StrEnum):
     solved = "solved"
@@ -35,8 +33,22 @@ class MissionExplanationContract(BaseModel):
     debrief: str = Field(min_length=1)
 
 
+class MissionFactContract(BaseModel):
+    id: str = Field(pattern=r"^[a-z][a-z0-9_]+$")
+    label: str = Field(min_length=1)
+    accepted_values: list[str] = Field(min_length=1)
+    accepted_patterns: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def valid_patterns(self) -> MissionFactContract:
+        for pattern in self.accepted_patterns:
+            re.compile(pattern)
+        return self
+
+
 class MissionGradingContract(BaseModel):
     artifact: MissionArtifactContract
+    facts: list[MissionFactContract] = Field(min_length=1)
     explanation: MissionExplanationContract
 
 
@@ -44,16 +56,20 @@ class MissionGrade(BaseModel):
     status: MissionGradeStatus
     reason: str
     explanation_accepted: bool
+    field_errors: dict[str, str] = Field(default_factory=dict)
+    free_text_review_status: str = "not_assessed"
 
 
 def grade_mission(
     artifact: str | None,
+    structured_facts: dict[str, str] | None,
     explanation: str | None,
     contract: MissionGradingContract,
 ) -> MissionGrade:
     """Grade a declared result only. The learner input is never executed."""
     declared_artifact = (artifact or "").strip()
-    declared_explanation = explanation or ""
+    del explanation
+    facts = structured_facts or {}
     if not declared_artifact:
         return MissionGrade(
             status=MissionGradeStatus.wrong_artifact,
@@ -72,28 +88,45 @@ def grade_mission(
             return MissionGrade(
                 status=MissionGradeStatus.needs_review,
                 reason="Формат похож на возможный вариант, но его нет в контракте миссии.",
-                explanation_accepted=grade_observation(
-                    declared_explanation,
-                    contract.explanation.expected_concepts,
-                ),
+                explanation_accepted=False,
             )
         return MissionGrade(
             status=MissionGradeStatus.wrong_artifact,
             reason="Заявленный артефакт не подтверждается подготовленными данными.",
             explanation_accepted=False,
         )
-    explanation_accepted = grade_observation(
-        declared_explanation,
-        contract.explanation.expected_concepts,
-    )
-    if not explanation_accepted:
+    field_errors: dict[str, str] = {}
+    expected_ids = {field.id for field in contract.facts}
+    for field_id in sorted(set(facts).difference(expected_ids)):
+        field_errors[field_id] = "Поле не входит в контракт этого варианта."
+    missing = False
+    for field in contract.facts:
+        value = str(facts.get(field.id, "")).strip()
+        if not value:
+            missing = True
+            field_errors[field.id] = "Заполните обязательный факт из публичного снимка."
+            continue
+        exact = any(value.casefold() == item.casefold() for item in field.accepted_values)
+        pattern = any(
+            re.fullmatch(item, value, re.IGNORECASE) is not None for item in field.accepted_patterns
+        )
+        if not exact and not pattern:
+            field_errors[field.id] = f"Факт «{field.label}» не связан с выбранным вариантом."
+    if field_errors:
         return MissionGrade(
-            status=MissionGradeStatus.unexplained,
-            reason="Артефакт найден, но связь с задачей не объяснена.",
+            status=(
+                MissionGradeStatus.unexplained if missing else MissionGradeStatus.wrong_artifact
+            ),
+            reason=(
+                "Артефакт найден, но обязательные структурированные факты не заполнены."
+                if missing
+                else "Один или несколько структурированных фактов не подтверждены."
+            ),
             explanation_accepted=False,
+            field_errors=field_errors,
         )
     return MissionGrade(
         status=MissionGradeStatus.solved,
-        reason="Финальный артефакт и объяснение подтверждены.",
-        explanation_accepted=True,
+        reason="Артефакт и структурированный разбор подтверждены.",
+        explanation_accepted=False,
     )

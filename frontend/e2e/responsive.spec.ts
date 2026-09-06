@@ -54,9 +54,15 @@ async function mockCommandPractice(page: Page) {
         items: [{
           technique_id: 'linux-find-executable-files',
           shell: 'bash',
+          execution_status: 'range_ready',
           challenge: {
             id: 'linux-find-executable-files-recall',
             prompt: 'Найдите обычные исполняемые файлы в синтетическом дереве.', estimated_minutes: 5,
+            context: {
+              shell: 'bash', working_directory: '/home/student/training',
+              named_inputs: { search_root: '.' }, constraints: ['Только синтетические данные.'],
+            },
+            answer_fields: [{ id: 'command', label: 'Команда в Bash', kind: 'command' }],
             hints: [
               { level: 1, label: 'Смысл и образ' },
               { level: 2, label: 'Название команды' },
@@ -64,10 +70,11 @@ async function mockCommandPractice(page: Page) {
               { level: 4, label: 'Полный пример' },
             ],
             observation_prompt: 'Что подтверждает результат?',
-            version: 1,
+            version: 2,
           },
           due_at: '2026-08-26T00:00:00Z', overdue: true, retry_in_session: false,
-          draft_answer: '', draft_observation_answer: '',
+          draft_answer: '', draft_observation_answer: '', draft_attempt_key: null,
+          attempt_type: 'assessment', eligible_at: null, window_id: 1, phase: 'recall',
         }],
         due_total: 1, new_total: 72, debt_remaining: 0, session_limit: 5,
       }
@@ -88,8 +95,16 @@ async function mockCommandPractice(page: Page) {
     } else if (path.endsWith('/complete')) {
       body = {
         attempt_id: 1, technique_id: 'linux-find-executable-files', reason: 'correct_with_help',
-        correct: true, independent: false, observation_correct: true,
+        correct: true, independent: false, observation_correct: false,
         next_due_at: '2026-08-28T00:00:00Z', interval_days: null, retry_in_session: false, duplicate: false,
+        verification_status: 'verified', detail: 'Команда совпала.', attempt_type: 'assessment', completed: false,
+        observation_example: 'SYNTHETIC RESULT\nobserved_path=путь',
+        observation_fields: [{ id: 'observed_path', label: 'Наблюдаемый путь', required: true }],
+      }
+    } else if (path.endsWith('/observation')) {
+      body = {
+        attempt_id: 1, technique_id: 'linux-find-executable-files', observation_correct: true,
+        field_errors: {}, free_text_review_status: 'not_assessed', completed: true,
       }
     }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
@@ -258,16 +273,25 @@ test('command recall records help and keeps output interpretation separate', asy
   await page.getByRole('button', { name: 'Открыть: Смысл и образ' }).click()
   await expect(page.getByText('Флажок x выделяет исполняемый файл.')).toBeVisible()
   await page.getByLabel('Команда в Bash').fill('find . -type f -perm -111')
-  await page.getByLabel('Отдельно: что должен означать результат?').fill('Вывод содержит путь найденного файла.')
   const completion = page.waitForRequest((request) => request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/complete'))
   await page.getByRole('button', { name: 'Проверить на сервере' }).click()
   const request = await completion
   expect(request.postDataJSON()).toMatchObject({
     answer: 'find . -type f -perm -111',
-    observation_answer: 'Вывод содержит путь найденного файла.',
+    observation_answer: '',
     dont_remember: false,
   })
   await expect(page.getByText('Верно с помощью. Самостоятельный интервал не вырос.')).toBeVisible()
+  await page.getByLabel('Наблюдаемый путь').fill('путь')
+  await page.getByLabel(/Свободное объяснение/).fill('Вывод содержит путь найденного файла.')
+  const observation = page.waitForRequest((request) => request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/observation'))
+  await page.getByRole('button', { name: 'Проверить факты' }).click()
+  const observationRequest = await observation
+  expect(observationRequest.postDataJSON()).toMatchObject({
+    structured_observation: { observed_path: 'путь' },
+    free_text: 'Вывод содержит путь найденного файла.',
+  })
+  await expect(page.getByText('Структурированный разбор подтверждён.')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
 })
 

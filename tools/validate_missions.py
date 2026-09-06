@@ -37,8 +37,11 @@ def main() -> int:
         for variant in mission.variants:
             if not variant.grading.artifact.accepted_values:
                 errors.append(f"{mission.id}/{variant.id}: artifact contract is empty")
-            if not variant.grading.explanation.expected_concepts:
-                errors.append(f"{mission.id}/{variant.id}: explanation contract is empty")
+            if not variant.grading.facts:
+                errors.append(f"{mission.id}/{variant.id}: structured fact contract is empty")
+            field_ids = [field.id for field in variant.grading.facts]
+            if len(field_ids) != len(set(field_ids)):
+                errors.append(f"{mission.id}/{variant.id}: structured fact ids are not unique")
             if any("—" in entry.content for entry in variant.prepared_data):
                 errors.append(f"{mission.id}/{variant.id}: prepared data contains an em dash")
     if errors:

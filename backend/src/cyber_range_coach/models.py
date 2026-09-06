@@ -166,6 +166,10 @@ class LabRun(Base):
     transcript: Mapped[str] = mapped_column(Text, default="")
     terminal_inputs: Mapped[list[str]] = mapped_column(JSON, default=list)
     terminal_input_offsets: Mapped[list[int]] = mapped_column(JSON, default=list)
+    terminal_input_kinds: Mapped[list[str]] = mapped_column(JSON, default=list)
+    input_integrity: Mapped[str] = mapped_column(String(30), default="unverified")
+    input_integrity_reason: Mapped[str | None] = mapped_column(String(80))
+    terminal_session_id: Mapped[str | None] = mapped_column(String(80))
     grader_status: Mapped[str | None] = mapped_column(String(30))
     grader_report: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     relay_port: Mapped[int | None] = mapped_column(Integer)
@@ -234,6 +238,47 @@ class CommandPracticeState(Base):
     applied_in_environment_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     applied_variant_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    eligible_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    last_help_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    grading_policy_version: Mapped[int] = mapped_column(Integer, default=2)
+
+
+class AssessmentWindow(Base):
+    __tablename__ = "assessment_windows"
+    __table_args__ = (
+        Index(
+            "uq_assessment_windows_active_technique",
+            "technique_id",
+            unique=True,
+            sqlite_where=text("closed_at IS NULL AND window_type = 'assessment'"),
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    technique_id: Mapped[str] = mapped_column(String(120), index=True)
+    challenge_version: Mapped[int] = mapped_column(Integer)
+    grading_policy_version: Mapped[int] = mapped_column(Integer, default=2)
+    window_type: Mapped[str] = mapped_column(String(20), default="assessment")
+    opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    eligible_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    result: Mapped[str | None] = mapped_column(String(40))
+    advancement_applied: Mapped[bool] = mapped_column(Boolean, default=False)
+    contaminated: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class HelpEvent(Base):
+    __tablename__ = "help_events"
+    __table_args__ = (UniqueConstraint("disclosure_key", name="uq_help_events_disclosure_key"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    disclosure_key: Mapped[str] = mapped_column(String(120))
+    technique_id: Mapped[str] = mapped_column(String(120), index=True)
+    challenge_version: Mapped[int] = mapped_column(Integer)
+    window_id: Mapped[int | None] = mapped_column(ForeignKey("assessment_windows.id"), index=True)
+    shown_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    surface: Mapped[str] = mapped_column(String(40))
+    scope: Mapped[str] = mapped_column(String(40), default="answer")
 
 
 class CommandAttempt(Base):
@@ -261,13 +306,19 @@ class CommandAttempt(Base):
     dont_remember: Mapped[bool] = mapped_column(Boolean, default=False)
     next_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     interval_days: Mapped[int | None] = mapped_column(Integer)
+    window_id: Mapped[int | None] = mapped_column(ForeignKey("assessment_windows.id"), index=True)
+    attempt_type: Mapped[str] = mapped_column(String(20), default="assessment")
+    recall_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    observation_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    structured_observation: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    verification_status: Mapped[str] = mapped_column(String(30), default="verified")
+    grader_version: Mapped[int] = mapped_column(Integer, default=2)
+    grading_policy_version: Mapped[int] = mapped_column(Integer, default=2)
 
 
 class MissionRun(Base):
     __tablename__ = "mission_runs"
-    __table_args__ = (
-        UniqueConstraint("idempotency_key", name="uq_mission_run_idempotency_key"),
-    )
+    __table_args__ = (UniqueConstraint("idempotency_key", name="uq_mission_run_idempotency_key"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     idempotency_key: Mapped[str] = mapped_column(String(80))
@@ -284,6 +335,9 @@ class MissionRun(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     draft_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    structured_facts: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    free_text_review_status: Mapped[str] = mapped_column(String(30), default="not_assessed")
+    grading_policy_version: Mapped[int] = mapped_column(Integer, default=2)
 
 
 class Note(Base):

@@ -21,13 +21,16 @@ def _mission_item(plan: object, mission_id: str):
     return next(item for item in plan.items if item.mission_id == mission_id)
 
 
-def _correct_submission(client: TestClient, mission_id: str, variant_id: str) -> tuple[str, str]:
+def _correct_submission(
+    client: TestClient, mission_id: str, variant_id: str
+) -> tuple[str, str, dict[str, str]]:
     variant = client.app.state.mission_catalog.variant(mission_id, variant_id)
     artifact = variant.grading.artifact.accepted_values[0]
     explanation = "Маркер trace указывает на нужный сектор."
     if mission_id == "why-command-failed":
         explanation = "Это ошибка оболочки: в Bash нужен правильный флаг или аргумент."
-    return artifact, explanation
+    facts = {field.id: field.accepted_values[0] for field in variant.grading.facts}
+    return artifact, explanation, facts
 
 
 def test_mission_catalog_has_the_two_stage2_scenarios_and_existing_techniques(client) -> None:
@@ -49,21 +52,44 @@ def test_mission_grader_accepts_only_known_artifact_and_requires_explanation() -
                 "accepted_values": ["trace: marker=ORBIT-41"],
                 "review_patterns": [r"^trace:\s*marker=[A-Z]+-[0-9]+$"],
             },
+            "facts": [
+                {
+                    "id": "marker",
+                    "label": "Маркер",
+                    "accepted_values": ["ORBIT-41"],
+                },
+                {
+                    "id": "sector",
+                    "label": "Сектор",
+                    "accepted_values": ["west"],
+                },
+            ],
             "explanation": {
                 "expected_concepts": [["маркер", "marker"], ["сектор", "sector"]],
                 "debrief": "Разбор открывается только после отправки.",
             },
         }
     )
-    solved = grade_mission("trace: marker=ORBIT-41", "Маркер ведёт в нужный сектор.", contract)
-    fake = grade_mission("fabricated terminal output", "Маркер и сектор.", contract)
-    unknown = grade_mission("trace: marker=OTHER-99", "Маркер и сектор.", contract)
-    unexplained = grade_mission("trace: marker=ORBIT-41", "", contract)
+    facts = {"marker": "ORBIT-41", "sector": "west"}
+    solved = grade_mission(
+        "trace: marker=ORBIT-41", facts, "Маркер ведёт в нужный сектор.", contract
+    )
+    fake = grade_mission("fabricated terminal output", facts, "Маркер и сектор.", contract)
+    unknown = grade_mission("trace: marker=OTHER-99", facts, "Маркер и сектор.", contract)
+    unexplained = grade_mission("trace: marker=ORBIT-41", {}, "маркер сектор", contract)
+    negation = grade_mission(
+        "trace: marker=ORBIT-41",
+        {},
+        "Этот маркер вообще не связан с сектором",
+        contract,
+    )
     assert solved.status == MissionGradeStatus.solved
     assert fake.status == MissionGradeStatus.wrong_artifact
     assert fake.status != MissionGradeStatus.solved
     assert unknown.status == MissionGradeStatus.needs_review
     assert unexplained.status == MissionGradeStatus.unexplained
+    assert negation.status != MissionGradeStatus.solved
+    assert solved.explanation_accepted is False
 
 
 def test_completed_mission_uses_next_synthetic_variant_without_needing_command_history(client) -> None:
@@ -80,7 +106,10 @@ def test_completed_mission_uses_next_synthetic_variant_without_needing_command_h
             mission_id=first.mission_id,
             variant_id=first.variant_id,
             artifact=first_variant.grading.artifact.accepted_values[0],
-            explanation="Маркер trace связан с сектором west.",
+        explanation="Маркер trace связан с сектором west.",
+        structured_facts={
+            field.id: field.accepted_values[0] for field in first_variant.grading.facts
+        },
             now=now,
         )
         second = _mission_item(plan_missions(session, catalog), "magpie-missing-clue")
@@ -103,12 +132,15 @@ def test_mission_api_saves_a_draft_hides_solution_until_response_and_is_idempote
     serialized = str(item)
     assert "grading" not in item
     assert "debrief" not in serialized
-    artifact, explanation = _correct_submission(client, item["mission_id"], item["variant_id"])
+    artifact, explanation, structured_facts = _correct_submission(
+        client, item["mission_id"], item["variant_id"]
+    )
     payload = {
         "mission_id": item["mission_id"],
         "variant_id": item["variant_id"],
         "artifact": artifact,
         "explanation": explanation,
+        "structured_facts": structured_facts,
     }
     attempt_key = "mission-api-attempt-0001"
     draft = client.put(f"/api/v2/missions/attempts/{attempt_key}/draft", json=payload)
@@ -123,6 +155,7 @@ def test_mission_api_saves_a_draft_hides_solution_until_response_and_is_idempote
     duplicate = client.post(f"/api/v2/missions/attempts/{attempt_key}/complete", json=payload)
     assert completed.status_code == 200
     assert completed.json()["status"] == "solved"
+    assert completed.json()["free_text_review_status"] == "not_assessed"
     assert "debrief" in completed.json()
     assert duplicate.status_code == 200
     assert duplicate.json()["duplicate"] is True
@@ -141,6 +174,7 @@ def test_unknown_mission_variant_needs_review_without_becoming_a_success(client:
             "variant_id": item["variant_id"],
             "artifact": "trace: marker=UNKNOWN-99",
             "explanation": "Маркер связан с сектором.",
+            "structured_facts": {},
         },
     )
     assert response.status_code == 200

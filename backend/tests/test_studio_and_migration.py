@@ -67,7 +67,7 @@ def test_runtime_database_uses_alembic_head_and_fts(client: TestClient) -> None:
         linux_host_columns = {
             row[1] for row in connection.exec_driver_sql("PRAGMA table_info(linux_hosts)")
         }
-    assert revision == "20260827_0004"
+    assert revision == "20260906_0005"
     assert fts == 2
     assert "relay_source_ip" in linux_host_columns
 
@@ -177,6 +177,94 @@ def test_mission_run_migration_is_additive_on_a_disposable_copy(tmp_path: Path) 
         assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
             "20260827_0003",
         )
+
+
+def test_assessment_integrity_migration_preserves_existing_learning_rows(
+    tmp_path: Path,
+) -> None:
+    database = tmp_path / "assessment-integrity-copy.db"
+    config = Config(str(project_root() / "alembic.ini"))
+    config.set_main_option("script_location", str(project_root() / "backend" / "migrations"))
+    config.set_main_option("prepend_sys_path", str(project_root() / "backend" / "src"))
+    config.set_main_option("sqlalchemy.url", f"sqlite:///{database.as_posix()}")
+    command.upgrade(config, "20260827_0004")
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            """
+            INSERT INTO command_practice_states (
+                technique_id, challenge_version, data_version, timezone,
+                practice_cycle, current_help_levels, interval_index,
+                retry_in_session, draft_answer, draft_observation_answer
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            ("linux-pwd-current-directory", 1, 1, "UTC", 2, "[]", 3, 0, "pwd", "path"),
+        )
+        connection.execute(
+            """
+            INSERT INTO command_attempts (
+                idempotency_key, technique_id, challenge_version, data_version,
+                practice_cycle, started_at, shell, answer, observation_answer,
+                revealed_help, result, evidence_kind, observation_correct, dont_remember
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "legacy-command-attempt", "linux-pwd-current-directory", 1, 1, 2,
+                "2026-09-01 00:00:00", "bash", "pwd", "path", "[]", "correct",
+                "recall", 1, 0,
+            ),
+        )
+        connection.execute(
+            """
+            INSERT INTO mission_runs (
+                idempotency_key, mission_id, mission_version, data_version,
+                data_variant, declared_artifact, explanation, grader_status,
+                explanation_accepted, evidence_kind, started_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "legacy-mission-run", "linux-first-investigation", 1, 1, "variant-a",
+                "artifact", "legacy free text", "correct", 1, "structured", "2026-09-01 00:00:00",
+            ),
+        )
+        connection.commit()
+
+    command.upgrade(config, "20260906_0005")
+    with sqlite3.connect(database) as connection:
+        assert connection.execute(
+            "SELECT interval_index, draft_answer, grading_policy_version "
+            "FROM command_practice_states WHERE technique_id = ?",
+            ("linux-pwd-current-directory",),
+        ).fetchone() == (3, "pwd", 1)
+        assert connection.execute(
+            "SELECT answer, structured_observation, grading_policy_version "
+            "FROM command_attempts WHERE idempotency_key = ?",
+            ("legacy-command-attempt",),
+        ).fetchone() == ("pwd", "{}", 1)
+        assert connection.execute(
+            "SELECT explanation, structured_facts, free_text_review_status "
+            "FROM mission_runs WHERE idempotency_key = ?",
+            ("legacy-mission-run",),
+        ).fetchone() == ("legacy free text", "{}", "not_assessed")
+        assert any(
+            row[2] == "assessment_windows" and row[3] == "window_id"
+            for row in connection.execute("PRAGMA foreign_key_list(command_attempts)")
+        )
+        assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+        assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
+            "20260906_0005",
+        )
+
+    command.downgrade(config, "20260827_0004")
+    with sqlite3.connect(database) as connection:
+        assert connection.execute(
+            "SELECT answer FROM command_attempts WHERE idempotency_key = ?",
+            ("legacy-command-attempt",),
+        ).fetchone() == ("pwd",)
+        assert connection.execute(
+            "SELECT explanation FROM mission_runs WHERE idempotency_key = ?",
+            ("legacy-mission-run",),
+        ).fetchone() == ("legacy free text",)
+        assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
 
 
 def test_alembic_downgrade_removes_fts_and_application_schema(client: TestClient) -> None:

@@ -7,6 +7,7 @@ export function TerminalPanel({ runId, role, transcript }: { runId: number; role
   const host = useRef<HTMLDivElement>(null)
   const [compact, setCompact] = useState(() => window.matchMedia('(max-width: 767px)').matches)
   const [portraitTablet, setPortraitTablet] = useState(() => window.matchMedia('(min-width: 768px) and (max-width: 1023px) and (orientation: portrait)').matches)
+  const [integrity, setIntegrity] = useState<'initializing' | 'verified' | 'unverified'>('initializing')
   const interactive = role !== 'viewer' && !compact && !portraitTablet
 
   useEffect(() => {
@@ -63,9 +64,12 @@ export function TerminalPanel({ runId, role, transcript }: { runId: number; role
           socket?.send(JSON.stringify({ type: 'resize', cols: terminal.cols, rows: terminal.rows }))
         })
         socket.addEventListener('message', (event) => {
-          const message = JSON.parse(String(event.data)) as { type: string; data?: string; message?: string; reconnectable?: boolean }
+          const message = JSON.parse(String(event.data)) as { type: string; data?: string; message?: string; reconnectable?: boolean; status?: 'verified' | 'unverified'; input_integrity?: 'verified' | 'unverified' }
           if (message.type === 'output' && message.data) terminal.write(message.data)
           if (message.type === 'transcript' && message.data) { terminal.clear(); terminal.write(message.data) }
+          if (message.type === 'initializing') setIntegrity('initializing')
+          if (message.type === 'integrity' && message.status) setIntegrity(message.status)
+          if (message.type === 'ready' && message.input_integrity) setIntegrity(message.input_integrity)
           if (message.type === 'error') terminal.writeln(`\r\n\x1b[31m[наставник] ${message.message ?? 'ошибка терминала'}\x1b[0m`)
           if (message.type === 'exit') { exited = true; terminal.writeln('\r\n\x1b[33m[наставник] терминал закрыт\x1b[0m') }
         })
@@ -106,5 +110,15 @@ export function TerminalPanel({ runId, role, transcript }: { runId: number; role
       </div>
     )
   }
-  return <div className="terminal-host" ref={host} aria-label="Интерактивный терминал Linux VM" />
+  return (
+    <div className="terminal-shell">
+      <div className="terminal-integrity" role="status">
+        <StatusPill status={integrity === 'verified' ? 'ok' : 'warning'}>
+          {integrity === 'verified' ? 'ВВОД ПРОВЕРЯЕМ' : integrity === 'initializing' ? 'ПРОВЕРКА ВВОДА' : 'НЕЗАЧЁТНАЯ ПРАКТИКА'}
+        </StatusPill>
+        <span>{integrity === 'verified' ? 'Выполненная строка сопоставляется с журналом.' : integrity === 'initializing' ? 'Ввод откроется после проверки временного Bash-профиля.' : 'Неизвестный режим ввода блокирует успешный зачёт, но не считается ошибкой.'}</span>
+      </div>
+      <div className="terminal-host" ref={host} aria-label="Интерактивный терминал Linux VM" />
+    </div>
+  )
 }

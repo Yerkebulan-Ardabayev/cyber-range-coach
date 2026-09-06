@@ -4,8 +4,9 @@ import asyncio
 import base64
 import json
 import os
+import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import asyncssh
 from fastapi import WebSocket
@@ -235,6 +236,9 @@ class TerminalSession:
         initial_transcript: str = "",
         initial_commands: list[str] | None = None,
         initial_command_offsets: list[int] | None = None,
+        initial_input_kinds: list[str] | None = None,
+        initialization_marker: str = "",
+        initialization_failure_marker: str = "",
     ) -> None:
         self.run_id = run_id
         self.connection = connection
@@ -248,7 +252,22 @@ class TerminalSession:
         self.pending_input_start_offset: int | None = None
         self.submitted_commands = list(initial_commands or [])
         self.command_offsets = list(initial_command_offsets or [])
+        self.input_kinds = list(initial_input_kinds or [])
+        if not self.input_kinds and self.submitted_commands:
+            self.input_kinds = ["legacy_unknown"] * len(self.submitted_commands)
+        self.history_contaminated = bool(self.submitted_commands)
+        self.editor = TerminalLineEditor()
+        self.initialization_marker = initialization_marker
+        self.initialization_failure_marker = initialization_failure_marker
+        self.initialization_buffer = ""
+        self.input_ready = not initialization_marker
+        self.input_integrity = "verified" if self.input_ready else "initializing"
+        self.input_integrity_reason: str | None = None
+        self.program_responses_remaining = 0
         self.reader_task = asyncio.create_task(self._read_output())
+        self.initialization_task = (
+            asyncio.create_task(self._initialization_timeout()) if initialization_marker else None
+        )
         self.close_task: asyncio.Task[None] | None = None
         self.closed = False
 
@@ -258,12 +277,12 @@ class TerminalSession:
                 chunk = await self.process.stdout.read(4096)
                 if not chunk:
                     break
-                self._append(str(chunk))
-                await self._broadcast({"type": "output", "data": str(chunk)})
+                visible = self._consume_initialization(str(chunk))
+                if visible:
+                    self._append(visible)
+                    await self._broadcast({"type": "output", "data": visible})
         except (asyncssh.Error, OSError):
-            await self._broadcast(
-                {"type": "error", "message": "Поток SSH-терминала прерван."}
-            )
+            await self._broadcast({"type": "error", "message": "Поток SSH-терминала прерван."})
         finally:
             await self.flush()
             await self._broadcast(
@@ -273,6 +292,81 @@ class TerminalSession:
             self.connection.close()
             await self.connection.wait_closed()
             self.on_finished(self.run_id)
+
+    def _consume_initialization(self, chunk: str) -> str:
+        if self.input_ready or not self.initialization_marker:
+            return chunk
+        self.initialization_buffer += chunk
+        marker_index = self.initialization_buffer.find(self.initialization_marker)
+        failure_index = (
+            self.initialization_buffer.find(self.initialization_failure_marker)
+            if self.initialization_failure_marker
+            else -1
+        )
+        if marker_index < 0 and failure_index < 0:
+            self.initialization_buffer = self.initialization_buffer[-16_384:]
+            return ""
+        profile_verified = marker_index >= 0 and (
+            failure_index < 0 or marker_index < failure_index
+        )
+        matched_index = marker_index if profile_verified else failure_index
+        matched_marker = (
+            self.initialization_marker
+            if profile_verified
+            else self.initialization_failure_marker
+        )
+        visible = self.initialization_buffer[
+            matched_index + len(matched_marker) :
+        ].lstrip("\r\n")
+        self.initialization_buffer = ""
+        self.input_ready = True
+        self.input_integrity = (
+            "verified" if profile_verified and not self.history_contaminated else "unverified"
+        )
+        self.input_integrity_reason = (
+            "reconnected_run"
+            if self.history_contaminated
+            else (None if profile_verified else "temporary_profile_mismatch")
+        )
+        if self.initialization_task:
+            self.initialization_task.cancel()
+            self.initialization_task = None
+        self.integrity_broadcast_task = asyncio.create_task(
+            self._broadcast(
+                {
+                    "type": "integrity",
+                    "status": self.input_integrity,
+                    "message": (
+                        "Временный Bash-профиль подтверждён, но продолженный run остаётся незачётным."
+                        if self.history_contaminated
+                        else (
+                            "Временный Bash-профиль и поддерживаемые клавиши подтверждены."
+                            if profile_verified
+                            else "Фактические Bash bindings не совпали с проверяемым профилем."
+                        )
+                    ),
+                }
+            )
+        )
+        return visible
+
+    async def _initialization_timeout(self) -> None:
+        try:
+            await asyncio.sleep(5)
+        except asyncio.CancelledError:
+            return
+        if self.input_ready:
+            return
+        self.input_ready = True
+        self.input_integrity = "unverified"
+        self.input_integrity_reason = "temporary_profile_unconfirmed"
+        await self._broadcast(
+            {
+                "type": "integrity",
+                "status": "unverified",
+                "message": "Профиль ввода не подтверждён. Терминал доступен только для незачётной практики.",
+            }
+        )
 
     def _append(self, value: str) -> None:
         combined = self.buffer + value
@@ -284,8 +378,11 @@ class TerminalSession:
             # Clear the ledger so grading fails closed until a fresh command.
             self.submitted_commands.clear()
             self.command_offsets.clear()
+            self.input_kinds.clear()
             self.pending_input = ""
             self.pending_input_start_offset = None
+            self.input_integrity = "unverified"
+            self.input_integrity_reason = "transcript_truncated"
         self.buffer = combined
 
     async def _broadcast(self, payload: dict[str, object]) -> None:
@@ -305,7 +402,19 @@ class TerminalSession:
         self.listeners.add(websocket)
         if self.buffer:
             await websocket.send_json({"type": "transcript", "data": self.buffer})
-        await websocket.send_json({"type": "ready", "run_id": self.run_id})
+        if self.input_ready:
+            await websocket.send_json(
+                {
+                    "type": "ready",
+                    "run_id": self.run_id,
+                    "input_integrity": self.input_integrity,
+                    "integrity_reason": self.input_integrity_reason,
+                }
+            )
+        else:
+            await websocket.send_json(
+                {"type": "initializing", "message": "Проверяется временный профиль Bash."}
+            )
 
     def detach(self, websocket: WebSocket, grace_seconds: float) -> None:
         self.listeners.discard(websocket)
@@ -322,29 +431,39 @@ class TerminalSession:
     async def input(self, data: str) -> None:
         if self.closed:
             raise AppError(409, "terminal_closed", "Сессия терминала закрыта.")
+        if not self.input_ready:
+            await self._broadcast(
+                {"type": "error", "message": "Ввод заблокирован до проверки профиля Bash."}
+            )
+            return
         self._record_input(data)
         self.process.stdin.write(data)
         await self.process.stdin.drain()
 
     def _record_input(self, data: str) -> None:
-        for character in data:
-            if character in {"\r", "\n"}:
-                command = self.pending_input.strip()
-                if command:
-                    self.submitted_commands.append(command[:8000])
-                    self.command_offsets.append(self.pending_input_start_offset or 0)
-                    self.submitted_commands = self.submitted_commands[-100:]
-                    self.command_offsets = self.command_offsets[-100:]
-                self.pending_input = ""
-                self.pending_input_start_offset = None
-            elif character in {"\b", "\x7f"}:
-                self.pending_input = self.pending_input[:-1]
-            elif character >= " " and character != "\x7f":
-                if not self.pending_input:
-                    self.pending_input_start_offset = len(self.buffer)
-                self.pending_input += character
-                if len(self.pending_input) > 8000:
-                    self.pending_input = self.pending_input[-8000:]
+        if self.pending_input_start_offset is None and data:
+            self.pending_input_start_offset = len(self.buffer)
+        lines = self.editor.feed(data)
+        if self.editor.integrity == "unverified":
+            self.input_integrity = "unverified"
+            self.input_integrity_reason = self.editor.reason
+        for line in lines:
+            command = line.strip()
+            if not command:
+                continue
+            kind = "program_response" if self.program_responses_remaining else "shell_command"
+            if self.program_responses_remaining:
+                self.program_responses_remaining -= 1
+            else:
+                self.program_responses_remaining = command.count("read -r -p")
+            self.submitted_commands.append(command[:8000])
+            self.command_offsets.append(self.pending_input_start_offset or 0)
+            self.input_kinds.append(kind)
+            self.submitted_commands = self.submitted_commands[-100:]
+            self.command_offsets = self.command_offsets[-100:]
+            self.input_kinds = self.input_kinds[-100:]
+            self.pending_input_start_offset = None
+        self.pending_input = self.editor.text
 
     def resize(self, columns: int, rows: int) -> None:
         if not self.closed:
@@ -360,6 +479,9 @@ class TerminalSession:
                     run.transcript = transcript
                     run.terminal_inputs = list(self.submitted_commands)
                     run.terminal_input_offsets = list(self.command_offsets)
+                    run.terminal_input_kinds = list(self.input_kinds)
+                    run.input_integrity = self.input_integrity
+                    run.input_integrity_reason = self.input_integrity_reason
                     session.commit()
 
         await asyncio.to_thread(persist)
@@ -376,6 +498,107 @@ class TerminalSession:
         self.connection.close()
         await self.connection.wait_closed()
         self.closed = True
+
+
+class TerminalLineEditor:
+    """Limited Emacs-mode line editor used only to verify the executed line."""
+
+    SEQUENCES: ClassVar[dict[str, str]] = {
+        "\x1b[D": "left",
+        "\x1b[C": "right",
+        "\x1b[H": "home",
+        "\x1b[F": "end",
+        "\x1b[1~": "home",
+        "\x1b[4~": "end",
+        "\x1b[3~": "delete",
+    }
+
+    def __init__(self) -> None:
+        self._characters: list[str] = []
+        self.cursor = 0
+        self.pending_escape = ""
+        self.integrity = "verified"
+        self.reason: str | None = None
+
+    @property
+    def text(self) -> str:
+        return "".join(self._characters)
+
+    def _unverified(self, reason: str) -> None:
+        self.integrity = "unverified"
+        self.reason = self.reason or reason
+
+    def _apply_sequence(self, action: str) -> None:
+        if action == "left":
+            self.cursor = max(0, self.cursor - 1)
+        elif action == "right":
+            self.cursor = min(len(self._characters), self.cursor + 1)
+        elif action == "home":
+            self.cursor = 0
+        elif action == "end":
+            self.cursor = len(self._characters)
+        elif action == "delete" and self.cursor < len(self._characters):
+            self._characters.pop(self.cursor)
+
+    def feed(self, data: str) -> list[str]:
+        submitted: list[str] = []
+        stream = self.pending_escape + data
+        self.pending_escape = ""
+        index = 0
+        newline_count = sum(character in {"\r", "\n"} for character in data)
+        if newline_count > 1:
+            self._unverified("multiline_paste")
+        while index < len(stream):
+            character = stream[index]
+            if character == "\x1b":
+                remaining = stream[index:]
+                exact = next(
+                    (sequence for sequence in self.SEQUENCES if remaining.startswith(sequence)),
+                    None,
+                )
+                if exact is not None:
+                    self._apply_sequence(self.SEQUENCES[exact])
+                    index += len(exact)
+                    continue
+                if any(sequence.startswith(remaining) for sequence in self.SEQUENCES):
+                    self.pending_escape = remaining
+                    break
+                self._unverified("unknown_escape_sequence")
+                index += 1
+                continue
+            if character in {"\r", "\n"}:
+                submitted.append(self.text)
+                self._characters.clear()
+                self.cursor = 0
+            elif character in {"\b", "\x7f"}:
+                if self.cursor > 0:
+                    self.cursor -= 1
+                    self._characters.pop(self.cursor)
+            elif character == "\x01":
+                self.cursor = 0
+            elif character == "\x05":
+                self.cursor = len(self._characters)
+            elif character == "\x15":
+                del self._characters[: self.cursor]
+                self.cursor = 0
+            elif character == "\x0b":
+                del self._characters[self.cursor :]
+            elif character == "\x03":
+                self._characters.clear()
+                self.cursor = 0
+            elif character == "\t":
+                self._unverified("tab_completion")
+            elif ord(character) < 32:
+                self._unverified("unknown_control_character")
+            else:
+                self._characters.insert(self.cursor, character)
+                self.cursor += 1
+                if len(self._characters) > 8000:
+                    self._characters = self._characters[-8000:]
+                    self.cursor = len(self._characters)
+                    self._unverified("input_too_long")
+            index += 1
+        return submitted
 
 
 class TerminalManager:
@@ -446,7 +669,9 @@ class TerminalManager:
             payload = json.loads(result.stdout or "")
         except json.JSONDecodeError as exc:
             raise AppError(
-                409, "student_boundary_invalid", "Проверка границ student вернула некорректный JSON."
+                409,
+                "student_boundary_invalid",
+                "Проверка границ student вернула некорректный JSON.",
             ) from exc
         safe = bool(
             result.exit_status == 0
@@ -475,6 +700,7 @@ class TerminalManager:
                 initial_transcript = run.transcript
                 initial_commands = list(run.terminal_inputs or [])
                 initial_command_offsets = list(run.terminal_input_offsets or [])
+                initial_input_kinds = list(run.terminal_input_kinds or [])
                 session.expunge(host)
             known_hosts = write_known_hosts(self.settings, host)
             key = import_private_key(host, self.protector)
@@ -491,6 +717,7 @@ class TerminalManager:
                     timeout=self.settings.ssh_connect_timeout_seconds,
                 )
                 process = await connection.create_process(
+                    command="env INPUTRC=/dev/null /bin/bash --noprofile --norc -i",
                     term_type="xterm-256color",
                     term_size=(120, 32),
                     stderr=asyncssh.STDOUT,
@@ -502,6 +729,42 @@ class TerminalManager:
                     "Не удалось открыть terminal в подтверждённой Linux VM.",
                     {"error": type(exc).__name__},
                 ) from exc
+            session_id = uuid.uuid4().hex
+            marker = f"__CRC_INPUT_READY_{session_id}__"
+            failure_marker = f"__CRC_INPUT_FAILED_{session_id}__"
+            initialization = (
+                "stty -echo\n"
+                "bind 'set editing-mode emacs'\n"
+                "bind 'set enable-bracketed-paste off'\n"
+                "bind '\"\\C-a\": beginning-of-line'\n"
+                "bind '\"\\C-e\": end-of-line'\n"
+                "bind '\"\\C-u\": unix-line-discard'\n"
+                "bind '\"\\C-k\": kill-line'\n"
+                "bind '\"\\e[D\": backward-char'\n"
+                "bind '\"\\e[C\": forward-char'\n"
+                "bind '\"\\e[H\": beginning-of-line'\n"
+                "bind '\"\\e[F\": end-of-line'\n"
+                "bind '\"\\e[3~\": delete-char'\n"
+                "if bind -v | grep -q '^set editing-mode emacs$' "
+                "&& bind -q beginning-of-line | grep -Fq '\\C-a' "
+                "&& bind -q end-of-line | grep -Fq '\\C-e' "
+                "&& bind -q unix-line-discard | grep -Fq '\\C-u' "
+                "&& bind -q kill-line | grep -Fq '\\C-k'; then\n"
+                f"  printf '\\n{marker}\\n'\n"
+                "else\n"
+                f"  printf '\\n{failure_marker}\\n'\n"
+                "fi\n"
+                "stty echo\n"
+            )
+            process.stdin.write(initialization)
+            await process.stdin.drain()
+            with self.database.session_factory() as session:
+                stored = session.get(LabRun, run_id)
+                if stored is not None:
+                    stored.input_integrity = "initializing"
+                    stored.input_integrity_reason = None
+                    stored.terminal_session_id = session_id
+                    session.commit()
             terminal = TerminalSession(
                 run_id,
                 connection,
@@ -512,6 +775,9 @@ class TerminalManager:
                 initial_transcript=initial_transcript,
                 initial_commands=initial_commands,
                 initial_command_offsets=initial_command_offsets,
+                initial_input_kinds=initial_input_kinds,
+                initialization_marker=marker,
+                initialization_failure_marker=failure_marker,
             )
             self.sessions[run_id] = terminal
             return terminal

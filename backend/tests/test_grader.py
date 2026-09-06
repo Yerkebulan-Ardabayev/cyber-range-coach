@@ -26,6 +26,7 @@ def test_http_failure_never_becomes_http_response(client) -> None:
             prediction="Ожидаю HTTP status",
             transcript="curl: (7) Failed to connect: Connection refused\n",
             terminal_inputs=["printf 'HTTP/1.1 200 OK\\nContent-Type: text/plain\\n'"],
+            input_integrity="verified",
         )
         session.add(run)
         session.commit()
@@ -106,6 +107,7 @@ def test_correct_pipe_output_ignores_command_text_and_passes(client) -> None:
             prediction="Останется одна строка",
             transcript=f"student$ {lesson.command}\nLISTEN 8080\n",
             terminal_inputs=[lesson.command],
+            input_integrity="verified",
         )
         session.add(run)
         session.flush()
@@ -128,11 +130,38 @@ def test_echoed_approved_command_is_not_observed_output(client) -> None:
             prediction="Ожидаю две записи",
             transcript=f"student$ {lesson.command}\n",
             terminal_inputs=[lesson.command],
+            input_integrity="verified",
         )
         session.add(run)
         session.flush()
         result = grade_run(session, run, lesson)
         assert result.status == "needs_evidence"
+
+
+def test_input_not_verifiable_is_technical_limit_not_a_failed_command(client) -> None:
+    db = client.app.state.db
+    lesson = client.app.state.curriculum.lesson("text-pipes-grep")
+    with db.session_factory() as session:
+        learning = LearningSession(duration_minutes=15, lesson_ids=[lesson.id])
+        session.add(learning)
+        session.flush()
+        run = LabRun(
+            session_id=learning.id,
+            lesson_id=lesson.id,
+            skill_id=lesson.skill_id,
+            prediction="Останется одна строка",
+            transcript=f"student$ {lesson.command}\nLISTEN 8080\n",
+            terminal_inputs=[lesson.command],
+            input_integrity="unverified",
+            input_integrity_reason="tab_completion",
+        )
+        session.add(run)
+        session.flush()
+        result = grade_run(session, run, lesson)
+        assert result.status == "needs_evidence"
+        check = next(item for item in result.checks if item["kind"] == "input_integrity")
+        assert check["passed"] is False
+        assert check["reason"] == "tab_completion"
 
 
 def test_follow_up_fake_command_cannot_supply_observation(client) -> None:
@@ -150,6 +179,7 @@ def test_follow_up_fake_command_cannot_supply_observation(client) -> None:
             prediction="Ожидаю одну строку",
             transcript=f"student$ {lesson.command}\nfailed\nstudent$ {fake}\nLISTEN 8080\n",
             terminal_inputs=[lesson.command, fake],
+            input_integrity="verified",
         )
         session.add(run)
         session.flush()
@@ -175,6 +205,7 @@ def test_earlier_fake_command_cannot_supply_observation(client) -> None:
             prediction="Ожидаю одну строку",
             transcript=f"student$ {fake}\nLISTEN 8080\nstudent$ {lesson.command}\nfailed\n",
             terminal_inputs=[fake, lesson.command],
+            input_integrity="verified",
         )
         session.add(run)
         session.flush()
@@ -204,6 +235,7 @@ def test_gateway_offsets_exclude_spoofed_approved_echo_before_real_command(clien
             transcript=fake_chunk + real_chunk,
             terminal_inputs=[fake, lesson.command],
             terminal_input_offsets=[0, len(fake_chunk)],
+            input_integrity="verified",
         )
         session.add(run)
         session.flush()
@@ -234,6 +266,7 @@ def test_type_ahead_output_from_previous_process_cannot_pass(client) -> None:
             ),
             terminal_inputs=[fake, lesson.command],
             terminal_input_offsets=[0, len(prefix)],
+            input_integrity="verified",
         )
         session.add(run)
         session.flush()
@@ -270,6 +303,8 @@ def test_evidence_report_keeps_six_interactive_answers(client) -> None:
             prediction="Ожидаю шесть полей",
             transcript=f"student$ {lesson.command}\n{output}\n",
             terminal_inputs=[lesson.command, *answers],
+            terminal_input_kinds=["shell_command", *("program_response" for _ in answers)],
+            input_integrity="verified",
         )
         session.add(run)
         session.flush()
@@ -291,6 +326,7 @@ def test_evidence_requires_explanation_tutor_and_final_debrief(client) -> None:
             prediction="Останется одна строка",
             transcript=f"student$ {lesson.command}\nLISTEN 8080\n",
             terminal_inputs=[lesson.command],
+            input_integrity="verified",
         )
         session.add(run)
         session.add(

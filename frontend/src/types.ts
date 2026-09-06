@@ -182,12 +182,17 @@ export interface Review {
   completed_at: string | null
 }
 
+export type CommandShell = 'bash' | 'cmd'
+
+export type CommandExecutionStatus = 'range_ready' | 'awaiting_stand'
+
 export type RecallReason = 'correct' | 'correct_with_help' | 'wrong_tool' | 'wrong_flag' | 'wrong_shell' | 'insufficient_data'
 
 export interface CommandTechnique {
   id: string
   family: string
-  shell: 'bash'
+  shell: CommandShell
+  execution_status: CommandExecutionStatus
   purpose: string
   significant_flags: string[]
   typical_error: string
@@ -199,6 +204,13 @@ export interface CommandTechnique {
 export interface CommandPracticeChallenge {
   id: string
   prompt: string
+  context: {
+    shell: CommandShell
+    working_directory: string | null
+    named_inputs: Record<string, string>
+    constraints: string[]
+  }
+  answer_fields: Array<{ id: string; label: string; kind: 'command' }>
   estimated_minutes: number
   hints: Array<{ level: 1 | 2 | 3 | 4; label: string }>
   observation_prompt: string
@@ -207,13 +219,19 @@ export interface CommandPracticeChallenge {
 
 export interface CommandPracticeItem {
   technique_id: string
-  shell: 'bash'
+  shell: CommandShell
+  execution_status: CommandExecutionStatus
   challenge: CommandPracticeChallenge
   due_at: string | null
   overdue: boolean
   retry_in_session: boolean
   draft_answer: string
   draft_observation_answer: string
+  draft_attempt_key: string | null
+  attempt_type: 'assessment' | 'rehearsal'
+  eligible_at: string | null
+  window_id: number | null
+  phase: 'recall' | 'observation'
 }
 
 export interface CommandPracticePlan {
@@ -235,6 +253,21 @@ export interface CommandPracticeResult {
   interval_days: number | null
   retry_in_session: boolean
   duplicate: boolean
+  verification_status: 'verified' | 'unverified'
+  detail: string
+  attempt_type: 'assessment' | 'rehearsal'
+  completed: boolean
+  observation_example: string | null
+  observation_fields: Array<{ id: string; label: string; required: boolean }>
+}
+
+export interface CommandObservationResult {
+  attempt_id: number
+  technique_id: string
+  observation_correct: boolean
+  field_errors: Record<string, string>
+  free_text_review_status: 'not_assessed'
+  completed: boolean
 }
 
 export type MissionGradeStatus = 'solved' | 'wrong_artifact' | 'unexplained' | 'needs_review'
@@ -255,16 +288,18 @@ export interface MissionPlanItem {
   final_artifact_prompt: string
   explanation_prompt: string
   technique_ids: string[]
-  techniques: CommandTechnique[]
+  technique_refs: Array<{ id: string; label: string; shell: CommandShell }>
   variant_rule: string
   requires_free_text: boolean
   version: number
   variant_id: string
   scenario: string
   prepared_data: MissionPreparedDataEntry[]
+  fact_fields: Array<{ id: string; label: string; required: boolean }>
   draft_attempt_key: string | null
   draft_artifact: string
   draft_explanation: string
+  draft_structured_facts: Record<string, string>
 }
 
 export interface MissionPlan {
@@ -281,6 +316,8 @@ export interface MissionResult {
   debrief: string
   evidence_kind: string
   duplicate: boolean
+  field_errors: Record<string, string>
+  free_text_review_status: 'not_assessed'
 }
 
 export interface Note {

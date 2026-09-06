@@ -1,4 +1,4 @@
-version: 1
+version: 2
 sources:
 - name: 01 · Введение в Linux CLI · мнемоника.docx
   block_count: 140
@@ -933,13 +933,33 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать текущий каталог.?'
-    expected_concepts:
-    - - путь
-      - каталог
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_pwd_current_directory_1=путь'
+    fields:
+    - id: observed_linux_pwd_current_directory_1
+      label: 'Наблюдаемый факт 1: путь / каталог'
+      accepted_values:
+      - путь
+      - каталог
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Показать текущий каталог.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-ls-directory-listing-recall
   technique_id: linux-ls-directory-listing
   prompt: Показать имена в текущем каталоге. Напишите команду для синтетического учебного примера.
@@ -972,14 +992,34 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать имена в текущем каталоге.?'
-    expected_concepts:
-    - - имя
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_ls_directory_listing_1=имя'
+    fields:
+    - id: observed_linux_ls_directory_listing_1
+      label: 'Наблюдаемый факт 1: имя / файл / каталог'
+      accepted_values:
+      - имя
       - файл
       - каталог
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Показать имена в текущем каталоге.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-cd-change-directory-recall
   technique_id: linux-cd-change-directory
   prompt: Перейти в указанный каталог. Напишите команду для синтетического учебного примера.
@@ -1012,13 +1052,33 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: перейти в указанный каталог.?'
-    expected_concepts:
-    - - каталог
-      - путь
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_cd_change_directory_1=каталог'
+    fields:
+    - id: observed_linux_cd_change_directory_1
+      label: 'Наблюдаемый факт 1: каталог / путь'
+      accepted_values:
+      - каталог
+      - путь
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      directory_path: recon
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-cat-read-text-file-recall
   technique_id: linux-cat-read-text-file
   prompt: Прочитать короткий текстовый файл целиком. Напишите команду для синтетического учебного примера.
@@ -1051,14 +1111,34 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать короткий текстовый файл
       целиком.?'
-    expected_concepts:
-    - - текст
-      - содержим
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_cat_read_text_file_1=текст'
+    fields:
+    - id: observed_linux_cat_read_text_file_1
+      label: 'Наблюдаемый факт 1: текст / содержим'
+      accepted_values:
+      - текст
+      - содержим
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      file_path: briefing.txt
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-grep-text-pattern-recall
   technique_id: linux-grep-text-pattern
   prompt: Оставить строки с заданной текстовой меткой. Напишите команду для синтетического учебного примера.
@@ -1091,14 +1171,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: оставить строки с заданной текстовой
       меткой.?'
-    expected_concepts:
-    - - строк
-      - совпад
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_grep_text_pattern_1=строк'
+    fields:
+    - id: observed_linux_grep_text_pattern_1
+      label: 'Наблюдаемый факт 1: строк / совпад'
+      accepted_values:
+      - строк
+      - совпад
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_text: CRED
+      file_path: briefing.txt
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-chmod-add-execute-recall
   technique_id: linux-chmod-add-execute
   prompt: Добавить владельцу, группе и остальным право выполнения по символической записи. Напишите команду
@@ -1133,15 +1234,36 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: добавить владельцу, группе и остальным
       право выполнения по символической записи.?'
-    expected_concepts:
-    - - прав
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_chmod_add_execute_1=прав'
+    fields:
+    - id: observed_linux_chmod_add_execute_1
+      label: 'Наблюдаемый факт 1: прав / исполн / execute'
+      accepted_values:
+      - прав
       - исполн
       - execute
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: +x
+      target_path: ./reveal.sh
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-run-current-directory-file-recall
   technique_id: linux-run-current-directory-file
   prompt: Запустить файл из текущего каталога явным относительным путём. Напишите команду для синтетического
@@ -1176,14 +1298,34 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: запустить файл из текущего каталога
       явным относительным путём.?'
-    expected_concepts:
-    - - вывод
-      - результат
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_run_current_directory_file_1=вывод'
+    fields:
+    - id: observed_linux_run_current_directory_file_1
+      label: 'Наблюдаемый факт 1: вывод / результат'
+      accepted_values:
+      - вывод
+      - результат
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      target_path: ./reveal.sh
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-tool-version-option-recall
   technique_id: linux-tool-version-option
   prompt: Попросить локальный инструмент показать версию. Напишите команду для синтетического учебного
@@ -1217,13 +1359,33 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: попросить локальный инструмент
       показать версию.?'
-    expected_concepts:
-    - - верси
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_tool_version_option_1=верси'
+    fields:
+    - id: observed_linux_tool_version_option_1
+      label: 'Наблюдаемый факт 1: верси'
+      accepted_values:
+      - верси
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      target_path: ./reconctl
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-cut-equals-field-recall
   technique_id: linux-cut-equals-field
   prompt: Взять второе поле из строки KEY=value. Напишите команду для синтетического учебного примера.
@@ -1257,14 +1419,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: взять второе поле из строки key=value.?'
-    expected_concepts:
-    - - analyst
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_cut_equals_field_1=analyst'
+    fields:
+    - id: observed_linux_cut_equals_field_1
+      label: 'Наблюдаемый факт 1: analyst / втор / значен'
+      accepted_values:
+      - analyst
       - втор
       - значен
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      target_path: '%s\n'
+      argument: ROLE=analyst
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-cut-colon-field-recall
   technique_id: linux-cut-colon-field
   prompt: Взять второе поле из строки с разделителем двоеточие. Напишите команду для синтетического учебного
@@ -1300,15 +1483,36 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: взять второе поле из строки с разделителем
       двоеточие.?'
-    expected_concepts:
-    - - demo
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_cut_colon_field_1=demo'
+    fields:
+    - id: observed_linux_cut_colon_field_1
+      label: 'Наблюдаемый факт 1: demo / втор / значен'
+      accepted_values:
+      - demo
       - втор
       - значен
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      target_path: '%s\n'
+      argument: analyst:demo:1000
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-shell-glob-extension-recall
   technique_id: linux-shell-glob-extension
   prompt: Подставить имена файлов с заданным расширением. Напишите команду для синтетического учебного
@@ -1343,14 +1547,34 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: подставить имена файлов с заданным
       расширением.?'
-    expected_concepts:
-    - - файл
-      - содержим
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_shell_glob_extension_1=файл'
+    fields:
+    - id: observed_linux_shell_glob_extension_1
+      label: 'Наблюдаемый факт 1: файл / содержим'
+      accepted_values:
+      - файл
+      - содержим
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      filename_pattern: '*.key'
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-grep-recursive-tree-recall
   technique_id: linux-grep-recursive-tree
   prompt: Искать метку во всём дереве каталогов. Напишите команду для синтетического учебного примера.
@@ -1383,14 +1607,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: искать метку во всём дереве каталогов.?'
-    expected_concepts:
-    - - путь
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_grep_recursive_tree_1=путь'
+    fields:
+    - id: observed_linux_grep_recursive_tree_1
+      label: 'Наблюдаемый факт 1: путь / строк / совпад'
+      accepted_values:
+      - путь
       - строк
       - совпад
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_text: CRED
+      file_path: loot/
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-cat-leading-dash-file-recall
   technique_id: linux-cat-leading-dash-file
   prompt: Прочитать файл, имя которого начинается с дефиса. Напишите команду для синтетического учебного
@@ -1425,14 +1670,34 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать файл, имя которого начинается
       с дефиса.?'
-    expected_concepts:
-    - - содержим
-      - текст
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_cat_leading_dash_file_1=содержим'
+    fields:
+    - id: observed_linux_cat_leading_dash_file_1
+      label: 'Наблюдаемый факт 1: содержим / текст'
+      accepted_values:
+      - содержим
+      - текст
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      file_path: ./-
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-cat-quoted-filename-recall
   technique_id: linux-cat-quoted-filename
   prompt: Прочитать файл, в имени которого есть пробел. Напишите команду для синтетического учебного примера.
@@ -1465,14 +1730,34 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать файл, в имени которого
       есть пробел.?'
-    expected_concepts:
-    - - содержим
-      - текст
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_cat_quoted_filename_1=содержим'
+    fields:
+    - id: observed_linux_cat_quoted_filename_1
+      label: 'Наблюдаемый факт 1: содержим / текст'
+      accepted_values:
+      - содержим
+      - текст
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      file_path: server notes.txt
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-ls-show-hidden-recall
   technique_id: linux-ls-show-hidden
   prompt: Показать скрытые имена вместе с обычными. Напишите команду для синтетического учебного примера.
@@ -1505,15 +1790,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать скрытые имена вместе с
       обычными.?'
-    expected_concepts:
-    - - скрыт
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_ls_show_hidden_1=скрыт'
+    fields:
+    - id: observed_linux_ls_show_hidden_1
+      label: 'Наблюдаемый факт 1: скрыт / точк / имя'
+      accepted_values:
+      - скрыт
       - точк
       - имя
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Показать скрытые имена вместе с обычными.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-ls-long-details-recall
   technique_id: linux-ls-long-details
   prompt: Показать права, размер и другие свойства файлов. Напишите команду для синтетического учебного
@@ -1547,15 +1852,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать права, размер и другие
       свойства файлов.?'
-    expected_concepts:
-    - - прав
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_ls_long_details_1=прав'
+    fields:
+    - id: observed_linux_ls_long_details_1
+      label: 'Наблюдаемый факт 1: прав / размер / владел'
+      accepted_values:
+      - прав
       - размер
       - владел
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Показать права, размер и другие свойства файлов.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-find-executable-files-recall
   technique_id: linux-find-executable-files
   prompt: Найти обычные файлы с любым битом выполнения. Напишите команду для синтетического учебного примера.
@@ -1597,14 +1922,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact_or_permuted
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти обычные файлы с любым битом
       выполнения.?'
-    expected_concepts:
-    - - путь
-      - файл
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_find_executable_files_1=путь'
+    fields:
+    - id: observed_linux_find_executable_files_1
+      label: 'Наблюдаемый факт 1: путь / файл'
+      accepted_values:
+      - путь
+      - файл
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_root: .
+      search_value: f
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-find-size-bytes-recall
   technique_id: linux-find-size-bytes
   prompt: Найти обычный файл точного размера в байтах. Напишите команду для синтетического учебного примера.
@@ -1646,14 +1992,36 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact_or_permuted
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти обычный файл точного размера
       в байтах.?'
-    expected_concepts:
-    - - путь
-      - файл
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_find_size_bytes_1=путь'
+    fields:
+    - id: observed_linux_find_size_bytes_1
+      label: 'Наблюдаемый факт 1: путь / файл'
+      accepted_values:
+      - путь
+      - файл
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_root: .
+      search_value: f
+      search_value_2: 1272c
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-sort-unique-line-recall
   technique_id: linux-sort-unique-line
   prompt: Оставить строку, которая встречается один раз. Напишите команду для синтетического учебного
@@ -1688,15 +2056,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: оставить строку, которая встречается
       один раз.?'
-    expected_concepts:
-    - - строк
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_sort_unique_line_1=строк'
+    fields:
+    - id: observed_linux_sort_unique_line_1
+      label: 'Наблюдаемый факт 1: строк / уник / одиноч'
+      accepted_values:
+      - строк
       - уник
       - одиноч
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      target_path: records.txt
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-strings-grep-case-insensitive-recall
   technique_id: linux-strings-grep-case-insensitive
   prompt: Извлечь печатаемый текст из бинарного файла и найти метку без учёта регистра. Напишите команду
@@ -1731,15 +2119,36 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: извлечь печатаемый текст из бинарного
       файла и найти метку без учёта регистра.?'
-    expected_concepts:
-    - - строк
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_strings_grep_case_insensitive_1=строк'
+    fields:
+    - id: observed_linux_strings_grep_case_insensitive_1
+      label: 'Наблюдаемый факт 1: строк / cred / совпад'
+      accepted_values:
+      - строк
       - cred
       - совпад
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_text: sample.bin
+      search_text_2: CRED
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-base64-decode-recall
   technique_id: linux-base64-decode
   prompt: Декодировать Base64 в стандартный вывод. Напишите команду для синтетического учебного примера.
@@ -1772,15 +2181,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: декодировать base64 в стандартный
       вывод.?'
-    expected_concepts:
-    - - декод
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_base64_decode_1=декод'
+    fields:
+    - id: observed_linux_base64_decode_1
+      label: 'Наблюдаемый факт 1: декод / текст / результат'
+      accepted_values:
+      - декод
       - текст
       - результат
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      target_path: encoded.txt
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-tool-help-recall
   technique_id: linux-tool-help
   prompt: Открыть встроенную справку локального инструмента. Напишите команду для синтетического учебного
@@ -1816,15 +2245,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: открыть встроенную справку локального
       инструмента.?'
-    expected_concepts:
-    - - справ
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_tool_help_1=справ'
+    fields:
+    - id: observed_linux_tool_help_1
+      label: 'Наблюдаемый факт 1: справ / опци / режим'
+      accepted_values:
+      - справ
       - опци
       - режим
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      target_path: ./auditbox
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-source-environment-file-recall
   technique_id: linux-source-environment-file
   prompt: Загрузить переменные файла в текущую оболочку. Напишите команду для синтетического учебного
@@ -1859,14 +2308,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: загрузить переменные файла в текущую
       оболочку.?'
-    expected_concepts:
-    - - переменн
-      - окружен
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_source_environment_file_1=переменн'
+    fields:
+    - id: observed_linux_source_environment_file_1
+      label: 'Наблюдаемый факт 1: переменн / окружен'
+      accepted_values:
+      - переменн
+      - окружен
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      target_path: .
+      target_path_2: profile.env
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-echo-variable-recall
   technique_id: linux-echo-variable
   prompt: Показать значение переменной оболочки. Напишите команду для синтетического учебного примера.
@@ -1899,13 +2369,33 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать значение переменной оболочки.?'
-    expected_concepts:
-    - - значен
-      - переменн
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_echo_variable_1=значен'
+    fields:
+    - id: observed_linux_echo_variable_1
+      label: 'Наблюдаемый факт 1: значен / переменн'
+      accepted_values:
+      - значен
+      - переменн
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      variable_name: NEXT_STEP
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-id-identity-groups-recall
   technique_id: linux-id-identity-groups
   prompt: Показать UID, GID и группы текущего пользователя. Напишите команду для синтетического учебного
@@ -1940,15 +2430,41 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать uid, gid и группы текущего
       пользователя.?'
-    expected_concepts:
-    - - uid
-    - - gid
-      - групп
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_id_identity_groups_1=uid
+
+      observed_linux_id_identity_groups_2=gid'
+    fields:
+    - id: observed_linux_id_identity_groups_1
+      label: 'Наблюдаемый факт 1: uid'
+      accepted_values:
+      - uid
+      accepted_patterns: []
+    - id: observed_linux_id_identity_groups_2
+      label: 'Наблюдаемый факт 2: gid / групп'
+      accepted_values:
+      - gid
+      - групп
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Показать UID, GID и группы текущего пользователя.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-uname-kernel-recall
   technique_id: linux-uname-kernel
   prompt: Показать сведения о ядре и архитектуре. Напишите команду для синтетического учебного примера.
@@ -1981,15 +2497,41 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать сведения о ядре и архитектуре.?'
-    expected_concepts:
-    - - ядр
-      - kernel
-    - - архитект
-      - машин
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_uname_kernel_1=ядр
+
+      observed_linux_uname_kernel_2=архитект'
+    fields:
+    - id: observed_linux_uname_kernel_1
+      label: 'Наблюдаемый факт 1: ядр / kernel'
+      accepted_values:
+      - ядр
+      - kernel
+      accepted_patterns: []
+    - id: observed_linux_uname_kernel_2
+      label: 'Наблюдаемый факт 2: архитект / машин'
+      accepted_values:
+      - архитект
+      - машин
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Показать сведения о ядре и архитектуре.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-os-release-recall
   technique_id: linux-os-release
   prompt: Прочитать название и выпуск дистрибутива. Напишите команду для синтетического учебного примера.
@@ -2022,15 +2564,41 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать название и выпуск дистрибутива.?'
-    expected_concepts:
-    - - дистрибутив
-      - систем
-    - - верси
-      - выпуск
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_os_release_1=дистрибутив
+
+      observed_linux_os_release_2=верси'
+    fields:
+    - id: observed_linux_os_release_1
+      label: 'Наблюдаемый факт 1: дистрибутив / систем'
+      accepted_values:
+      - дистрибутив
+      - систем
+      accepted_patterns: []
+    - id: observed_linux_os_release_2
+      label: 'Наблюдаемый факт 2: верси / выпуск'
+      accepted_values:
+      - верси
+      - выпуск
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Прочитать название и выпуск дистрибутива.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-hostname-recall
   technique_id: linux-hostname
   prompt: Показать имя хоста. Напишите команду для синтетического учебного примера.
@@ -2063,13 +2631,33 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать имя хоста.?'
-    expected_concepts:
-    - - имя
-      - хост
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_hostname_1=имя'
+    fields:
+    - id: observed_linux_hostname_1
+      label: 'Наблюдаемый факт 1: имя / хост'
+      accepted_values:
+      - имя
+      - хост
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Показать имя хоста.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-grep-invert-tmp-recall
   technique_id: linux-grep-invert-tmp
   prompt: Показать строки, которые не оканчиваются на .tmp. Напишите команду для синтетического учебного
@@ -2104,16 +2692,42 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать строки, которые не оканчиваются
       на .tmp.?'
-    expected_concepts:
-    - - имя
-      - список
-    - - tmp
-      - не tmp
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_grep_invert_tmp_1=имя
+
+      observed_linux_grep_invert_tmp_2=tmp'
+    fields:
+    - id: observed_linux_grep_invert_tmp_1
+      label: 'Наблюдаемый факт 1: имя / список'
+      accepted_values:
+      - имя
+      - список
+      accepted_patterns: []
+    - id: observed_linux_grep_invert_tmp_2
+      label: 'Наблюдаемый факт 2: tmp / не tmp'
+      accepted_values:
+      - tmp
+      - не tmp
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      directory_path: .tmp$
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-rm-glob-lab-only-recall
   technique_id: linux-rm-glob-lab-only
   prompt: Удалить синтетические .tmp только внутри учебной песочницы. Напишите команду для синтетического
@@ -2148,14 +2762,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: удалить синтетические .tmp только
       внутри учебной песочницы.?'
-    expected_concepts:
-    - - удален
-      - нет файл
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_rm_glob_lab_only_1=удален'
+    fields:
+    - id: observed_linux_rm_glob_lab_only_1
+      label: 'Наблюдаемый факт 1: удален / нет файл'
+      accepted_values:
+      - удален
+      - нет файл
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: rm
+      filename_pattern: '*.tmp'
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-cat-concatenate-parts-recall
   technique_id: linux-cat-concatenate-parts
   prompt: Собрать части по маске в новый файл. Напишите команду для синтетического учебного примера.
@@ -2188,16 +2823,43 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: собрать части по маске в новый
       файл.?'
-    expected_concepts:
-    - - файл
-      - joined
-    - - содержим
-      - част
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_cat_concatenate_parts_1=файл
+
+      observed_linux_cat_concatenate_parts_2=содержим'
+    fields:
+    - id: observed_linux_cat_concatenate_parts_1
+      label: 'Наблюдаемый факт 1: файл / joined'
+      accepted_values:
+      - файл
+      - joined
+      accepted_patterns: []
+    - id: observed_linux_cat_concatenate_parts_2
+      label: 'Наблюдаемый факт 2: содержим / част'
+      accepted_values:
+      - содержим
+      - част
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      filename_pattern: part_*
+      additional_value: joined.txt
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-readlink-final-target-recall
   technique_id: linux-readlink-final-target
   prompt: Разрешить цепочку символических ссылок до конечного пути. Напишите команду для синтетического
@@ -2231,14 +2893,34 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: разрешить цепочку символических
       ссылок до конечного пути.?'
-    expected_concepts:
-    - - путь
-      - цель
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_readlink_final_target_1=путь'
+    fields:
+    - id: observed_linux_readlink_final_target_1
+      label: 'Наблюдаемый факт 1: путь / цель'
+      accepted_values:
+      - путь
+      - цель
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Разрешить цепочку символических ссылок до конечного пути.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-cat-resolved-link-recall
   technique_id: linux-cat-resolved-link
   prompt: Прочитать файл по конечному пути символической ссылки. Напишите команду для синтетического учебного
@@ -2273,14 +2955,34 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать файл по конечному пути
       символической ссылки.?'
-    expected_concepts:
-    - - содержим
-      - текст
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_cat_resolved_link_1=содержим'
+    fields:
+    - id: observed_linux_cat_resolved_link_1
+      label: 'Наблюдаемый факт 1: содержим / текст'
+      accepted_values:
+      - содержим
+      - текст
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      file_path: (readlink -f start)
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-grep-anchor-cut-field-recall
   technique_id: linux-grep-anchor-cut-field
   prompt: Выбрать строку по началу и взять третье поле через двоеточие. Напишите команду для синтетического
@@ -2316,15 +3018,36 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: выбрать строку по началу и взять
       третье поле через двоеточие.?'
-    expected_concepts:
-    - - трет
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_grep_anchor_cut_field_1=трет'
+    fields:
+    - id: observed_linux_grep_anchor_cut_field_1
+      label: 'Наблюдаемый факт 1: трет / значен / поле'
+      accepted_values:
+      - трет
       - значен
       - поле
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_text: '^keeper:'
+      file_path: accounts.txt
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-awk-field-condition-recall
   technique_id: linux-awk-field-condition
   prompt: Выбрать CSV-строку по второму полю и вывести третье. Напишите команду для синтетического учебного
@@ -2360,15 +3083,36 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: выбрать csv-строку по второму полю
       и вывести третье.?'
-    expected_concepts:
-    - - трет
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_awk_field_condition_1=трет'
+    fields:
+    - id: observed_linux_awk_field_condition_1
+      label: 'Наблюдаемый факт 1: трет / поле / значен'
+      accepted_values:
+      - трет
       - поле
       - значен
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: 2=="VAULT"{print $3}
+      target_path: inventory.csv
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-sed-remove-marker-recall
   technique_id: linux-sed-remove-marker
   prompt: Удалить все синтетические разделители ~~ из строки. Напишите команду для синтетического учебного
@@ -2402,15 +3146,38 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: удалить все синтетические разделители
       ~~ из строки.?'
-    expected_concepts:
-    - - aabb
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_sed_remove_marker_1=aabb'
+    fields:
+    - id: observed_linux_sed_remove_marker_1
+      label: 'Наблюдаемый факт 1: aabb / очищ / строк'
+      accepted_values:
+      - aabb
       - очищ
       - строк
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      target_path: '%s\n'
+      argument: AA~~BB
+      argument_2: sed
+      target_path_2: s/~~//g
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-diff-files-recall
   technique_id: linux-diff-files
   prompt: Показать различия двух текстовых файлов. Напишите команду для синтетического учебного примера.
@@ -2443,14 +3210,36 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать различия двух текстовых
       файлов.?'
-    expected_concepts:
-    - - различ
-      - строк
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_diff_files_1=различ'
+    fields:
+    - id: observed_linux_diff_files_1
+      label: 'Наблюдаемый факт 1: различ / строк'
+      accepted_values:
+      - различ
+      - строк
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: diff
+      target_path: before.txt
+      target_path_2: after.txt
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-find-setuid-recall
   technique_id: linux-find-setuid
   prompt: Найти обычные файлы с установленным setuid. Напишите команду для синтетического учебного примера.
@@ -2493,17 +3282,44 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact_or_permuted
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти обычные файлы с установленным
       setuid.?'
-    expected_concepts:
-    - - путь
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_find_setuid_1=путь
+
+      observed_linux_find_setuid_2=прав'
+    fields:
+    - id: observed_linux_find_setuid_1
+      label: 'Наблюдаемый факт 1: путь / файл'
+      accepted_values:
+      - путь
       - файл
-    - - прав
+      accepted_patterns: []
+    - id: observed_linux_find_setuid_2
+      label: 'Наблюдаемый факт 2: прав / 4000 / setuid'
+      accepted_values:
+      - прав
       - '4000'
       - setuid
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_root: .
+      search_value: f
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-find-setgid-recall
   technique_id: linux-find-setgid
   prompt: Найти обычные файлы с установленным setgid. Напишите команду для синтетического учебного примера.
@@ -2546,17 +3362,44 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact_or_permuted
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти обычные файлы с установленным
       setgid.?'
-    expected_concepts:
-    - - путь
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_find_setgid_1=путь
+
+      observed_linux_find_setgid_2=прав'
+    fields:
+    - id: observed_linux_find_setgid_1
+      label: 'Наблюдаемый факт 1: путь / файл'
+      accepted_values:
+      - путь
       - файл
-    - - прав
+      accepted_patterns: []
+    - id: observed_linux_find_setgid_2
+      label: 'Наблюдаемый факт 2: прав / 2000 / setgid'
+      accepted_values:
+      - прав
       - '2000'
       - setgid
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_root: .
+      search_value: f
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-find-world-writable-recall
   technique_id: linux-find-world-writable
   prompt: Найти обычные файлы, доступные остальным на запись. Напишите команду для синтетического учебного
@@ -2600,17 +3443,44 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact_or_permuted
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти обычные файлы, доступные
       остальным на запись.?'
-    expected_concepts:
-    - - путь
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_find_world_writable_1=путь
+
+      observed_linux_find_world_writable_2=прав'
+    fields:
+    - id: observed_linux_find_world_writable_1
+      label: 'Наблюдаемый факт 1: путь / файл'
+      accepted_values:
+      - путь
       - файл
-    - - прав
+      accepted_patterns: []
+    - id: observed_linux_find_world_writable_2
+      label: 'Наблюдаемый факт 2: прав / 0002 / запис'
+      accepted_values:
+      - прав
       - '0002'
       - запис
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_root: .
+      search_value: f
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-find-sticky-directories-recall
   technique_id: linux-find-sticky-directories
   prompt: Найти каталоги со sticky-битом. Напишите команду для синтетического учебного примера.
@@ -2653,16 +3523,43 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact_or_permuted
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти каталоги со sticky-битом.?'
-    expected_concepts:
-    - - путь
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_find_sticky_directories_1=путь
+
+      observed_linux_find_sticky_directories_2=прав'
+    fields:
+    - id: observed_linux_find_sticky_directories_1
+      label: 'Наблюдаемый факт 1: путь / каталог'
+      accepted_values:
+      - путь
       - каталог
-    - - прав
+      accepted_patterns: []
+    - id: observed_linux_find_sticky_directories_2
+      label: 'Наблюдаемый факт 2: прав / 1000 / sticky'
+      accepted_values:
+      - прав
       - '1000'
       - sticky
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_root: .
+      search_value: d
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-grep-uid0-nonroot-recall
   technique_id: linux-grep-uid0-nonroot
   prompt: Найти строку UID 0 и исключить штатный root в синтетическом passwd. Напишите команду для синтетического
@@ -2698,16 +3595,44 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти строку uid 0 и исключить
       штатный root в синтетическом passwd.?'
-    expected_concepts:
-    - - строк
-      - учёт
-    - - не root
-      - исключ
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_grep_uid0_nonroot_1=строк
+
+      observed_linux_grep_uid0_nonroot_2=не root'
+    fields:
+    - id: observed_linux_grep_uid0_nonroot_1
+      label: 'Наблюдаемый факт 1: строк / учёт'
+      accepted_values:
+      - строк
+      - учёт
+      accepted_patterns: []
+    - id: observed_linux_grep_uid0_nonroot_2
+      label: 'Наблюдаемый факт 2: не root / исключ'
+      accepted_values:
+      - не root
+      - исключ
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_text: ':0:'
+      file_path: passwd.demo
+      file_path_2: '^root:'
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-grep-recursive-line-numbers-recall
   technique_id: linux-grep-recursive-line-numbers
   prompt: Рекурсивно найти NOPASSWD и показать номера строк. Напишите команду для синтетического учебного
@@ -2742,16 +3667,43 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: рекурсивно найти nopasswd и показать
       номера строк.?'
-    expected_concepts:
-    - - путь
-      - файл
-    - - строк
-      - номер
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_grep_recursive_line_numbers_1=путь
+
+      observed_linux_grep_recursive_line_numbers_2=строк'
+    fields:
+    - id: observed_linux_grep_recursive_line_numbers_1
+      label: 'Наблюдаемый факт 1: путь / файл'
+      accepted_values:
+      - путь
+      - файл
+      accepted_patterns: []
+    - id: observed_linux_grep_recursive_line_numbers_2
+      label: 'Наблюдаемый факт 2: строк / номер'
+      accepted_values:
+      - строк
+      - номер
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_text: NOPASSWD
+      file_path: etc-demo/
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-find-readable-private-key-recall
   technique_id: linux-find-readable-private-key
   prompt: Найти синтетический id_rsa с чтением для остальных. Напишите команду для синтетического учебного
@@ -2798,16 +3750,44 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact_or_permuted
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти синтетический id_rsa с чтением
       для остальных.?'
-    expected_concepts:
-    - - путь
-      - id_rsa
-    - - прав
-      - '0004'
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_find_readable_private_key_1=путь
+
+      observed_linux_find_readable_private_key_2=прав'
+    fields:
+    - id: observed_linux_find_readable_private_key_1
+      label: 'Наблюдаемый факт 1: путь / id_rsa'
+      accepted_values:
+      - путь
+      - id_rsa
+      accepted_patterns: []
+    - id: observed_linux_find_readable_private_key_2
+      label: 'Наблюдаемый факт 2: прав / 0004'
+      accepted_values:
+      - прав
+      - '0004'
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_root: .
+      search_value: f
+      search_value_2: id_rsa
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-ssh-custom-port-recall
   technique_id: linux-ssh-custom-port
   prompt: Открыть SSH-сеанс к следующей учебной учётке на нестандартном порту. Напишите команду для синтетического
@@ -2842,15 +3822,37 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: открыть ssh-сеанс к следующей учебной
       учётке на нестандартном порту.?'
-    expected_concepts:
-    - - приглашен
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_ssh_custom_port_1=приглашен'
+    fields:
+    - id: observed_linux_ssh_custom_port_1
+      label: 'Наблюдаемый факт 1: приглашен / сеанс / host key'
+      accepted_values:
+      - приглашен
       - сеанс
       - host key
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: ssh
+      numeric_value: '2222'
+      argument_2: student2@localhost
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-grep-context-after-recall
   technique_id: linux-grep-context-after
   prompt: Показать совпавшую строку и одну строку после неё. Напишите команду для синтетического учебного
@@ -2885,16 +3887,44 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать совпавшую строку и одну
       строку после неё.?'
-    expected_concepts:
-    - - совпад
-      - header
-    - - следующ
-      - после
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_grep_context_after_1=совпад
+
+      observed_linux_grep_context_after_2=следующ'
+    fields:
+    - id: observed_linux_grep_context_after_1
+      label: 'Наблюдаемый факт 1: совпад / header'
+      accepted_values:
+      - совпад
+      - header
+      accepted_patterns: []
+    - id: observed_linux_grep_context_after_2
+      label: 'Наблюдаемый факт 2: следующ / после'
+      accepted_values:
+      - следующ
+      - после
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_text: '1'
+      search_text_2: HEADER
+      file_path: data.txt
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-awk-last-field-recall
   technique_id: linux-awk-last-field
   prompt: Вывести последнее поле найденной строки. Напишите команду для синтетического учебного примера.
@@ -2928,15 +3958,37 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: вывести последнее поле найденной
       строки.?'
-    expected_concepts:
-    - - послед
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_awk_last_field_1=послед'
+    fields:
+    - id: observed_linux_awk_last_field_1
+      label: 'Наблюдаемый факт 1: послед / поле / значен'
+      accepted_values:
+      - послед
       - поле
       - значен
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_text: analyst
+      file_path: auth.log
+      file_path_2: '{print $NF}'
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-find-path-executable-recall
   technique_id: linux-find-path-executable
   prompt: Найти исполняемые файлы только внутри пути secret. Напишите команду для синтетического учебного
@@ -2971,15 +4023,43 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти исполняемые файлы только
       внутри пути secret.?'
-    expected_concepts:
-    - - путь
-      - файл
-    - - secret
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_find_path_executable_1=путь
+
+      observed_linux_find_path_executable_2=secret'
+    fields:
+    - id: observed_linux_find_path_executable_1
+      label: 'Наблюдаемый факт 1: путь / файл'
+      accepted_values:
+      - путь
+      - файл
+      accepted_patterns: []
+    - id: observed_linux_find_path_executable_2
+      label: 'Наблюдаемый факт 2: secret'
+      accepted_values:
+      - secret
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_root: ./evidence
+      filename_pattern: '*/secret/*'
+      search_value: f
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-base64-decode-to-file-recall
   technique_id: linux-base64-decode-to-file
   prompt: Декодировать Base64 в записываемый синтетический файл. Напишите команду для синтетического учебного
@@ -3014,16 +4094,43 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: декодировать base64 в записываемый
       синтетический файл.?'
-    expected_concepts:
-    - - файл
-      - decoded
-    - - декод
-      - содержим
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_base64_decode_to_file_1=файл
+
+      observed_linux_base64_decode_to_file_2=декод'
+    fields:
+    - id: observed_linux_base64_decode_to_file_1
+      label: 'Наблюдаемый факт 1: файл / decoded'
+      accepted_values:
+      - файл
+      - decoded
+      accepted_patterns: []
+    - id: observed_linux_base64_decode_to_file_2
+      label: 'Наблюдаемый факт 2: декод / содержим'
+      accepted_values:
+      - декод
+      - содержим
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      target_path: encoded.txt
+      target_path_2: decoded.txt
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-whoami-current-user-recall
   technique_id: linux-whoami-current-user
   prompt: Показать имя текущего пользователя. Напишите команду для синтетического учебного примера.
@@ -3056,13 +4163,33 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать имя текущего пользователя.?'
-    expected_concepts:
-    - - имя
-      - пользоват
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_whoami_current_user_1=имя'
+    fields:
+    - id: observed_linux_whoami_current_user_1
+      label: 'Наблюдаемый факт 1: имя / пользоват'
+      accepted_values:
+      - имя
+      - пользоват
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Показать имя текущего пользователя.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-getent-current-user-recall
   technique_id: linux-getent-current-user
   prompt: Получить запись passwd текущего пользователя. Напишите команду для синтетического учебного примера.
@@ -3096,16 +4223,44 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: получить запись passwd текущего
       пользователя.?'
-    expected_concepts:
-    - - строк
-      - запис
-    - - пользоват
-      - uid
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_getent_current_user_1=строк
+
+      observed_linux_getent_current_user_2=пользоват'
+    fields:
+    - id: observed_linux_getent_current_user_1
+      label: 'Наблюдаемый факт 1: строк / запис'
+      accepted_values:
+      - строк
+      - запис
+      accepted_patterns: []
+    - id: observed_linux_getent_current_user_2
+      label: 'Наблюдаемый факт 2: пользоват / uid'
+      accepted_values:
+      - пользоват
+      - uid
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: getent
+      argument_2: passwd
+      argument_3: (whoami)
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-man-command-recall
   technique_id: linux-man-command
   prompt: Открыть локальное руководство утилиты. Напишите команду для синтетического учебного примера.
@@ -3138,14 +4293,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: открыть локальное руководство утилиты.?'
-    expected_concepts:
-    - - справ
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_man_command_1=справ'
+    fields:
+    - id: observed_linux_man_command_1
+      label: 'Наблюдаемый факт 1: справ / описан / manual'
+      accepted_values:
+      - справ
       - описан
       - manual
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: man
+      argument_2: xxd
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-xxd-reverse-recall
   technique_id: linux-xxd-reverse
   prompt: Восстановить исходные байты из hex-дампа. Напишите команду для синтетического учебного примера.
@@ -3178,15 +4354,36 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: восстановить исходные байты из
       hex-дампа.?'
-    expected_concepts:
-    - - байт
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_xxd_reverse_1=байт'
+    fields:
+    - id: observed_linux_xxd_reverse_1
+      label: 'Наблюдаемый факт 1: байт / двоич / восстанов'
+      accepted_values:
+      - байт
       - двоич
       - восстанов
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: xxd
+      target_path: dump.hex
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-export-path-recall
   technique_id: linux-export-path
   prompt: Добавить каталог программ в PATH текущей сессии. Напишите команду для синтетического учебного
@@ -3220,16 +4417,42 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: добавить каталог программ в path
       текущей сессии.?'
-    expected_concepts:
-    - - path
-      - маршрут
-    - - каталог
-      - demo
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_export_path_1=path
+
+      observed_linux_export_path_2=каталог'
+    fields:
+    - id: observed_linux_export_path_1
+      label: 'Наблюдаемый факт 1: path / маршрут'
+      accepted_values:
+      - path
+      - маршрут
+      accepted_patterns: []
+    - id: observed_linux_export_path_2
+      label: 'Наблюдаемый факт 2: каталог / demo'
+      accepted_values:
+      - каталог
+      - demo
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      target_path: PATH="$PATH:/opt/demo/bin
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-grep-fixed-string-recall
   technique_id: linux-grep-fixed-string
   prompt: Искать системную метку как буквальную строку. Напишите команду для синтетического учебного примера.
@@ -3262,16 +4485,42 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: искать системную метку как буквальную
       строку.?'
-    expected_concepts:
-    - - pretty_name
-      - строк
-    - - дистрибутив
-      - назван
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_grep_fixed_string_1=pretty_name
+
+      observed_linux_grep_fixed_string_2=дистрибутив'
+    fields:
+    - id: observed_linux_grep_fixed_string_1
+      label: 'Наблюдаемый факт 1: pretty_name / строк'
+      accepted_values:
+      - pretty_name
+      - строк
+      accepted_patterns: []
+    - id: observed_linux_grep_fixed_string_2
+      label: 'Наблюдаемый факт 2: дистрибутив / назван'
+      accepted_values:
+      - дистрибутив
+      - назван
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      search_text: PRETTY_NAME
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-nano-edit-config-recall
   technique_id: linux-nano-edit-config
   prompt: Открыть синтетический конфигурационный файл в редакторе. Напишите команду для синтетического
@@ -3306,15 +4555,36 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: открыть синтетический конфигурационный
       файл в редакторе.?'
-    expected_concepts:
-    - - редактор
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_nano_edit_config_1=редактор'
+    fields:
+    - id: observed_linux_nano_edit_config_1
+      label: 'Наблюдаемый факт 1: редактор / файл / конфиг'
+      accepted_values:
+      - редактор
       - файл
       - конфиг
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: nano
+      target_path: agent.demo.conf
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-pgrep-full-command-recall
   technique_id: linux-pgrep-full-command
   prompt: Найти процесс по полной строке запуска и показать аргументы. Напишите команду для синтетического
@@ -3349,16 +4619,43 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти процесс по полной строке
       запуска и показать аргументы.?'
-    expected_concepts:
-    - - pid
-      - процесс
-    - - аргумент
-      - команд
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_pgrep_full_command_1=pid
+
+      observed_linux_pgrep_full_command_2=аргумент'
+    fields:
+    - id: observed_linux_pgrep_full_command_1
+      label: 'Наблюдаемый факт 1: pid / процесс'
+      accepted_values:
+      - pid
+      - процесс
+      accepted_patterns: []
+    - id: observed_linux_pgrep_full_command_2
+      label: 'Наблюдаемый факт 2: аргумент / команд'
+      accepted_values:
+      - аргумент
+      - команд
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: pgrep
+      argument_2: magpie-demo
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-tail-follow-recall
   technique_id: linux-tail-follow
   prompt: Следить за новыми строками растущего файла. Напишите команду для синтетического учебного примера.
@@ -3391,16 +4688,42 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: следить за новыми строками растущего
       файла.?'
-    expected_concepts:
-    - - нов
-      - строк
-    - - поток
-      - растущ
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_tail_follow_1=нов
+
+      observed_linux_tail_follow_2=поток'
+    fields:
+    - id: observed_linux_tail_follow_1
+      label: 'Наблюдаемый факт 1: нов / строк'
+      accepted_values:
+      - нов
+      - строк
+      accepted_patterns: []
+    - id: observed_linux_tail_follow_2
+      label: 'Наблюдаемый факт 2: поток / растущ'
+      accepted_values:
+      - поток
+      - растущ
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      file_path: feed.demo.log
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-dpkg-file-owner-recall
   technique_id: linux-dpkg-file-owner
   prompt: Определить пакет, которому принадлежит файл. Напишите команду для синтетического учебного примера.
@@ -3433,15 +4756,41 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: определить пакет, которому принадлежит
       файл.?'
-    expected_concepts:
-    - - пакет
-    - - путь
-      - файл
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_dpkg_file_owner_1=пакет
+
+      observed_linux_dpkg_file_owner_2=путь'
+    fields:
+    - id: observed_linux_dpkg_file_owner_1
+      label: 'Наблюдаемый факт 1: пакет'
+      accepted_values:
+      - пакет
+      accepted_patterns: []
+    - id: observed_linux_dpkg_file_owner_2
+      label: 'Наблюдаемый факт 2: путь / файл'
+      accepted_values:
+      - путь
+      - файл
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: dpkg
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-read-system-cron-recall
   technique_id: linux-read-system-cron
   prompt: Прочитать системные файлы расписания cron. Напишите команду для синтетического учебного примера.
@@ -3474,16 +4823,42 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать системные файлы расписания
       cron.?'
-    expected_concepts:
-    - - расписан
-      - cron
-    - - команд
-      - пользоват
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_read_system_cron_1=расписан
+
+      observed_linux_read_system_cron_2=команд'
+    fields:
+    - id: observed_linux_read_system_cron_1
+      label: 'Наблюдаемый факт 1: расписан / cron'
+      accepted_values:
+      - расписан
+      - cron
+      accepted_patterns: []
+    - id: observed_linux_read_system_cron_2
+      label: 'Наблюдаемый факт 2: команд / пользоват'
+      accepted_values:
+      - команд
+      - пользоват
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Прочитать системные файлы расписания cron.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-apt-installed-version-recall
   technique_id: linux-apt-installed-version
   prompt: Показать установленную и кандидатную версии пакета. Напишите команду для синтетического учебного
@@ -3517,16 +4892,44 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать установленную и кандидатную
       версии пакета.?'
-    expected_concepts:
-    - - installed
-      - установ
-    - - candidate
-      - кандидат
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_apt_installed_version_1=installed
+
+      observed_linux_apt_installed_version_2=candidate'
+    fields:
+    - id: observed_linux_apt_installed_version_1
+      label: 'Наблюдаемый факт 1: installed / установ'
+      accepted_values:
+      - installed
+      - установ
+      accepted_patterns: []
+    - id: observed_linux_apt_installed_version_2
+      label: 'Наблюдаемый факт 2: candidate / кандидат'
+      accepted_values:
+      - candidate
+      - кандидат
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: apt-cache
+      argument_2: policy
+      argument_3: bash
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-sudo-list-rules-recall
   technique_id: linux-sudo-list-rules
   prompt: Показать разрешённые правила sudo для текущего пользователя. Напишите команду для синтетического
@@ -3561,16 +4964,42 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать разрешённые правила sudo
       для текущего пользователя.?'
-    expected_concepts:
-    - - разреш
-      - прав
-    - - nopasswd
-      - команд
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_sudo_list_rules_1=разреш
+
+      observed_linux_sudo_list_rules_2=nopasswd'
+    fields:
+    - id: observed_linux_sudo_list_rules_1
+      label: 'Наблюдаемый факт 1: разреш / прав'
+      accepted_values:
+      - разреш
+      - прав
+      accepted_patterns: []
+    - id: observed_linux_sudo_list_rules_2
+      label: 'Наблюдаемый факт 2: nopasswd / команд'
+      accepted_values:
+      - nopasswd
+      - команд
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Показать разрешённые правила sudo для текущего пользователя.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-sudo-exact-allowed-command-recall
   technique_id: linux-sudo-exact-allowed-command
   prompt: Запустить через sudo только синтетическую явно разрешённую программу. Напишите команду для синтетического
@@ -3605,14 +5034,34 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: запустить через sudo только синтетическую
       явно разрешённую программу.?'
-    expected_concepts:
-    - - вывод
-      - результат
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_sudo_exact_allowed_command_1=вывод'
+    fields:
+    - id: observed_linux_sudo_exact_allowed_command_1
+      label: 'Наблюдаемый факт 1: вывод / результат'
+      accepted_values:
+      - вывод
+      - результат
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Запустить через sudo только синтетическую явно разрешённую программу.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-su-login-shell-recall
   technique_id: linux-su-login-shell
   prompt: Открыть login shell целевой учебной учётной записи. Напишите команду для синтетического учебного
@@ -3647,15 +5096,35 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: открыть login shell целевой учебной
       учётной записи.?'
-    expected_concepts:
-    - - приглашен
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_su_login_shell_1=приглашен'
+    fields:
+    - id: observed_linux_su_login_shell_1
+      label: 'Наблюдаемый факт 1: приглашен / пользоват / shell'
+      accepted_values:
+      - приглашен
       - пользоват
       - shell
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: su
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-exit-shell-recall
   technique_id: linux-exit-shell
   prompt: Выйти из текущей дочерней оболочки. Напишите команду для синтетического учебного примера.
@@ -3688,14 +5157,34 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: выйти из текущей дочерней оболочки.?'
-    expected_concepts:
-    - - приглашен
+    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_exit_shell_1=приглашен'
+    fields:
+    - id: observed_linux_exit_shell_1
+      label: 'Наблюдаемый факт 1: приглашен / пользоват / оболоч'
+      accepted_values:
+      - приглашен
       - пользоват
       - оболоч
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: exit
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-lsblk-devices-recall
   technique_id: linux-lsblk-devices
   prompt: Показать дерево дисков и разделов. Напишите команду для синтетического учебного примера.
@@ -3728,14 +5217,40 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать дерево дисков и разделов.?'
-    expected_concepts:
-    - - диск
-      - устройств
-    - - раздел
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_lsblk_devices_1=диск
+
+      observed_linux_lsblk_devices_2=раздел'
+    fields:
+    - id: observed_linux_lsblk_devices_1
+      label: 'Наблюдаемый факт 1: диск / устройств'
+      accepted_values:
+      - диск
+      - устройств
+      accepted_patterns: []
+    - id: observed_linux_lsblk_devices_2
+      label: 'Наблюдаемый факт 2: раздел'
+      accepted_values:
+      - раздел
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: lsblk
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-lsblk-filesystems-recall
   technique_id: linux-lsblk-filesystems
   prompt: Показать дерево устройств с файловой системой и меткой. Напишите команду для синтетического
@@ -3770,16 +5285,42 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать дерево устройств с файловой
       системой и меткой.?'
-    expected_concepts:
-    - - fstype
-      - файлов
-    - - label
-      - метк
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_lsblk_filesystems_1=fstype
+
+      observed_linux_lsblk_filesystems_2=label'
+    fields:
+    - id: observed_linux_lsblk_filesystems_1
+      label: 'Наблюдаемый факт 1: fstype / файлов'
+      accepted_values:
+      - fstype
+      - файлов
+      accepted_patterns: []
+    - id: observed_linux_lsblk_filesystems_2
+      label: 'Наблюдаемый факт 2: label / метк'
+      accepted_values:
+      - label
+      - метк
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: lsblk
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-blkid-partition-recall
   technique_id: linux-blkid-partition
   prompt: Показать тип и метку конкретного синтетического раздела. Напишите команду для синтетического
@@ -3814,16 +5355,42 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать тип и метку конкретного
       синтетического раздела.?'
-    expected_concepts:
-    - - type
-      - файлов
-    - - label
-      - метк
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_blkid_partition_1=type
+
+      observed_linux_blkid_partition_2=label'
+    fields:
+    - id: observed_linux_blkid_partition_1
+      label: 'Наблюдаемый факт 1: type / файлов'
+      accepted_values:
+      - type
+      - файлов
+      accepted_patterns: []
+    - id: observed_linux_blkid_partition_2
+      label: 'Наблюдаемый факт 2: label / метк'
+      accepted_values:
+      - label
+      - метк
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: blkid
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-mkdir-parents-recall
   technique_id: linux-mkdir-parents
   prompt: Создать синтетическую точку монтирования вместе с родителями. Напишите команду для синтетического
@@ -3858,14 +5425,34 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: создать синтетическую точку монтирования
       вместе с родителями.?'
-    expected_concepts:
-    - - каталог
-      - папк
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_mkdir_parents_1=каталог'
+    fields:
+    - id: observed_linux_mkdir_parents_1
+      label: 'Наблюдаемый факт 1: каталог / папк'
+      accepted_values:
+      - каталог
+      - папк
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Создать синтетическую точку монтирования вместе с родителями.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-mount-partition-recall
   technique_id: linux-mount-partition
   prompt: Подключить учебный раздел к синтетической точке монтирования. Напишите команду для синтетического
@@ -3900,16 +5487,42 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: подключить учебный раздел к синтетической
       точке монтирования.?'
-    expected_concepts:
-    - - раздел
-      - vdc1
-    - - точк
-      - mnt
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_mount_partition_1=раздел
+
+      observed_linux_mount_partition_2=точк'
+    fields:
+    - id: observed_linux_mount_partition_1
+      label: 'Наблюдаемый факт 1: раздел / vdc1'
+      accepted_values:
+      - раздел
+      - vdc1
+      accepted_patterns: []
+    - id: observed_linux_mount_partition_2
+      label: 'Наблюдаемый факт 2: точк / mnt'
+      accepted_values:
+      - точк
+      - mnt
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Подключить учебный раздел к синтетической точке монтирования.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-mount-filter-recall
   technique_id: linux-mount-filter
   prompt: Проверить, куда подключён конкретный учебный раздел. Напишите команду для синтетического учебного
@@ -3944,16 +5557,42 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: проверить, куда подключён конкретный
       учебный раздел.?'
-    expected_concepts:
-    - - vdc1
-      - раздел
-    - - /mnt
-      - точк
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_mount_filter_1=vdc1
+
+      observed_linux_mount_filter_2=/mnt'
+    fields:
+    - id: observed_linux_mount_filter_1
+      label: 'Наблюдаемый факт 1: vdc1 / раздел'
+      accepted_values:
+      - vdc1
+      - раздел
+      accepted_patterns: []
+    - id: observed_linux_mount_filter_2
+      label: 'Наблюдаемый факт 2: /mnt / точк'
+      accepted_values:
+      - /mnt
+      - точк
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: vdc1
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-free-human-memory-recall
   technique_id: linux-free-human-memory
   prompt: Показать объём оперативной памяти в читаемых единицах. Напишите команду для синтетического учебного
@@ -3988,16 +5627,42 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать объём оперативной памяти
       в читаемых единицах.?'
-    expected_concepts:
-    - - total
-      - всего
-    - - памят
-      - mem
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_free_human_memory_1=total
+
+      observed_linux_free_human_memory_2=памят'
+    fields:
+    - id: observed_linux_free_human_memory_1
+      label: 'Наблюдаемый факт 1: total / всего'
+      accepted_values:
+      - total
+      - всего
+      accepted_patterns: []
+    - id: observed_linux_free_human_memory_2
+      label: 'Наблюдаемый факт 2: памят / mem'
+      accepted_values:
+      - памят
+      - mem
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      argument: free
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 - id: linux-df-human-filesystems-recall
   technique_id: linux-df-human-filesystems
   prompt: Показать занятое и свободное место смонтированных файловых систем. Напишите команду для синтетического
@@ -4032,18 +5697,50 @@ challenges:
     - where.exe
     - cmd.exe
     - powershell
+    comparison_mode: exact
   observation:
     prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать занятое и свободное место
       смонтированных файловых систем.?'
-    expected_concepts:
-    - - size
-      - размер
-    - - used
-      - занят
-    - - avail
-      - свобод
     sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-  version: 1
+    example_output: 'SYNTHETIC RESULT
+
+      observed_linux_df_human_filesystems_1=size
+
+      observed_linux_df_human_filesystems_2=used
+
+      observed_linux_df_human_filesystems_3=avail'
+    fields:
+    - id: observed_linux_df_human_filesystems_1
+      label: 'Наблюдаемый факт 1: size / размер'
+      accepted_values:
+      - size
+      - размер
+      accepted_patterns: []
+    - id: observed_linux_df_human_filesystems_2
+      label: 'Наблюдаемый факт 2: used / занят'
+      accepted_values:
+      - used
+      - занят
+      accepted_patterns: []
+    - id: observed_linux_df_human_filesystems_3
+      label: 'Наблюдаемый факт 3: avail / свобод'
+      accepted_values:
+      - avail
+      - свобод
+      accepted_patterns: []
+  version: 2
+  context:
+    shell: bash
+    working_directory: /home/student/training
+    named_inputs:
+      task_goal: Показать занятое и свободное место смонтированных файловых систем.
+    constraints:
+    - Используйте только именованные синтетические исходные данные условия.
+    - Ответ вводится как текст и не исполняется приложением Coach.
+  answer_fields:
+  - id: command
+    label: Команда в Bash
+    kind: command
 coverage:
 - source: 01 · Введение в Linux CLI · мнемоника.docx
   address: P001

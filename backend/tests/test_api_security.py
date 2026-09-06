@@ -54,6 +54,20 @@ def test_viewer_cannot_create_session_or_target(client: TestClient) -> None:
     assert target.status_code == 403
 
 
+def test_viewer_cannot_create_a_reference_help_event(client: TestClient) -> None:
+    client.cookies.set("crc_csrf", "test-csrf")
+    response = client.post(
+        "/api/v2/command-techniques/linux-pwd-current-directory/reveal",
+        headers=csrf_headers("viewer"),
+        json={
+            "disclosure_key": "viewer-reference-denied",
+            "timezone": "Asia/Almaty",
+            "surface": "technique_card",
+        },
+    )
+    assert response.status_code == 403
+
+
 def test_paired_mutation_requires_csrf(client: TestClient) -> None:
     response = client.post(
         "/api/v2/sessions",

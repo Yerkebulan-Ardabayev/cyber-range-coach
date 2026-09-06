@@ -5,14 +5,24 @@ from sqlalchemy import select
 
 from ..errors import AppError
 from ..models import CommandAttempt, CommandPracticeState
-from ..schemas import CommandCompleteRequest, CommandDraftRequest, CommandHintRequest
+from ..schemas import (
+    CommandCompleteRequest,
+    CommandDraftRequest,
+    CommandHintRequest,
+    CommandObservationRequest,
+    CommandReferenceRevealRequest,
+)
 from ..security import Principal, require_role
 from ..services.command_practice import (
     CommandPracticePlan,
     CompletionResult,
+    ObservationCompletionResult,
+    ReferenceDisclosure,
     complete_command_attempt,
+    complete_command_observation,
     plan_command_practice,
     reveal_command_hint,
+    reveal_command_reference,
     save_command_draft,
 )
 
@@ -66,6 +76,27 @@ def command_technique(
     return {
         "technique": catalog.technique(technique_id).model_dump(),
     }
+
+
+@router.post(
+    "/command-techniques/{technique_id}/reveal",
+    response_model=ReferenceDisclosure,
+)
+def command_technique_reveal(
+    technique_id: str,
+    payload: CommandReferenceRevealRequest,
+    request: Request,
+    _principal: Principal = Depends(require_role("operator")),
+) -> ReferenceDisclosure:
+    with request.app.state.db.session_factory() as session:
+        return reveal_command_reference(
+            session,
+            request.app.state.command_catalog,
+            technique_id=technique_id,
+            disclosure_key=payload.disclosure_key,
+            surface=payload.surface,
+            timezone=payload.timezone,
+        )
 
 
 @router.put("/command-practice/attempts/{attempt_key}/draft")
@@ -140,5 +171,27 @@ def command_complete(
             answer=payload.answer,
             observation_answer=payload.observation_answer,
             dont_remember=payload.dont_remember,
+            timezone=payload.timezone,
+        )
+
+
+@router.post(
+    "/command-practice/attempts/{attempt_key}/observation",
+    response_model=ObservationCompletionResult,
+)
+def command_observation(
+    payload: CommandObservationRequest,
+    request: Request,
+    attempt_key: str = ATTEMPT_KEY,
+    _principal: Principal = Depends(require_role("operator")),
+) -> ObservationCompletionResult:
+    with request.app.state.db.session_factory() as session:
+        return complete_command_observation(
+            session,
+            request.app.state.command_catalog,
+            attempt_key=attempt_key,
+            technique_id=payload.technique_id,
+            structured_observation=payload.structured_observation,
+            free_text=payload.free_text,
             timezone=payload.timezone,
         )

@@ -7,6 +7,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from .services.recall_grader import Shell
+
 
 class ApiModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -248,6 +250,10 @@ class LabRunResponse(ApiModel):
     transcript: str
     terminal_inputs: list[str]
     terminal_input_offsets: list[int]
+    terminal_input_kinds: list[str]
+    input_integrity: str
+    input_integrity_reason: str | None
+    terminal_session_id: str | None
     grader_status: str | None
     grader_report: dict[str, Any]
     relay_port: int | None
@@ -315,7 +321,7 @@ class ReviewResponse(ApiModel):
 
 class CommandAttemptBase(ApiModel):
     technique_id: str = Field(min_length=2, max_length=120, pattern=r"^[a-z0-9][a-z0-9-]+$")
-    shell: Literal["bash"]
+    shell: Shell
     timezone: str = Field(min_length=1, max_length=80)
 
     @field_validator("timezone")
@@ -343,6 +349,28 @@ class CommandCompleteRequest(CommandAttemptBase):
     dont_remember: bool = False
 
 
+class CommandObservationRequest(ApiModel):
+    technique_id: str = Field(min_length=2, max_length=120, pattern=r"^[a-z0-9][a-z0-9-]+$")
+    timezone: str = Field(min_length=1, max_length=80)
+    structured_observation: dict[str, str] = Field(default_factory=dict)
+    free_text: str = Field(default="", max_length=4000)
+
+    @field_validator("timezone")
+    @classmethod
+    def known_observation_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as error:
+            raise ValueError("unknown IANA timezone") from error
+        return value
+
+
+class CommandReferenceRevealRequest(ApiModel):
+    disclosure_key: str = Field(min_length=16, max_length=120, pattern=r"^[A-Za-z0-9._:-]+$")
+    timezone: str = Field(min_length=1, max_length=80)
+    surface: Literal["technique_card", "mission_reference"]
+
+
 class MissionAttemptBase(ApiModel):
     mission_id: str = Field(min_length=2, max_length=120, pattern=r"^[a-z0-9][a-z0-9-]+$")
     variant_id: str = Field(min_length=2, max_length=120, pattern=r"^[a-z0-9][a-z0-9-]+$")
@@ -351,11 +379,13 @@ class MissionAttemptBase(ApiModel):
 class MissionDraftRequest(MissionAttemptBase):
     artifact: str = Field(max_length=4000)
     explanation: str = Field(default="", max_length=4000)
+    structured_facts: dict[str, str] = Field(default_factory=dict)
 
 
 class MissionCompleteRequest(MissionAttemptBase):
     artifact: str = Field(default="", max_length=4000)
     explanation: str = Field(default="", max_length=4000)
+    structured_facts: dict[str, str] = Field(default_factory=dict)
 
 
 class NoteCreate(ApiModel):

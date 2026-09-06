@@ -42,6 +42,7 @@ def mission_draft(
             variant_id=payload.variant_id,
             artifact=payload.artifact,
             explanation=payload.explanation,
+            structured_facts=payload.structured_facts,
         )
         return {"run_id": run.id, "saved": run.completed_at is None}
 
@@ -65,4 +66,5 @@ def mission_complete(
             variant_id=payload.variant_id,
             artifact=payload.artifact,
             explanation=payload.explanation,
+            structured_facts=payload.structured_facts,
         )

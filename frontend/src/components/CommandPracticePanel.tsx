@@ -2,13 +2,18 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 
 import { api, jsonBody } from '../api'
-import type { CommandPracticePlan, CommandPracticeResult, CommandTechnique, Principal } from '../types'
+import type { CommandObservationResult, CommandPracticePlan, CommandPracticeResult, CommandShell, CommandTechnique, Principal } from '../types'
 import { ArrowIcon, RepeatIcon } from '../icons'
 import { ErrorNotice, Eyebrow, LoadingBlock, StatusPill, formatDate } from './Common'
 
 function newAttemptKey(): string {
   if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID()
   return `practice-${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+const shellLabel: Record<CommandShell, string> = {
+  bash: 'Bash',
+  cmd: 'cmd.exe',
 }
 
 const reasonText: Record<CommandPracticeResult['reason'], string> = {
@@ -32,6 +37,8 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
   const [attemptKey, setAttemptKey] = useState(newAttemptKey)
   const [answer, setAnswer] = useState('')
   const [observation, setObservation] = useState('')
+  const [structuredObservation, setStructuredObservation] = useState<Record<string, string>>({})
+  const [observationResult, setObservationResult] = useState<CommandObservationResult | null>(null)
   const [revealed, setRevealed] = useState<number[]>([])
   const [revealedHints, setRevealedHints] = useState<Array<{ level: 1 | 2 | 3 | 4; label: string; text: string }>>([])
   const [catalogOpen, setCatalogOpen] = useState(false)
@@ -42,7 +49,7 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
   const leaveDraft = useRef<{
     attemptKey: string
     techniqueId: string
-    shell: 'bash'
+    shell: CommandShell
     timezone: string
     answer: string
     observationAnswer: string
@@ -63,9 +70,11 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
   useLayoutEffect(() => {
     if (!item || initializedIndex.current === index) return
     initializedIndex.current = index
-    setAttemptKey(newAttemptKey())
+    setAttemptKey(item.draft_attempt_key ?? newAttemptKey())
     setAnswer(item.draft_answer)
     setObservation(item.draft_observation_answer)
+    setStructuredObservation({})
+    setObservationResult(null)
     setRevealed([])
     setRevealedHints([])
     setCatalogOpen(false)
@@ -85,7 +94,7 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
     timezone,
     answer,
     observationAnswer: observation,
-    canSave: principal.role !== 'viewer' && !result,
+    canSave: principal.role !== 'viewer' && (!result || !result.completed),
   } : null
 
   useEffect(() => {
@@ -116,7 +125,7 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
   })
 
   useEffect(() => {
-    if (!item || principal.role === 'viewer' || result) return
+    if (!item || principal.role === 'viewer' || result?.completed) return
     const timer = window.setTimeout(() => saveDraft.mutate({ answer, observationAnswer: observation }), 600)
     return () => window.clearTimeout(timer)
   }, [answer, observation, item, principal.role, result])
@@ -150,7 +159,7 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
         ...jsonBody({
           ...basePayload,
           answer,
-          observation_answer: observation,
+          observation_answer: '',
           dont_remember: dontRemember,
         }),
       },
@@ -160,12 +169,34 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
     },
   })
 
+  useEffect(() => {
+    if (item?.phase !== 'observation' || result || complete.isPending) return
+    complete.mutate(false)
+  }, [complete, item?.phase, result])
+
+  const completeObservation = useMutation({
+    mutationFn: () => api<CommandObservationResult>(
+      `/api/v2/command-practice/attempts/${attemptKey}/observation`,
+      {
+        method: 'POST',
+        ...jsonBody({
+          technique_id: item?.technique_id,
+          timezone,
+          structured_observation: structuredObservation,
+          free_text: observation,
+        }),
+      },
+    ),
+    onSuccess: (value) => setObservationResult(value),
+  })
+
   async function openCatalog() {
-    if (!item || principal.role === 'viewer') return
-    const value = await revealHint.mutateAsync(4)
-    setRevealed(value.levels)
-    setRevealedHints(value.hints)
-    const response = await api<{ technique: CommandTechnique }>(`/api/v2/command-techniques/${item.technique_id}?attempt_key=${encodeURIComponent(attemptKey)}`)
+    if (!item) return
+    const disclosureKey = `technique-card-${attemptKey}`
+    const response = await api<{ technique: CommandTechnique }>(`/api/v2/command-techniques/${item.technique_id}/reveal`, {
+      method: 'POST',
+      ...jsonBody({ disclosure_key: disclosureKey, timezone, surface: 'technique_card' }),
+    })
     setCatalogTechnique(response.technique)
     setCatalogOpen(true)
   }
@@ -236,6 +267,8 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
         </div>
         <div className="command-practice__status">
           <StatusPill status={item.overdue ? 'warning' : 'ok'}>{item.retry_in_session ? 'вернуть позже' : item.overdue ? 'просрочено' : 'новый приём'}</StatusPill>
+          <StatusPill status="neutral">среда: {shellLabel[item.shell]}</StatusPill>
+          <StatusPill status={item.attempt_type === 'assessment' ? 'ok' : 'warning'}>{item.attempt_type === 'assessment' ? 'самостоятельное окно' : 'тренировочный повтор'}</StatusPill>
           <small>долг после сессии: {visibleDebt}</small>
         </div>
       </header>
@@ -243,36 +276,78 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
       <div className="command-practice__grid">
         <div className="command-practice__task">
           <p className="large-copy">{item.challenge.prompt}</p>
+          <div className="command-practice__context" aria-label="Исходные данные задания">
+            <strong>Исходные данные</strong>
+            <p>Оболочка: {shellLabel[item.challenge.context.shell]}. Рабочий каталог: <code>{item.challenge.context.working_directory ?? 'не требуется'}</code>.</p>
+            <dl>
+              {Object.entries(item.challenge.context.named_inputs).map(([name, value]) => (
+                <div key={name}><dt>{name}</dt><dd><code>{value}</code></dd></div>
+              ))}
+            </dl>
+            <ul>{item.challenge.context.constraints.map((constraint) => <li key={constraint}>{constraint}</li>)}</ul>
+          </div>
+          {item.execution_status === 'awaiting_stand' ? (
+            <p className="command-practice__stand-notice" role="note">
+              Ждёт стенд. Это репетиция по памяти: у приёма пока нет собственной цели, на которой его можно выполнить. Репетиция не засчитывается как реальное применение.
+            </p>
+          ) : null}
           <label>
-            Команда в Bash
+            Команда в {shellLabel[item.shell]}
             <textarea
               value={answer}
-              onChange={(event) => setAnswer(event.target.value)}
-              onBlur={() => principal.role !== 'viewer' && !result && saveDraft.mutate({ answer, observationAnswer: observation })}
-              disabled={principal.role === 'viewer' || Boolean(result)}
+              onChange={(event) => { setAnswer(event.target.value); if (result?.verification_status === 'unverified') setResult(null) }}
+              onBlur={() => principal.role !== 'viewer' && !result?.correct && saveDraft.mutate({ answer, observationAnswer: observation })}
+              disabled={principal.role === 'viewer' || Boolean(result?.correct || result?.completed)}
               placeholder="Введите команду. Coach не исполняет этот ответ."
               rows={3}
             />
           </label>
-          <label>
-            Отдельно: что должен означать результат?
-            <span className="field-help">{item.challenge.observation_prompt}</span>
-            <textarea
-              value={observation}
-              onChange={(event) => setObservation(event.target.value)}
-              onBlur={() => principal.role !== 'viewer' && !result && saveDraft.mutate({ answer, observationAnswer: observation })}
-              disabled={principal.role === 'viewer' || Boolean(result)}
-              placeholder="Опишите наблюдение, не повторяя синтаксис команды."
-              rows={3}
-            />
-          </label>
-
-          {result ? (
+          {result?.correct ? (
+            <div className="command-practice__observation">
+              <div className="command-practice__result is-correct" role="status">
+                <strong>{reasonText[result.reason]}</strong>
+                <p>{result.detail}</p>
+                <small>{result.attempt_type === 'assessment' && result.independent ? 'Самостоятельное окно зачтено.' : 'Тренировочный результат, интервал не увеличен.'}</small>
+              </div>
+              <h3>Теперь разберите отдельный пример вывода</h3>
+              <p className="field-help">{item.challenge.observation_prompt}</p>
+              <pre className="command-practice__example">{result.observation_example}</pre>
+              {result.observation_fields.map((field) => (
+                <label key={field.id}>
+                  {field.label}
+                  <input
+                    value={structuredObservation[field.id] ?? ''}
+                    onChange={(event) => setStructuredObservation((current) => ({ ...current, [field.id]: event.target.value }))}
+                    disabled={principal.role === 'viewer' || observationResult?.completed}
+                  />
+                  {observationResult?.field_errors[field.id] ? <span className="field-error">{observationResult.field_errors[field.id]}</span> : null}
+                </label>
+              ))}
+              <label>
+                Свободное объяснение
+                <span className="field-help">Сохранится для вашего рассуждения, автоматически не оценивается.</span>
+                <textarea value={observation} onChange={(event) => setObservation(event.target.value)} rows={3} disabled={principal.role === 'viewer' || observationResult?.completed} />
+              </label>
+              {observationResult?.completed ? (
+                <div className="command-practice__result is-correct" role="status">
+                  <strong>Структурированный разбор подтверждён.</strong>
+                  <p>Свободное объяснение сохранено, автоматически не оценено.</p>
+                  <button className="button button--primary" onClick={() => void nextItem()}>Следующий приём <ArrowIcon /></button>
+                </div>
+              ) : (
+                <button className="button button--primary" onClick={() => completeObservation.mutate()} disabled={principal.role === 'viewer' || completeObservation.isPending}>Проверить факты</button>
+              )}
+            </div>
+          ) : result ? (
             <div className={`command-practice__result ${result.correct ? 'is-correct' : 'is-error'}`} role="status">
               <strong>{reasonText[result.reason]}</strong>
-              <p>{result.observation_correct ? 'Объяснение результата принято отдельно.' : 'Объяснение результата пока не подтверждено.'}</p>
+              <p>{result.detail}</p>
               <small>{result.next_due_at ? `Следующий срок: ${formatDate(result.next_due_at)}.` : 'Следующий срок ещё не назначен.'}</small>
-              <button className="button button--primary" onClick={() => void nextItem()}>Следующий приём <ArrowIcon /></button>
+              {result.verification_status === 'unverified' ? (
+                <button className="button" onClick={() => setResult(null)}>Изменить форму записи</button>
+              ) : (
+                <button className="button button--primary" onClick={() => void nextItem()}>Следующий приём <ArrowIcon /></button>
+              )}
             </div>
           ) : (
             <div className="button-row">
@@ -280,7 +355,7 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
               <button className="button" onClick={() => complete.mutate(true)} disabled={principal.role === 'viewer' || complete.isPending}>Не помню</button>
             </div>
           )}
-          {complete.error || saveDraft.error ? <ErrorNotice error={complete.error ?? saveDraft.error} /> : null}
+          {complete.error || completeObservation.error || saveDraft.error ? <ErrorNotice error={complete.error ?? completeObservation.error ?? saveDraft.error} /> : null}
         </div>
 
         <aside className="command-practice__help" aria-label="Подсказки и карточка приёма">
@@ -291,12 +366,12 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
               <article key={hint.level}><span>0{hint.level}</span><div><strong>{hint.label}</strong><p>{hint.text}</p></div></article>
             ))}
           </div>
-          {nextHint && !result ? (
+          {nextHint && (!result || result.verification_status === 'unverified') ? (
             <button className="button" onClick={() => revealHint.mutate(nextHint.level)} disabled={principal.role === 'viewer' || revealHint.isPending}>
               Открыть: {nextHint.label}
             </button>
           ) : null}
-          <button className="button button--ghost" onClick={() => void openCatalog()} disabled={principal.role === 'viewer' || revealHint.isPending}>Открыть карточку приёма</button>
+          <button className="button button--ghost" onClick={() => void openCatalog()} disabled={revealHint.isPending}>Открыть справку, ответ будет с помощью</button>
           {catalogOpen && catalogTechnique ? (
             <div className="technique-card">
               <strong>{catalogTechnique.family}</strong>

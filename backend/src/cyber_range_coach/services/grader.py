@@ -117,6 +117,15 @@ def grade_run(
     checks: list[dict[str, object]] = []
     command_required = lesson.grader.source in {"transcript", "probe"}
     if command_required:
+        integrity_ok = run.input_integrity == "verified"
+        checks.append(
+            {
+                "kind": "input_integrity",
+                "pattern": "terminal line ledger verified for this run",
+                "passed": integrity_ok,
+                "reason": run.input_integrity_reason,
+            }
+        )
         checks.append(
             {
                 "kind": "command",
@@ -146,6 +155,7 @@ def grade_run(
         or not command_seen
         or not clean_attempt_boundary
         or not response_count_ok
+        or (command_required and run.input_integrity != "verified")
     ):
         report = GradeResponse(
             run_id=run.id,

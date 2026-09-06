@@ -1,15 +1,19 @@
-version: 1
+version: 2
 missions:
 - id: magpie-missing-clue
   title: 'Сорока: пропавшая улика'
-  story: В синтетическом архиве один след связывает дело с нужной записью. Найдите файл и точную строку, а затем объясните, почему она важна.
-  allowed_environment: Учебный Linux и только показанный синтетический снимок каталога. Ответ в Coach не исполняется как shell-команда.
-  prepared_data_description: Каталоги, имена и строки ниже подготовлены для этой миссии. Они не являются данными пользователя или реального стенда.
+  story: В синтетическом архиве один след связывает дело с нужной записью. Найдите файл и точную строку,
+    а затем объясните, почему она важна.
+  allowed_environment: Учебный Linux и только показанный синтетический снимок каталога. Ответ в Coach
+    не исполняется как shell-команда.
+  prepared_data_description: Каталоги, имена и строки ниже подготовлены для этой миссии. Они не являются
+    данными пользователя или реального стенда.
   required_actions:
   - Сначала установите текущий каталог и состав дерева через pwd, ls и cd.
   - Для поиска применяйте find, file, cat, grep и cut только по необходимости.
   - В ответе укажите найденную строку или строку вместе с путём файла.
-  final_artifact_prompt: Укажите единственную строку-подсказку. Допускается также путь файла, затем двоеточие и эта строка.
+  final_artifact_prompt: Укажите единственную строку-подсказку. Допускается также путь файла, затем двоеточие
+    и эта строка.
   explanation_prompt: Объясните, какой маркер связывает строку с задачей и почему соседние записи не подходят.
   technique_ids:
   - linux-pwd-current-directory
@@ -19,9 +23,10 @@ missions:
   - linux-cat-read-text-file
   - linux-grep-text-pattern
   - linux-cut-equals-field
-  variant_rule: 'При новом завершённом прохождении меняются имя файла, его место в дереве и маркер строки. Цель остаётся прежней: выбрать один проверяемый след, а не воспроизвести старое значение.'
+  variant_rule: 'При новом завершённом прохождении меняются имя файла, его место в дереве и маркер строки.
+    Цель остаётся прежней: выбрать один проверяемый след, а не воспроизвести старое значение.'
   requires_free_text: true
-  version: 1
+  version: 2
   variants:
   - id: magpie-aurora
     scenario: Дело «Аврора». Найдите единственный след, который связывает архив с передачей в нужный сектор.
@@ -30,10 +35,10 @@ missions:
       kind: directory
     - path: casefiles/aurora/readme.txt
       kind: text
-      content: 'case=aurora\nstatus=training-only\nowner=archive'
+      content: case=aurora\nstatus=training-only\nowner=archive
     - path: casefiles/aurora/notes/visitor.txt
       kind: text
-      content: 'visitor=magpie\nshift=morning\ncomment=no delivery reference'
+      content: visitor=magpie\nshift=morning\ncomment=no delivery reference
     - path: casefiles/aurora/archive/ledger-sparrow.txt
       kind: text
       content: 'record=18\ntrace: marker=ORBIT-41\nsector=west'
@@ -46,14 +51,51 @@ missions:
         - 'trace: marker=ORBIT-41'
         - 'casefiles/aurora/archive/ledger-sparrow.txt: trace: marker=ORBIT-41'
         accepted_patterns:
-        - '^casefiles/aurora/archive/ledger-sparrow\.txt:\s*trace:\s*marker=ORBIT-41$'
+        - ^casefiles/aurora/archive/ledger-sparrow\.txt:\s*trace:\s*marker=ORBIT-41$
         review_patterns:
-        - '^(?:[A-Za-z0-9_./-]+:\s*)?trace:\s*marker=[A-Z]+-[0-9]+$'
+        - ^(?:[A-Za-z0-9_./-]+:\s*)?trace:\s*marker=[A-Z]+-[0-9]+$
       explanation:
         expected_concepts:
-        - [маркер, marker, trace]
-        - [сектор, sector, west]
-        debrief: Строка trace содержит маркер ORBIT-41 и находится рядом с сектором west. Запись посетителя не связывает дело с передачей, потому что в ней нет следа доставки.
+        - - маркер
+          - marker
+          - trace
+        - - сектор
+          - sector
+          - west
+        debrief: Строка trace содержит маркер ORBIT-41 и находится рядом с сектором west. Запись посетителя
+          не связывает дело с передачей, потому что в ней нет следа доставки.
+      facts:
+      - id: source_path
+        label: Путь подтверждающего файла
+        accepted_values:
+        - casefiles/aurora/archive/ledger-sparrow.txt
+        accepted_patterns: []
+      - id: marker
+        label: Маркер
+        accepted_values:
+        - ORBIT-41
+        accepted_patterns: []
+      - id: sector
+        label: Сектор
+        accepted_values:
+        - west
+        accepted_patterns: []
+      - id: evidence_line
+        label: Подтверждающая строка
+        accepted_values:
+        - 'trace: marker=ORBIT-41'
+        accepted_patterns: []
+      - id: alternative_path
+        label: Путь отвергнутой соседней записи
+        accepted_values:
+        - casefiles/aurora/notes/visitor.txt
+        accepted_patterns: []
+      - id: rejection_feature
+        label: Почему соседняя запись не подходит
+        accepted_values:
+        - no delivery reference
+        - нет ссылки на передачу
+        accepted_patterns: []
   - id: magpie-quartz
     scenario: Дело «Кварц». Найдите один след, который говорит, куда ушёл подготовленный архив.
     prepared_data:
@@ -61,10 +103,10 @@ missions:
       kind: directory
     - path: briefing/quartz/index.txt
       kind: text
-      content: 'case=quartz\nstatus=training-only\nqueue=archive'
+      content: case=quartz\nstatus=training-only\nqueue=archive
     - path: briefing/quartz/desk/meeting.txt
       kind: text
-      content: 'topic=inventory\nattendee=magpie\ncomment=no route marker'
+      content: topic=inventory\nattendee=magpie\ncomment=no route marker
     - path: briefing/quartz/desk/old/receipt-kite.log
       kind: text
       content: 'entry=07\ntrace: marker=QUARTZ-58\nsector=north'
@@ -77,25 +119,63 @@ missions:
         - 'trace: marker=QUARTZ-58'
         - 'briefing/quartz/desk/old/receipt-kite.log: trace: marker=QUARTZ-58'
         accepted_patterns:
-        - '^briefing/quartz/desk/old/receipt-kite\.log:\s*trace:\s*marker=QUARTZ-58$'
+        - ^briefing/quartz/desk/old/receipt-kite\.log:\s*trace:\s*marker=QUARTZ-58$
         review_patterns:
-        - '^(?:[A-Za-z0-9_./-]+:\s*)?trace:\s*marker=[A-Z]+-[0-9]+$'
+        - ^(?:[A-Za-z0-9_./-]+:\s*)?trace:\s*marker=[A-Z]+-[0-9]+$
       explanation:
         expected_concepts:
-        - [маркер, marker, trace]
-        - [сектор, sector, north]
-        debrief: 'Полезна строка trace из receipt-kite.log: маркер QUARTZ-58 связан с сектором north. Остальные файлы описывают контекст, но не маршрут архива.'
+        - - маркер
+          - marker
+          - trace
+        - - сектор
+          - sector
+          - north
+        debrief: 'Полезна строка trace из receipt-kite.log: маркер QUARTZ-58 связан с сектором north.
+          Остальные файлы описывают контекст, но не маршрут архива.'
+      facts:
+      - id: source_path
+        label: Путь подтверждающего файла
+        accepted_values:
+        - briefing/quartz/desk/old/receipt-kite.log
+        accepted_patterns: []
+      - id: marker
+        label: Маркер
+        accepted_values:
+        - QUARTZ-58
+        accepted_patterns: []
+      - id: sector
+        label: Сектор
+        accepted_values:
+        - north
+        accepted_patterns: []
+      - id: evidence_line
+        label: Подтверждающая строка
+        accepted_values:
+        - 'trace: marker=QUARTZ-58'
+        accepted_patterns: []
+      - id: alternative_path
+        label: Путь отвергнутой соседней записи
+        accepted_values:
+        - briefing/quartz/desk/meeting.txt
+        accepted_patterns: []
+      - id: rejection_feature
+        label: Почему соседняя запись не подходит
+        accepted_values:
+        - no route marker
+        - нет маршрутного маркера
+        accepted_patterns: []
   - id: magpie-ember
-    scenario: Дело «Эмбер». Найдите строку, которая однозначно связывает старую заметку с назначенным сектором.
+    scenario: Дело «Эмбер». Найдите строку, которая однозначно связывает старую заметку с назначенным
+      сектором.
     prepared_data:
     - path: workspace
       kind: directory
     - path: workspace/ember/overview.txt
       kind: text
-      content: 'case=ember\nstatus=training-only\nowner=archive'
+      content: case=ember\nstatus=training-only\nowner=archive
     - path: workspace/ember/interviews/voice-note.txt
       kind: text
-      content: 'speaker=magpie\nsubject=shelf\ncomment=no evidence marker'
+      content: speaker=magpie\nsubject=shelf\ncomment=no evidence marker
     - path: workspace/ember/interviews/old/notice-wren.txt
       kind: text
       content: 'record=22\ntrace: marker=EMBER-73\nsector=east'
@@ -108,125 +188,265 @@ missions:
         - 'trace: marker=EMBER-73'
         - 'workspace/ember/interviews/old/notice-wren.txt: trace: marker=EMBER-73'
         accepted_patterns:
-        - '^workspace/ember/interviews/old/notice-wren\.txt:\s*trace:\s*marker=EMBER-73$'
+        - ^workspace/ember/interviews/old/notice-wren\.txt:\s*trace:\s*marker=EMBER-73$
         review_patterns:
-        - '^(?:[A-Za-z0-9_./-]+:\s*)?trace:\s*marker=[A-Z]+-[0-9]+$'
+        - ^(?:[A-Za-z0-9_./-]+:\s*)?trace:\s*marker=[A-Z]+-[0-9]+$
       explanation:
         expected_concepts:
-        - [маркер, marker, trace]
-        - [сектор, sector, east]
-        debrief: Строка trace в notice-wren.txt даёт маркер EMBER-73 и сектор east. Интервью описывает фон, но не является конечным следом.
+        - - маркер
+          - marker
+          - trace
+        - - сектор
+          - sector
+          - east
+        debrief: Строка trace в notice-wren.txt даёт маркер EMBER-73 и сектор east. Интервью описывает
+          фон, но не является конечным следом.
+      facts:
+      - id: source_path
+        label: Путь подтверждающего файла
+        accepted_values:
+        - workspace/ember/interviews/old/notice-wren.txt
+        accepted_patterns: []
+      - id: marker
+        label: Маркер
+        accepted_values:
+        - EMBER-73
+        accepted_patterns: []
+      - id: sector
+        label: Сектор
+        accepted_values:
+        - east
+        accepted_patterns: []
+      - id: evidence_line
+        label: Подтверждающая строка
+        accepted_values:
+        - 'trace: marker=EMBER-73'
+        accepted_patterns: []
+      - id: alternative_path
+        label: Путь отвергнутой соседней записи
+        accepted_values:
+        - workspace/ember/interviews/voice-note.txt
+        accepted_patterns: []
+      - id: rejection_feature
+        label: Почему соседняя запись не подходит
+        accepted_values:
+        - no evidence marker
+        - нет маркера доказательства
+        accepted_patterns: []
 - id: why-command-failed
   title: Почему команда не сработала
-  story: Короткая команда получила синтетический наблюдаемый ответ с намеренной ошибкой. Определите причину и напишите исправленную команду или исправленное действие.
+  story: Короткая команда получила синтетический наблюдаемый ответ с намеренной ошибкой. Определите причину
+    и напишите исправленную команду или исправленное действие.
   allowed_environment: Учебный Linux и синтетический вывод ниже. Ответ в Coach не запускается в Terminal.
-  prepared_data_description: Каждая репетиция содержит одну наблюдаемую ошибку. Ответ выбирается свободным текстом, случайный выбор варианта не засчитывается.
+  prepared_data_description: Каждая репетиция содержит одну наблюдаемую ошибку. Ответ выбирается свободным
+    текстом, случайный выбор варианта не засчитывается.
   required_actions:
   - Прочитайте команду, ответ оболочки и контекст до исправления.
   - Укажите исправленную команду или действие свободным текстом.
   - Объясните разницу между исходной причиной ошибки и исправлением.
-  final_artifact_prompt: 'Напишите исправленную команду или действие. Не выбирайте вариант из списка: самостоятельный ответ нужен для зачёта.'
-  explanation_prompt: 'Объясните причину ошибки конкретно: имя и содержимое, область переменной, оболочка или роль флага и аргумента.'
+  final_artifact_prompt: 'Напишите исправленную команду или действие. Не выбирайте вариант из списка:
+    самостоятельный ответ нужен для зачёта.'
+  explanation_prompt: 'Объясните причину ошибки конкретно: имя и содержимое, область переменной, оболочка
+    или роль флага и аргумента.'
   technique_ids:
   - linux-ls-directory-listing
   - linux-cat-read-text-file
   - linux-grep-text-pattern
   - linux-source-environment-file
-  variant_rule: 'После каждого завершённого ответа меняется тип типовой путаницы, но задача остаётся той же: прочитать наблюдаемый ответ и исправить причину, а не угадывать вариант.'
+  variant_rule: 'После каждого завершённого ответа меняется тип типовой путаницы, но задача остаётся той
+    же: прочитать наблюдаемый ответ и исправить причину, а не угадывать вариант.'
   requires_free_text: true
-  version: 1
+  version: 2
   variants:
   - id: command-content-vs-name
-    scenario: 'Команда: grep -n "MODE=training" relay.conf\nНаблюдаемый ответ: grep: relay.conf: No such file or directory\nКонтекст: нужная строка находится в файле configs/relay.conf.'
+    scenario: 'Команда: grep -n "MODE=training" relay.conf\nНаблюдаемый ответ: grep: relay.conf: No such
+      file or directory\nКонтекст: нужная строка находится в файле configs/relay.conf.'
     prepared_data:
     - path: configs
       kind: directory
     - path: configs/relay.conf
       kind: text
-      content: 'MODE=training\nRELAY_PORT=47000'
+      content: MODE=training\nRELAY_PORT=47000
     - path: notes/relay.conf.txt
       kind: text
       content: 'Подсказка: имя файла и содержимое не одно и то же.'
     grading:
       artifact:
         accepted_values:
-        - 'grep -n "MODE=training" configs/relay.conf'
-        - "grep -n 'MODE=training' configs/relay.conf"
+        - grep -n "MODE=training" configs/relay.conf
+        - grep -n 'MODE=training' configs/relay.conf
         accepted_patterns:
-        - '^grep\s+-n\s+(?:"MODE=training"|''MODE=training''|MODE=training)\s+configs/relay\.conf$'
+        - ^grep\s+-n\s+(?:"MODE=training"|'MODE=training'|MODE=training)\s+configs/relay\.conf$
         review_patterns:
-        - '^grep\b.*$'
+        - ^grep\b.*$
       explanation:
         expected_concepts:
-        - [имя, filename, file name]
-        - [содержим, content, строк]
-        debrief: relay.conf был указан как имя в текущем каталоге, хотя нужная строка находится в configs/relay.conf. grep ищет содержимое только в существующем переданном файле.
+        - - имя
+          - filename
+          - file name
+        - - содержим
+          - content
+          - строк
+        debrief: relay.conf был указан как имя в текущем каталоге, хотя нужная строка находится в configs/relay.conf.
+          grep ищет содержимое только в существующем переданном файле.
+      facts:
+      - id: failure_type
+        label: Тип ошибки
+        accepted_values:
+        - wrong_path
+        - неверный путь
+        accepted_patterns: []
+      - id: missing_path
+        label: Путь, отсутствовавший в исходной команде
+        accepted_values:
+        - configs/relay.conf
+        accepted_patterns: []
+      - id: searched_value
+        label: Искомое значение
+        accepted_values:
+        - MODE=training
+        accepted_patterns: []
   - id: command-shell-vs-cmd
-    scenario: 'Команда: dir /b reports\nНаблюдаемый ответ: dir: cannot access ''/b'': No such file or directory\nКонтекст: это Bash в Linux, каталог reports существует.'
+    scenario: 'Команда: dir /b reports\nНаблюдаемый ответ: dir: cannot access ''/b'': No such file or
+      directory\nКонтекст: это Bash в Linux, каталог reports существует.'
     prepared_data:
     - path: reports
       kind: directory
     - path: reports/summary.txt
       kind: text
-      content: 'status=training-only'
+      content: status=training-only
     - path: reports/queue.txt
       kind: text
-      content: 'item=two'
+      content: item=two
     grading:
       artifact:
         accepted_values:
-        - 'ls -1 reports'
+        - ls -1 reports
         accepted_patterns:
-        - '^ls\s+-1\s+reports$'
+        - ^ls\s+-1\s+reports$
         review_patterns:
-        - '^ls\b.*$'
+        - ^ls\b.*$
       explanation:
         expected_concepts:
-        - [CMD, Windows]
-        - [Linux, Bash, ls]
-        debrief: /b является ключом CMD, а в Bash он передаётся как имя. Для построчного списка в Linux используется ls -1 reports.
+        - - CMD
+          - Windows
+        - - Linux
+          - Bash
+          - ls
+        debrief: /b является ключом CMD, а в Bash он передаётся как имя. Для построчного списка в Linux
+          используется ls -1 reports.
+      facts:
+      - id: failure_type
+        label: Тип ошибки
+        accepted_values:
+        - wrong_shell
+        - другая оболочка
+        accepted_patterns: []
+      - id: source_shell
+        label: Оболочка исходной команды
+        accepted_values:
+        - cmd
+        - cmd.exe
+        - Windows
+        accepted_patterns: []
+      - id: target_shell
+        label: Оболочка учебной среды
+        accepted_values:
+        - bash
+        - Linux
+        accepted_patterns: []
   - id: command-flag-vs-argument
-    scenario: 'Команда: grep marker -n brief.txt\nНаблюдаемый ответ: grep: -n: No such file or directory\nКонтекст: строка marker находится в файле brief.txt.'
+    scenario: 'Команда: grep marker -n brief.txt\nНаблюдаемый ответ: grep: -n: No such file or directory\nКонтекст:
+      строка marker находится в файле brief.txt.'
     prepared_data:
     - path: brief.txt
       kind: text
-      content: 'section=one\nmarker=present\nsection=two'
+      content: section=one\nmarker=present\nsection=two
     - path: instruction.txt
       kind: text
-      content: 'Ключ -n относится к grep, а не к имени файла.'
+      content: Ключ -n относится к grep, а не к имени файла.
     grading:
       artifact:
         accepted_values:
-        - 'grep -n marker brief.txt'
-        - 'grep -n "marker" brief.txt'
+        - grep -n marker brief.txt
+        - grep -n "marker" brief.txt
         accepted_patterns:
-        - '^grep\s+-n\s+(?:"marker"|''marker''|marker)\s+brief\.txt$'
+        - ^grep\s+-n\s+(?:"marker"|'marker'|marker)\s+brief\.txt$
         review_patterns:
-        - '^grep\b.*$'
+        - ^grep\b.*$
       explanation:
         expected_concepts:
-        - [флаг, ключ, option]
-        - [аргумент, имя файла, filename]
-        debrief: После шаблона grep воспринял -n как имя файла. Ключ -n должен стоять среди опций команды до шаблона и имени файла.
+        - - флаг
+          - ключ
+          - option
+        - - аргумент
+          - имя файла
+          - filename
+        debrief: После шаблона grep воспринял -n как имя файла. Ключ -n должен стоять среди опций команды
+          до шаблона и имени файла.
+      facts:
+      - id: failure_type
+        label: Тип ошибки
+        accepted_values:
+        - flag_position
+        - позиция флага
+        accepted_patterns: []
+      - id: misread_token
+        label: Токен, ошибочно прочитанный как имя файла
+        accepted_values:
+        - -n
+        accepted_patterns: []
+      - id: source_path
+        label: Файл с искомой строкой
+        accepted_values:
+        - brief.txt
+        accepted_patterns: []
   - id: command-current-vs-persistent-variable
-    scenario: 'Команда: set CRC_SESSION=practice\nНаблюдаемый ответ: set: CRC_SESSION=practice: invalid option name\nКонтекст: в Bash переменная нужна текущей сессии и дочерним процессам.'
+    scenario: 'Команда: set CRC_SESSION=practice\nНаблюдаемый ответ: set: CRC_SESSION=practice: invalid
+      option name\nКонтекст: в Bash переменная нужна текущей сессии и дочерним процессам.'
     prepared_data:
     - path: profile.env
       kind: text
-      content: 'CRC_SESSION=practice'
+      content: CRC_SESSION=practice
     - path: shell-note.txt
       kind: text
-      content: 'Для текущей Bash-сессии значение нужно экспортировать.'
+      content: Для текущей Bash-сессии значение нужно экспортировать.
     grading:
       artifact:
         accepted_values:
-        - 'export CRC_SESSION=practice'
+        - export CRC_SESSION=practice
         accepted_patterns:
-        - '^export\s+CRC_SESSION=practice$'
+        - ^export\s+CRC_SESSION=practice$
         review_patterns:
-        - '^(?:export\s+)?CRC_SESSION=.*$'
+        - ^(?:export\s+)?CRC_SESSION=.*$
       explanation:
         expected_concepts:
-        - [текущ, current, session]
-        - [дочерн, child, export]
-        debrief: set CRC_SESSION=practice относится к другому синтаксису. В Bash export CRC_SESSION=practice задаёт значение для текущей сессии и передаёт его дочерним процессам. Постоянное изменение профиля является отдельным действием.
+        - - текущ
+          - current
+          - session
+        - - дочерн
+          - child
+          - export
+        debrief: set CRC_SESSION=practice относится к другому синтаксису. В Bash export CRC_SESSION=practice
+          задаёт значение для текущей сессии и передаёт его дочерним процессам. Постоянное изменение профиля
+          является отдельным действием.
+      facts:
+      - id: failure_type
+        label: Тип ошибки
+        accepted_values:
+        - variable_scope
+        - область переменной
+        accepted_patterns: []
+      - id: variable_name
+        label: Имя переменной
+        accepted_values:
+        - CRC_SESSION
+        accepted_patterns: []
+      - id: required_scope
+        label: Требуемая область
+        accepted_values:
+        - current session
+        - текущая сессия
+        - child processes
+        - дочерние процессы
+        accepted_patterns: []

@@ -4,7 +4,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from cyber_range_coach.services.command_practice import CommandCatalog
+from cyber_range_coach.services.command_practice import COMMAND_LEAD, CommandCatalog
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -42,8 +42,30 @@ def main() -> int:
             errors.append(f"{technique.id}: user-facing text contains an em dash")
         if challenge.recall.accepted_answers[0] in challenge.prompt:
             errors.append(f"{challenge.id}: prompt reveals the full answer")
+        if not challenge.context.named_inputs or not challenge.context.constraints:
+            errors.append(f"{challenge.id}: public context is incomplete")
+        if challenge.context.shell != challenge.recall.shell:
+            errors.append(f"{challenge.id}: context shell does not match recall shell")
+        if not challenge.answer_fields:
+            errors.append(f"{challenge.id}: public answer contract is empty")
+        if not challenge.observation.example_output or not challenge.observation.fields:
+            errors.append(f"{challenge.id}: structured observation contract is incomplete")
+        if technique.shell == "bash" and challenge.recall.comparison_mode not in {
+            "exact",
+            "exact_or_permuted",
+        }:
+            errors.append(f"{challenge.id}: bash comparison mode is not declared")
     if any(source.embedded_images for source in catalog.sources):
-        errors.append("Stage 1 source list unexpectedly contains embedded images")
+        errors.append("mnemonic source list unexpectedly contains embedded images")
+    for technique in catalog.techniques.values():
+        if technique.shell == "cmd" and any(
+            flag.startswith("-") for flag in technique.significant_flags
+        ):
+            errors.append(f"{technique.id}: cmd.exe switches start with a slash")
+        if technique.shell == "bash" and any(
+            flag.startswith("/") for flag in technique.significant_flags
+        ):
+            errors.append(f"{technique.id}: bash flags do not start with a slash")
     if errors:
         print("COMMAND CONTENT VALIDATION FAILED")
         for error in errors:

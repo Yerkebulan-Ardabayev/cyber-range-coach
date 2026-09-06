@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from ..errors import AppError
 from ..models import MissionRun
-from .command_practice import CommandCatalog, CommandTechnique
+from .command_practice import CommandCatalog
 from .mission_grader import MissionGradeStatus, MissionGradingContract, grade_mission
 
 
@@ -66,16 +66,18 @@ class MissionPlanItem(BaseModel):
     final_artifact_prompt: str
     explanation_prompt: str
     technique_ids: list[str]
-    techniques: list[CommandTechnique]
+    technique_refs: list[dict[str, str]]
     variant_rule: str
     requires_free_text: bool
     version: int
     variant_id: str
     scenario: str
     prepared_data: list[PreparedDataEntry]
+    fact_fields: list[dict[str, str | bool]]
     draft_attempt_key: str | None
     draft_artifact: str
     draft_explanation: str
+    draft_structured_facts: dict[str, str]
 
 
 class MissionPlan(BaseModel):
@@ -92,6 +94,8 @@ class MissionCompletionResult(BaseModel):
     debrief: str
     evidence_kind: str
     duplicate: bool = False
+    field_errors: dict[str, str] = Field(default_factory=dict)
+    free_text_review_status: Literal["not_assessed"] = "not_assessed"
 
 
 class MissionCatalog:
@@ -124,7 +128,9 @@ class MissionCatalog:
     def mission(self, mission_id: str) -> InvestigationMission:
         mission = self.missions.get(mission_id)
         if mission is None:
-            raise AppError(404, "mission_not_found", "Миссия не найдена.", {"mission_id": mission_id})
+            raise AppError(
+                404, "mission_not_found", "Миссия не найдена.", {"mission_id": mission_id}
+            )
         return mission
 
     def variant(self, mission_id: str, variant_id: str) -> MissionVariant:
@@ -178,16 +184,28 @@ def plan_missions(session: Session, catalog: MissionCatalog) -> MissionPlan:
                 final_artifact_prompt=mission.final_artifact_prompt,
                 explanation_prompt=mission.explanation_prompt,
                 technique_ids=mission.technique_ids,
-                techniques=[catalog.command_catalog.technique(item) for item in mission.technique_ids],
+                technique_refs=[
+                    {
+                        "id": item,
+                        "label": catalog.command_catalog.technique(item).family,
+                        "shell": catalog.command_catalog.technique(item).shell,
+                    }
+                    for item in mission.technique_ids
+                ],
                 variant_rule=mission.variant_rule,
                 requires_free_text=mission.requires_free_text,
                 version=mission.version,
                 variant_id=variant.id,
                 scenario=variant.scenario,
                 prepared_data=variant.prepared_data,
+                fact_fields=[
+                    {"id": field.id, "label": field.label, "required": True}
+                    for field in variant.grading.facts
+                ],
                 draft_attempt_key=draft.idempotency_key if draft else None,
                 draft_artifact=draft.declared_artifact if draft else "",
                 draft_explanation=draft.explanation if draft else "",
+                draft_structured_facts=dict(draft.structured_facts or {}) if draft else {},
             )
         )
     return MissionPlan(items=items)
@@ -237,6 +255,9 @@ def _run_for(
         explanation="",
         grader_status="draft",
         evidence_kind="mission_final_artifact",
+        structured_facts={},
+        free_text_review_status="not_assessed",
+        grading_policy_version=2,
         draft_updated_at=now,
     )
     session.add(run)
@@ -252,6 +273,7 @@ def save_mission_draft(
     variant_id: str,
     artifact: str,
     explanation: str,
+    structured_facts: dict[str, str],
     now: datetime | None = None,
 ) -> MissionRun:
     now = now or datetime.now(UTC)
@@ -266,6 +288,7 @@ def save_mission_draft(
     if run.completed_at is None:
         run.declared_artifact = artifact
         run.explanation = explanation
+        run.structured_facts = dict(structured_facts)
         run.draft_updated_at = now
         session.commit()
         session.refresh(run)
@@ -288,6 +311,7 @@ def _completion_from_run(
         debrief=variant.grading.explanation.debrief,
         evidence_kind=run.evidence_kind,
         duplicate=duplicate,
+        free_text_review_status="not_assessed",
     )
 
 
@@ -300,6 +324,7 @@ def complete_mission_run(
     variant_id: str,
     artifact: str,
     explanation: str,
+    structured_facts: dict[str, str],
     now: datetime | None = None,
 ) -> MissionCompletionResult:
     now = now or datetime.now(UTC)
@@ -314,14 +339,19 @@ def complete_mission_run(
     variant = catalog.variant(mission_id, variant_id)
     if run.completed_at is not None:
         return _completion_from_run(run, variant, duplicate=True)
-    grade = grade_mission(artifact, explanation, variant.grading)
+    grade = grade_mission(artifact, structured_facts, explanation, variant.grading)
     run.declared_artifact = artifact
     run.explanation = explanation
+    run.structured_facts = dict(structured_facts)
     run.grader_status = grade.status.value
     run.grader_reason = grade.reason
     run.explanation_accepted = grade.explanation_accepted
+    run.free_text_review_status = "not_assessed"
+    run.grading_policy_version = 2
     run.completed_at = now
     run.draft_updated_at = now
     session.commit()
     session.refresh(run)
-    return _completion_from_run(run, variant, duplicate=False)
+    result = _completion_from_run(run, variant, duplicate=False)
+    result.field_errors = grade.field_errors
+    return result

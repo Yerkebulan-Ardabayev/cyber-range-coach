@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api, jsonBody } from '../api'
-import type { MissionPlan, MissionResult, Principal } from '../types'
+import type { CommandTechnique, MissionPlan, MissionResult, Principal } from '../types'
 import { ArrowIcon, RepeatIcon } from '../icons'
 import { ErrorNotice, Eyebrow, LoadingBlock, StatusPill } from './Common'
 
@@ -12,9 +12,9 @@ function newAttemptKey(): string {
 }
 
 const statusText: Record<MissionResult['status'], string> = {
-  solved: 'Миссия решена: артефакт и объяснение подтверждены.',
+  solved: 'Миссия решена: артефакт и структурированный разбор подтверждены.',
   wrong_artifact: 'Артефакт не подтверждён подготовленными данными.',
-  unexplained: 'Артефакт найден, но объяснение пока не принято.',
+  unexplained: 'Артефакт найден, но обязательные структурированные факты не заполнены.',
   needs_review: 'Вариант не подтверждён автоматически и ждёт ручной проверки.',
 }
 
@@ -32,6 +32,8 @@ export function MissionPanel({ principal }: { principal: Principal }) {
   const [attemptKey, setAttemptKey] = useState(newAttemptKey)
   const [artifact, setArtifact] = useState('')
   const [explanation, setExplanation] = useState('')
+  const [structuredFacts, setStructuredFacts] = useState<Record<string, string>>({})
+  const [revealedTechniques, setRevealedTechniques] = useState<Record<string, CommandTechnique>>({})
   const [dirty, setDirty] = useState(false)
   const [result, setResult] = useState<MissionResult | null>(null)
   const leaveDraft = useRef<{
@@ -40,6 +42,7 @@ export function MissionPanel({ principal }: { principal: Principal }) {
     variantId: string
     artifact: string
     explanation: string
+    structuredFacts: Record<string, string>
     canSave: boolean
   } | null>(null)
   const items = plan.data?.items ?? []
@@ -56,6 +59,8 @@ export function MissionPanel({ principal }: { principal: Principal }) {
     setAttemptKey(item.draft_attempt_key ?? newAttemptKey())
     setArtifact(item.draft_artifact)
     setExplanation(item.draft_explanation)
+    setStructuredFacts(item.draft_structured_facts)
+    setRevealedTechniques({})
     setDirty(false)
     setResult(null)
   }, [item])
@@ -70,23 +75,24 @@ export function MissionPanel({ principal }: { principal: Principal }) {
     variantId: item.variant_id,
     artifact,
     explanation,
+    structuredFacts,
     canSave: dirty && principal.role !== 'viewer' && !result,
   } : null
 
   const saveDraft = useMutation({
-    mutationFn: (value: { artifact: string; explanation: string }) => api<{ saved: boolean }>(
+    mutationFn: (value: { artifact: string; explanation: string; structuredFacts: Record<string, string> }) => api<{ saved: boolean }>(
       `/api/v2/missions/attempts/${attemptKey}/draft`,
-      { method: 'PUT', ...jsonBody({ ...payload, ...value }) },
+      { method: 'PUT', ...jsonBody({ ...payload, artifact: value.artifact, explanation: value.explanation, structured_facts: value.structuredFacts }) },
     ),
   })
 
   useEffect(() => {
     if (!item || principal.role === 'viewer' || result || !dirty) return
     const timer = window.setTimeout(() => {
-      saveDraft.mutate({ artifact, explanation })
+      saveDraft.mutate({ artifact, explanation, structuredFacts })
     }, 600)
     return () => window.clearTimeout(timer)
-  }, [artifact, dirty, explanation, item, principal.role, result, saveDraft])
+  }, [artifact, dirty, explanation, item, principal.role, result, saveDraft, structuredFacts])
 
   useEffect(() => {
     const saveOnLeave = () => {
@@ -100,6 +106,7 @@ export function MissionPanel({ principal }: { principal: Principal }) {
           variant_id: draft.variantId,
           artifact: draft.artifact,
           explanation: draft.explanation,
+          structured_facts: draft.structuredFacts,
         }),
       })
     }
@@ -110,7 +117,7 @@ export function MissionPanel({ principal }: { principal: Principal }) {
   const complete = useMutation({
     mutationFn: () => api<MissionResult>(`/api/v2/missions/attempts/${attemptKey}/complete`, {
       method: 'POST',
-      ...jsonBody({ ...payload, artifact, explanation }),
+      ...jsonBody({ ...payload, artifact, explanation, structured_facts: structuredFacts }),
     }),
     onSuccess: (value) => {
       setResult(value)
@@ -132,6 +139,22 @@ export function MissionPanel({ principal }: { principal: Principal }) {
     setResult(null)
     setDirty(false)
     void queryClient.invalidateQueries({ queryKey: ['mission-plan'] })
+  }
+
+  async function revealTechnique(techniqueId: string) {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+    const disclosed = await api<{ technique: CommandTechnique }>(
+      `/api/v2/command-techniques/${techniqueId}/reveal`,
+      {
+        method: 'POST',
+        ...jsonBody({
+          disclosure_key: `mission-reference-${attemptKey}-${techniqueId}`,
+          timezone,
+          surface: 'mission_reference',
+        }),
+      },
+    )
+    setRevealedTechniques((current) => ({ ...current, [techniqueId]: disclosed.technique }))
   }
 
   if (plan.isPending) return <LoadingBlock />
@@ -196,20 +219,35 @@ export function MissionPanel({ principal }: { principal: Principal }) {
               aria-label="Конечный артефакт"
               value={artifact}
               onChange={(event) => { setArtifact(event.target.value); setDirty(true) }}
-              onBlur={() => dirty && principal.role !== 'viewer' && !result && saveDraft.mutate({ artifact, explanation })}
+              onBlur={() => dirty && principal.role !== 'viewer' && !result && saveDraft.mutate({ artifact, explanation, structuredFacts })}
               disabled={principal.role === 'viewer' || Boolean(result)}
               placeholder="Введите найденную строку, путь или исправленную команду. Coach не исполняет этот текст."
               rows={3}
             />
           </label>
+          <fieldset className="mission-facts">
+            <legend>Проверяемые факты</legend>
+            <p className="field-help">Заполните значения из публичного снимка. Ожидаемые ответы остаются на сервере.</p>
+            {item.fact_fields.map((field) => (
+              <label key={field.id}>
+                {field.label}
+                <input
+                  value={structuredFacts[field.id] ?? ''}
+                  onChange={(event) => { setStructuredFacts((current) => ({ ...current, [field.id]: event.target.value })); setDirty(true) }}
+                  disabled={principal.role === 'viewer' || Boolean(result)}
+                />
+                {result?.field_errors[field.id] ? <span className="field-error">{result.field_errors[field.id]}</span> : null}
+              </label>
+            ))}
+          </fieldset>
           <label>
             Объяснение
-            <span className="field-help">{item.explanation_prompt}</span>
+            <span className="field-help">{item.explanation_prompt} Текст сохранится, но автоматически не оценивается.</span>
             <textarea
               aria-label="Объяснение"
               value={explanation}
               onChange={(event) => { setExplanation(event.target.value); setDirty(true) }}
-              onBlur={() => dirty && principal.role !== 'viewer' && !result && saveDraft.mutate({ artifact, explanation })}
+              onBlur={() => dirty && principal.role !== 'viewer' && !result && saveDraft.mutate({ artifact, explanation, structuredFacts })}
               disabled={principal.role === 'viewer' || Boolean(result)}
               placeholder="Опишите связь артефакта с задачей своими словами."
               rows={3}
@@ -219,6 +257,7 @@ export function MissionPanel({ principal }: { principal: Principal }) {
             <div className={`mission-result mission-result--${result.status}`} role="status">
               <strong>{statusText[result.status]}</strong>
               <p>{result.reason}</p>
+              <p>Свободное объяснение сохранено, автоматически не оценено.</p>
               <p><strong>Разбор после ответа.</strong> {result.debrief}</p>
               <small>Вид доказательства: {result.evidence_kind}.</small>
               <button className="button button--primary" onClick={refreshMission}>Следующий вариант <ArrowIcon /></button>
@@ -233,13 +272,20 @@ export function MissionPanel({ principal }: { principal: Principal }) {
 
         <aside className="mission-panel__catalog" aria-label="Каталог приёмов миссии">
           <Eyebrow>ПРИЁМЫ РЯДОМ С ЗАДАНИЕМ</Eyebrow>
-          <p>Карточки доступны без отдельного перехода. Их чтение не является доказательством самостоятельного ответа.</p>
+          <p>До открытия видны только нейтральные названия. Открытие карточки регистрируется как помощь для связанного приёма.</p>
           <div className="mission-techniques">
-            {item.techniques.map((technique) => (
-              <article key={technique.id}>
-                <strong>{technique.family}</strong>
-                <p>{technique.purpose}</p>
-                <small>Типичная ошибка: {technique.typical_error}</small>
+            {item.technique_refs.map((reference) => (
+              <article key={reference.id}>
+                <strong>{reference.label}</strong>
+                <small>{reference.shell}</small>
+                {revealedTechniques[reference.id] ? (
+                  <>
+                    <p>{revealedTechniques[reference.id].purpose}</p>
+                    <small>Типичная ошибка: {revealedTechniques[reference.id].typical_error}</small>
+                  </>
+                ) : (
+                  <button className="button button--ghost" onClick={() => void revealTechnique(reference.id)}>Открыть справку, ответ будет с помощью</button>
+                )}
               </article>
             ))}
           </div>

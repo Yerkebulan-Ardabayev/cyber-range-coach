@@ -15,11 +15,13 @@ const missionPlan = {
     final_artifact_prompt: 'Укажите строку.',
     explanation_prompt: 'Объясните маркер.',
     technique_ids: ['linux-grep-text-pattern'],
-    techniques: [{ id: 'linux-grep-text-pattern', family: 'grep', shell: 'bash', purpose: 'Оставить строку с меткой.', significant_flags: [], typical_error: 'Перепутать шаблон.', mnemonic_image: 'сито', source_refs: [], version: 1 }],
+    technique_refs: [{ id: 'linux-grep-text-pattern', label: 'grep', shell: 'bash' }],
     variant_rule: 'При повторе меняется маркер.', requires_free_text: true, version: 1,
     variant_id: 'magpie-aurora', scenario: 'Дело Аврора.',
     prepared_data: [{ path: 'casefiles/trace.txt', kind: 'text', content: 'trace: marker=ORBIT-41' }],
+    fact_fields: [{ id: 'marker', label: 'Маркер', required: true }, { id: 'sector', label: 'Сектор', required: true }],
     draft_attempt_key: null, draft_artifact: '', draft_explanation: '',
+    draft_structured_facts: {},
   }],
 }
 
@@ -42,6 +44,7 @@ describe('MissionPanel', () => {
           run_id: 1, mission_id: 'magpie-missing-clue', variant_id: 'magpie-aurora', status: 'solved',
           reason: 'Финальный артефакт и объяснение подтверждены.', explanation_accepted: true,
           debrief: 'Разбор открыт после ответа.', evidence_kind: 'mission_final_artifact', duplicate: false,
+          field_errors: {}, free_text_review_status: 'not_assessed',
         }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
       }
       return Promise.resolve(new Response(JSON.stringify({ run_id: 1, saved: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
@@ -56,15 +59,18 @@ describe('MissionPanel', () => {
     await screen.findByRole('heading', { name: 'Сорока: пропавшая улика' })
     expect(screen.getByText('casefiles/trace.txt')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('Конечный артефакт'), { target: { value: 'trace: marker=ORBIT-41' } })
+    fireEvent.change(screen.getByLabelText('Маркер'), { target: { value: 'ORBIT-41' } })
+    fireEvent.change(screen.getByLabelText('Сектор'), { target: { value: 'west' } })
     fireEvent.change(screen.getByLabelText('Объяснение'), { target: { value: 'Маркер связан с сектором.' } })
     fireEvent(window, new Event('pagehide'))
     await waitFor(() => expect(requests.some((request) => request.path.endsWith('/draft') && request.body?.artifact === 'trace: marker=ORBIT-41')).toBe(true))
     fireEvent.click(screen.getByRole('button', { name: 'Проверить на сервере' }))
-    await screen.findByText('Миссия решена: артефакт и объяснение подтверждены.')
+    await screen.findByText('Миссия решена: артефакт и структурированный разбор подтверждены.')
     const completion = requests.find((request) => request.path.endsWith('/complete'))
     expect(completion?.body).toMatchObject({
       artifact: 'trace: marker=ORBIT-41',
       explanation: 'Маркер связан с сектором.',
+      structured_facts: { marker: 'ORBIT-41', sector: 'west' },
     })
     expect(screen.getByText('Разбор открыт после ответа.')).toBeInTheDocument()
   })

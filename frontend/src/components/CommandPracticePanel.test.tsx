@@ -8,9 +8,12 @@ const practicePlan = {
   items: [{
     technique_id: 'linux-find-executable-files',
     shell: 'bash',
+    execution_status: 'range_ready',
     challenge: {
       id: 'linux-find-executable-files-recall',
       prompt: 'Найдите обычные исполняемые файлы в синтетическом дереве.', estimated_minutes: 5,
+      context: { shell: 'bash', working_directory: '/home/student/training', named_inputs: { input_1: '.' }, constraints: ['Только синтетические данные.'] },
+      answer_fields: [{ id: 'command', label: 'Команда в Bash', kind: 'command' }],
       hints: [
         { level: 1, label: 'Смысл и образ' },
         { level: 2, label: 'Название команды' },
@@ -22,6 +25,7 @@ const practicePlan = {
     },
     due_at: '2026-08-26T00:00:00Z', overdue: true, retry_in_session: false,
     draft_answer: '', draft_observation_answer: '',
+    draft_attempt_key: null, attempt_type: 'assessment', eligible_at: null, window_id: null, phase: 'recall',
   }],
   due_total: 1, new_total: 72, debt_remaining: 0, session_limit: 5,
 }
@@ -50,8 +54,17 @@ describe('CommandPracticePanel', () => {
       if (path.endsWith('/complete')) {
         return Promise.resolve(new Response(JSON.stringify({
           attempt_id: 1, technique_id: 'linux-find-executable-files', reason: 'correct_with_help',
-          correct: true, independent: false, observation_correct: true,
+          correct: true, independent: false, observation_correct: false,
           next_due_at: '2026-08-28T00:00:00Z', interval_days: null, retry_in_session: false, duplicate: false,
+          verification_status: 'verified', detail: 'Команда совпала.', attempt_type: 'assessment', completed: false,
+          observation_example: 'SYNTHETIC RESULT\nobserved_path=путь',
+          observation_fields: [{ id: 'observed_path', label: 'Наблюдаемый путь', required: true }],
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      }
+      if (path.endsWith('/observation')) {
+        return Promise.resolve(new Response(JSON.stringify({
+          attempt_id: 1, technique_id: 'linux-find-executable-files', observation_correct: true,
+          field_errors: {}, free_text_review_status: 'not_assessed', completed: true,
         }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
       }
       return Promise.resolve(new Response(JSON.stringify({ attempt_id: 1, saved: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
@@ -67,16 +80,19 @@ describe('CommandPracticePanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Открыть: Смысл и образ' }))
     await screen.findByText('Флажок x выделяет исполняемый файл.')
     fireEvent.change(screen.getByLabelText('Команда в Bash'), { target: { value: 'find . -type f -perm -111' } })
-    fireEvent.change(screen.getByLabelText(/Отдельно: что должен означать результат/), { target: { value: 'Вывод содержит путь.' } })
     fireEvent(window, new Event('pagehide'))
-    await waitFor(() => expect(requests.some((request) => request.path.endsWith('/draft') && request.body?.observation_answer === 'Вывод содержит путь.')).toBe(true))
+    await waitFor(() => expect(requests.some((request) => request.path.endsWith('/draft') && request.body?.answer === 'find . -type f -perm -111')).toBe(true))
     fireEvent.click(screen.getByRole('button', { name: 'Проверить на сервере' }))
     await screen.findByText('Верно с помощью. Самостоятельный интервал не вырос.')
+    fireEvent.change(screen.getByLabelText('Наблюдаемый путь'), { target: { value: 'путь' } })
+    fireEvent.change(screen.getByLabelText(/Свободное объяснение/), { target: { value: 'Вывод содержит путь.' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Проверить факты' }))
+    await screen.findByText('Структурированный разбор подтверждён.')
     await waitFor(() => expect(requests.some((request) => request.path.endsWith('/complete'))).toBe(true))
     const completion = requests.find((request) => request.path.endsWith('/complete'))
     expect(completion?.body).toMatchObject({
       answer: 'find . -type f -perm -111',
-      observation_answer: 'Вывод содержит путь.',
+      observation_answer: '',
       dont_remember: false,
     })
     fireEvent.click(screen.getByRole('button', { name: /Следующий приём/ }))
@@ -108,6 +124,16 @@ describe('CommandPracticePanel', () => {
           interval_days: correct ? 1 : null,
           retry_in_session: !correct,
           duplicate: false,
+          verification_status: 'verified', detail: correct ? 'Команда совпала.' : 'Другой инструмент.',
+          attempt_type: 'assessment', completed: !correct,
+          observation_example: correct ? 'SYNTHETIC RESULT\nobserved_path=путь' : null,
+          observation_fields: correct ? [{ id: 'observed_path', label: 'Наблюдаемый путь', required: true }] : [],
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      }
+      if (path.endsWith('/observation')) {
+        return Promise.resolve(new Response(JSON.stringify({
+          attempt_id: 2, technique_id: 'linux-find-executable-files', observation_correct: true,
+          field_errors: {}, free_text_review_status: 'not_assessed', completed: true,
         }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
       }
       return Promise.resolve(new Response(JSON.stringify({ attempt_id: 1, saved: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
@@ -128,6 +154,9 @@ describe('CommandPracticePanel', () => {
     fireEvent.change(screen.getByLabelText('Команда в Bash'), { target: { value: 'find . -type f -perm -111' } })
     fireEvent.click(screen.getByRole('button', { name: 'Проверить на сервере' }))
     await screen.findByText('Верно, без помощи.')
+    fireEvent.change(screen.getByLabelText('Наблюдаемый путь'), { target: { value: 'путь' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Проверить факты' }))
+    await screen.findByText('Структурированный разбор подтверждён.')
     fireEvent.click(screen.getByRole('button', { name: /Следующий приём/ }))
     await screen.findByRole('heading', { name: 'Разминка завершена' })
     expect(completions).toBe(2)
