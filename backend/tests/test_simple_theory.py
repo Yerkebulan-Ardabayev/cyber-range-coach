@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import pytest
+from pydantic import ValidationError
+
 from cyber_range_coach.services.simple_theory import SimpleTheory, simplicity_errors
 
 
@@ -44,3 +47,18 @@ def test_course_pilot_lessons_are_simple(client) -> None:
     for lesson in with_theory:
         assert lesson.simple_theory is not None
         assert simplicity_errors(lesson.simple_theory) == [], lesson.id
+
+
+def test_broken_word_entry_is_rejected() -> None:
+    # A comma lost in YAML turns the rest of a meaning into a stray key.
+    broken = {"term": "cat", "meaning": "Команда", "которая печатает файл.": None}
+    with pytest.raises(ValidationError):
+        _theory(words=[broken])
+
+
+def test_course_word_meanings_are_complete_sentences(client) -> None:
+    for lesson in client.app.state.curriculum.ordered_lessons():
+        if lesson.simple_theory is None:
+            continue
+        for word in lesson.simple_theory.words:
+            assert word.meaning.rstrip().endswith((".", "!", "?", "»", ")")), (lesson.id, word.term)

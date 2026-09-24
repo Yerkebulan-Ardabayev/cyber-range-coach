@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 MAX_WORDS_PER_SENTENCE = 15
 MAX_PICTURE_LINES = 14
@@ -21,11 +21,16 @@ _WORD = re.compile(r"[\w-]+", re.UNICODE)
 
 
 class SimpleWord(BaseModel):
+    # A comma lost in YAML turns half a meaning into a stray key; reject it.
+    model_config = ConfigDict(extra="forbid")
+
     term: str = Field(min_length=1)
     meaning: str = Field(min_length=1)
 
 
 class SimpleTheory(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     analogy: str = Field(min_length=1)
     what_it_does: list[str] = Field(min_length=1, max_length=3)
     words: list[SimpleWord] = Field(default_factory=list)

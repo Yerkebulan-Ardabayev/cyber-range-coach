@@ -2177,20 +2177,20 @@ challenges:
     kind: command
 - id: linux-strings-grep-case-insensitive-recall
   technique_id: linux-strings-grep-case-insensitive
-  prompt: Извлечь печатаемый текст из бинарного файла и найти метку без учёта регистра. Напишите команду
-    для синтетического учебного примера.
+  prompt: В файле sample.bin текст перемешан с нулевыми байтами. Выньте из него читаемые строки и оставьте
+    только те, где есть метка CRED в любом регистре.
   estimated_minutes: 5
   hints:
   - level: 1
     label: Смысл и образ
-    text: 'Извлечь печатаемый текст из бинарного файла и найти метку без учёта регистра. Образ: strings
-      вынимает буквы из шума, сито ловит метку.'
+    text: 'Вынуть читаемые строки из файла с мусорными байтами и отобрать метку в любом регистре. Образ:
+      strings вынимает буквы из шума, сито ловит метку.'
   - level: 2
     label: Название команды
     text: Начните с команды strings.
   - level: 3
     label: Скелет
-    text: strings -i <аргументы>
+    text: strings <файл> | grep -i <метка>
   - level: 4
     label: Полный пример
     text: strings sample.bin | grep -i CRED. Сверьте инструмент, значимые флаги и аргументы по задаче.
@@ -2211,27 +2211,33 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: извлечь печатаемый текст из бинарного
-      файла и найти метку без учёта регистра.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какие учётные данные нашлись в sample.bin?
+    sample_answer: Нашлись две строки с меткой в разном регистре, токен amber-7731 и пользователь svc-backup.
+      Без -i строчная cred-token не попала бы в вывод. Действует ли токен, этот вывод не доказывает.
+    example_output: 'student@training-vm:~/training$ strings sample.bin | grep -i CRED
 
-      observed_linux_strings_grep_case_insensitive_1=строк'
+      cred-token=amber-7731
+
+      CRED_USER=svc-backup'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_strings_grep_case_insensitive_1
-      label: 'Наблюдаемый факт 1: строк / cred / совпад'
+    - id: token
+      label: Какое значение у токена?
       accepted_values:
-      - строк
-      - cred
-      - совпад
+      - amber-7731
+      accepted_patterns: []
+    - id: user
+      label: Какой пользователь указан рядом с меткой в верхнем регистре?
+      accepted_values:
+      - svc-backup
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      search_text: sample.bin
-      search_text_2: CRED
+      binary_file: sample.bin
+      label: CRED
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3910,14 +3916,13 @@ challenges:
     kind: command
 - id: linux-ssh-custom-port-recall
   technique_id: linux-ssh-custom-port
-  prompt: Открыть SSH-сеанс к следующей учебной учётке на нестандартном порту. Напишите команду для синтетического
-    учебного примера.
+  prompt: Учебный SSH-сервер этой машины слушает порт 2222, а не обычный 22. Подключитесь к нему под учётной
+    записью student2.
   estimated_minutes: 5
   hints:
   - level: 1
     label: Смысл и образ
-    text: 'Открыть SSH-сеанс к следующей учебной учётке на нестандартном порту. Образ: SSH-дверь имеет
-      отдельный номер порта.'
+    text: 'Подключиться к SSH-серверу, который слушает не 22-й порт. Образ: у двери SSH свой номер.'
   - level: 2
     label: Название команды
     text: Начните с команды ssh.
@@ -3944,28 +3949,43 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: открыть ssh-сеанс к следующей учебной
-      учётке на нестандартном порту.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Что ssh напечатал, когда сеанс закрылся?
+    sample_answer: Сервер спросил пароль, приглашение сменилось на student2@training-vm. После exit ssh
+      написал Connection to localhost closed, значит закрылся только сеанс SSH, и ученик вернулся к себе.
+    example_output: 'student@training-vm:~/training$ ssh -p 2222 student2@localhost
 
-      observed_linux_ssh_custom_port_1=приглашен'
+
+      student2@localhost''s password:
+
+      student2@training-vm:~$ id -un
+
+      student2
+
+      student2@training-vm:~$ hostname
+
+      training-vm
+
+      student2@training-vm:~$ exit
+
+      logout
+
+      Connection to localhost closed.'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_ssh_custom_port_1
-      label: 'Наблюдаемый факт 1: приглашен / сеанс / host key'
+    - id: close_message
+      label: Каким словом заканчивается строка после logout?
       accepted_values:
-      - приглашен
-      - сеанс
-      - host key
+      - closed.
+      - closed
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: ssh
-      numeric_value: '2222'
-      argument_2: student2@localhost
+      user: student2
+      host: localhost
+      port: '2222'
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4361,12 +4381,14 @@ challenges:
     kind: command
 - id: linux-man-command-recall
   technique_id: linux-man-command
-  prompt: Открыть локальное руководство утилиты. Напишите команду для синтетического учебного примера.
+  prompt: Вы не помните, какой ключ у xxd превращает шестнадцатеричный дамп обратно в байты. Откройте
+    встроенное руководство этой утилиты прямо в терминале.
   estimated_minutes: 5
   hints:
   - level: 1
     label: Смысл и образ
-    text: 'Открыть локальное руководство утилиты. Образ: справочник заменяет подбор флага наугад.'
+    text: 'Открыть встроенное руководство утилиты прямо в терминале. Образ: справочник вместо подбора
+      флага наугад.'
   - level: 2
     label: Название команды
     text: Начните с команды man.
@@ -4393,26 +4415,29 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: открыть локальное руководство утилиты.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_man_command_1=справ'
+    prompt: Какой ключ в разделе SYNOPSIS делает обратное преобразование?
+    sample_answer: Раздел NAME говорит, что xxd делает дамп или обратное действие, а SYNOPSIS показывает
+      строку с -r[evert]. Руководство открывается постранично, выход клавишей q.
+    example_output: "student@training-vm:~/training$ man xxd\nXXD(1)                  General Commands\
+      \ Manual                 XXD(1)\n\nNAME\n       xxd - make a hex dump or do the reverse.\n\nSYNOPSIS\n\
+      \       xxd -h[elp]\n       xxd [options] [infile [outfile]]\n       xxd -r[evert] [options] [infile\
+      \ [outfile]]\n\nDESCRIPTION\n       xxd  creates  a hex dump of a given file or standard input.\
+      \  It\n       can also convert a hex dump back to its original  binary  form.\n       Like  uuencode(1)\
+      \ and uudecode(1) it allows the transmission of"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_man_command_1
-      label: 'Наблюдаемый факт 1: справ / описан / manual'
+    - id: reverse_flag
+      label: Какой короткий ключ стоит в третьей строке SYNOPSIS?
       accepted_values:
-      - справ
-      - описан
-      - manual
+      - -r
+      - -r[evert]
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: man
-      argument_2: xxd
+      utility: xxd
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4422,12 +4447,14 @@ challenges:
     kind: command
 - id: linux-xxd-reverse-recall
   technique_id: linux-xxd-reverse
-  prompt: Восстановить исходные байты из hex-дампа. Напишите команду для синтетического учебного примера.
+  prompt: В dump.hex лежит шестнадцатеричный дамп короткой записки. Восстановите из него исходный текст
+    и выведите его на экран.
   estimated_minutes: 5
   hints:
   - level: 1
     label: Смысл и образ
-    text: 'Восстановить исходные байты из hex-дампа. Образ: обратный преобразователь собирает байты.'
+    text: 'Превратить шестнадцатеричный дамп обратно в исходный текст. Образ: обратный преобразователь
+      собирает байты.'
   - level: 2
     label: Название команды
     text: Начните с команды xxd.
@@ -4454,27 +4481,32 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: восстановить исходные байты из
-      hex-дампа.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой код и какой следующий узел в восстановленной записке?
+    sample_answer: Обратное преобразование вернуло две строки обычного текста, код amber-42 и адрес 10.0.5.12.
+      Кто написал записку, вывод не говорит.
+    example_output: 'student@training-vm:~/training$ xxd -r dump.hex
 
-      observed_linux_xxd_reverse_1=байт'
+      relay code: amber-42
+
+      next hop: 10.0.5.12'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_xxd_reverse_1
-      label: 'Наблюдаемый факт 1: байт / двоич / восстанов'
+    - id: relay_code
+      label: Какой код в первой строке?
       accepted_values:
-      - байт
-      - двоич
-      - восстанов
+      - amber-42
+      accepted_patterns: []
+    - id: next_hop
+      label: Какой адрес следующего узла?
+      accepted_values:
+      - 10.0.5.12
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: xxd
-      target_path: dump.hex
+      hex_dump: dump.hex
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4616,14 +4648,14 @@ challenges:
     kind: command
 - id: linux-nano-edit-config-recall
   technique_id: linux-nano-edit-config
-  prompt: Открыть синтетический конфигурационный файл в редакторе. Напишите команду для синтетического
-    учебного примера.
+  prompt: В конфиге agent.demo.conf стоит тестовый режим. Откройте файл в простом терминальном редакторе,
+    замените строку режима на mode=lab, сохраните и выйдите.
   estimated_minutes: 5
   hints:
   - level: 1
     label: Смысл и образ
-    text: 'Открыть синтетический конфигурационный файл в редакторе. Образ: настройка меняется в файле
-      и затем проверяется отдельно.'
+    text: 'Открыть конфиг в простом терминальном редакторе, поправить строку и сохранить. Образ: настройка
+      меняется в файле и потом проверяется отдельно.'
   - level: 2
     label: Название команды
     text: Начните с команды nano.
@@ -4650,27 +4682,32 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: открыть синтетический конфигурационный
-      файл в редакторе.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Что показывает cat после сохранения?
+    sample_answer: Редактор после выхода ничего не печатает, поэтому изменение видно только отдельной
+      проверкой cat. Строка режима стала mode=lab, остальные строки не тронуты.
+    example_output: 'student@training-vm:~/training$ nano agent.demo.conf
 
-      observed_linux_nano_edit_config_1=редактор'
+      student@training-vm:~/training$ cat agent.demo.conf
+
+      agent=demo
+
+      mode=lab
+
+      port=9000'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_nano_edit_config_1
-      label: 'Наблюдаемый факт 1: редактор / файл / конфиг'
+    - id: port_kept
+      label: Какой порт остался в файле?
       accepted_values:
-      - редактор
-      - файл
-      - конфиг
+      - '9000'
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: nano
-      target_path: agent.demo.conf
+      config_file: agent.demo.conf
+      new_line: mode=lab
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.

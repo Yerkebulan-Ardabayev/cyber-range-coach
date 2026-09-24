@@ -684,3 +684,36 @@ fixtures:
     volatile_fields:
     - root_available
     - root_use_percent
+  linux-strings-grep-case-insensitive:
+    setup: |
+      { head -c 64 /dev/zero; printf 'build: relay-agent 2.3\n'; head -c 48 /dev/zero; printf 'cred-token=amber-7731\n'; head -c 32 /dev/zero; printf 'CRED_USER=svc-backup\n'; head -c 40 /dev/zero; printf 'checksum ok\n'; } > sample.bin
+      chown student:student sample.bin
+  linux-ssh-custom-port:
+    setup: |
+      useradd -m -s /bin/bash student2
+      echo 'student2:training-only' | chpasswd
+      ssh-keygen -A >/dev/null
+      mkdir -p /run/sshd
+      printf 'Port 2222\nPasswordAuthentication yes\nPrintMotd no\nPrintLastLog no\n' > /etc/ssh/sshd_config.d/training.conf
+      /usr/sbin/sshd
+      install -d -m 700 -o student -g student /home/student/.ssh
+      ssh-keyscan -p 2222 localhost 2>/dev/null > /home/student/.ssh/known_hosts
+      chown student:student /home/student/.ssh/known_hosts
+      rm -f /etc/update-motd.d/* /etc/legal
+    run: "{ sleep 2; echo training-only; sleep 1.5; echo id -un; sleep 0.5; echo hostname; sleep 0.5; echo exit; sleep 1; } | script -qc 'ssh -p 2222 student2@localhost' /dev/null"
+    timeout: 60
+  linux-man-command:
+    run: MANWIDTH=72 MANPAGER=cat man xxd 2>/dev/null | head -n 14
+  linux-xxd-reverse:
+    setup: |
+      printf 'relay code: amber-42\nnext hop: 10.0.5.12\n' | xxd > dump.hex
+      chown student:student dump.hex
+    followups: []
+  linux-nano-edit-config:
+    setup: |
+      printf 'agent=demo\nmode=test\nport=9000\n' > agent.demo.conf
+      chown student:student agent.demo.conf
+    run: "{ sleep 1; printf '\\033[B'; sleep 0.3; printf '\\013'; sleep 0.3; printf 'mode=lab\\r'; sleep 0.3; printf '\\017'; sleep 0.5; printf '\\r'; sleep 0.5; printf '\\030'; sleep 1; } | script -qc 'nano agent.demo.conf' /dev/null > /dev/null"
+    followups:
+    - cat agent.demo.conf
+    timeout: 60

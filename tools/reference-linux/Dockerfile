@@ -11,3 +11,8 @@ RUN rm -f /etc/dpkg/dpkg.cfg.d/excludes && \
       xxd binutils nano openssh-server openssh-client netcat-openbsd nmap curl \
       ca-certificates && \
     rm -rf /var/lib/apt/lists/*
+# The minimized base image diverts man to a stub that prints "unminimize".
+# The learner WSL Ubuntu is not minimized, so restore the real man.
+RUN if [ -f /usr/bin/man.REAL ]; then \
+      rm /usr/bin/man && dpkg-divert --quiet --remove --rename /usr/bin/man; \
+    fi && mandb -q
