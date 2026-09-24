@@ -47,12 +47,13 @@ export function LearnPage({ principal }: { principal: Principal }) {
       {curriculum.error ? <ErrorNotice error={curriculum.error} /> : null}
       <div className="lesson-ledger">
         {lessons.map((lesson, index) => {
+          const ladderSkills = new Set((curriculum.data?.lessons ?? []).filter((item) => item.ladder_step > 1).map((item) => item.skill_id))
           const current = stageBySkill.get(lesson.skill_id) ?? 'introduced'
           return (
             <article key={lesson.id} className="lesson-entry">
               <div className="lesson-entry__number">{String(index + 1).padStart(2, '0')}</div>
               <div className="lesson-entry__main">
-                <div className="lesson-entry__meta"><span>{lesson.estimated_minutes} МИН</span><span>{lesson.requires_target ? 'ЦЕЛЬ В DOCKER' : 'LINUX-МАШИНА'}</span><span>{lesson.skill_id}</span></div>
+                <div className="lesson-entry__meta"><span>{lesson.estimated_minutes} МИН</span><span>{lesson.requires_target ? 'ЦЕЛЬ В DOCKER' : 'LINUX-МАШИНА'}</span><span>{lesson.skill_id}</span>{ladderSkills.has(lesson.skill_id) ? <span>СТУПЕНЬ {lesson.ladder_step} / 3</span> : null}</div>
                 <h2>{lesson.title}</h2><p>{lesson.summary}</p>
                 <div className="lesson-entry__term"><strong>{lesson.term.name}</strong><span>{lesson.term.definition}</span></div>
               </div>

@@ -52,6 +52,10 @@ export function LabPage({ principal }: { principal: Principal }) {
     mutationFn: () => api<GradeResult>(`/api/v2/lab-runs/${id}/finalize`, { method: 'POST', ...jsonBody({ corrected_conclusion: correction, limitation, next_test: nextTest }) }),
     onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['lab-run', id] }); void queryClient.invalidateQueries({ queryKey: ['reviews'] }); void queryClient.invalidateQueries({ queryKey: ['evidence'] }) },
   })
+  const reveal = useMutation({
+    mutationFn: () => api<RunLesson>(`/api/v2/lab-runs/${id}/reveal-command`, { method: 'POST' }),
+    onSuccess: (data) => { queryClient.setQueryData(['lab-run-lesson', id], data); void queryClient.invalidateQueries({ queryKey: ['lab-run', id] }) },
+  })
   const stop = useMutation({
     mutationFn: () => api<LabRun>(`/api/v2/lab-runs/${id}/stop`, { method: 'POST' }),
     onSuccess: () => navigate('/learn'),
@@ -77,7 +81,9 @@ export function LabPage({ principal }: { principal: Principal }) {
         <aside className="lab-guide">
           <section><Eyebrow>01 / ОПОРА</Eyebrow><h2>{lesson.data.term.name}</h2>{lesson.data.simple_theory ? <p><InlineCode text={lesson.data.simple_theory.analogy} /></p> : null}<p>{lesson.data.term.definition}</p></section>
           <section><Eyebrow>02 / ВАШ ПРОГНОЗ</Eyebrow><blockquote>{run.data.prediction}</blockquote></section>
-          <section><Eyebrow>03 / КОМАНДА</Eyebrow><div className="command-slip"><code>{lesson.data.rendered_command}</code><button onClick={() => { void navigator.clipboard.writeText(lesson.data.rendered_command); setCopied(true); window.setTimeout(() => setCopied(false), 1200) }}>{copied ? 'скопировано' : 'копировать'}</button></div><ol>{lesson.data.command_explanation.map((line) => <li key={line}>{line}</li>)}</ol></section>
+          {lesson.data.command_hidden ? (
+            <section><Eyebrow>03 / КОМАНДА</Eyebrow><p>Ступень {lesson.data.ladder_step} из 3: команду пишешь сам по заданию, любой верной записью. Засчитывает настоящий вывод. {lesson.data.ladder_step === 3 ? 'Это ступень переноса, подсказок здесь нет. Если не выходит, вернись к ступени 2.' : 'Если застрял, её можно открыть, но это помощь: навык не поднимется, повтор будет завтра.'}</p>{principal.role !== 'viewer' && lesson.data.ladder_step !== 3 ? <button className="button button--quiet" disabled={reveal.isPending || run.data.status !== 'active'} onClick={() => reveal.mutate()}>{reveal.isPending ? 'Открываем…' : 'Показать команду (помощь)'}</button> : null}{reveal.error ? <ErrorNotice error={reveal.error} /> : null}</section>
+          ) : <section><Eyebrow>03 / КОМАНДА</Eyebrow>{run.data.help_used ? <p className="notice notice--warning">Команда открыта как помощь.</p> : null}<div className="command-slip"><code>{lesson.data.rendered_command}</code><button onClick={() => { void navigator.clipboard.writeText(lesson.data.rendered_command); setCopied(true); window.setTimeout(() => setCopied(false), 1200) }}>{copied ? 'скопировано' : 'копировать'}</button></div><ol>{lesson.data.command_explanation.map((line) => <li key={line}>{line}</li>)}</ol></section>}
           <Link className="quiet-link" to={`/lesson/${lesson.data.id}`}>Вернуться к примеру</Link>
         </aside>
         <section className="terminal-deck">

@@ -1,0 +1,141 @@
+# Ladder cases for tools/validate_ladder.py (AC-11-6). Every command runs in
+# the reference image as student with a WSL-like home.
+# right_commands: other correct spellings that must pass (steps 2-3 are graded
+#   by meaning). A list entry is several terminal lines in one attempt.
+# wrong_commands: must not pass. For steps 2-3 at least one of them must pass
+#   the command check and be rejected by the real output alone.
+version: 1
+right_commands:
+  linux-navigation-home:
+  - cd; pwd
+  - cd ~; pwd
+  - cd /home/student && pwd
+  - - cd
+    - pwd
+  linux-navigation-logs:
+  - cd /var/log; pwd
+  - - cd /var/log
+    - pwd
+  linux-files-home-hidden:
+  - ls -la /home/student
+  - ls -a -l ~
+  - ls -al $HOME
+  linux-files-skel:
+  - ls -a -l /etc/skel
+  - ls -la /etc/skel/
+  linux-reading-shells:
+  - cd /etc; pwd; cat shells
+  - - cd /etc
+    - pwd
+    - cat shells
+  - cd /etc && pwd && cat /etc/shells
+  linux-reading-proc-version:
+  - cd /proc; pwd; cat version
+  - - cd /proc
+    - pwd
+    - cat version
+  text-pipes-bash-users:
+  - cat /etc/passwd | grep bash
+  - cat /etc/passwd | grep ":/bin/bash"
+  text-pipes-release-files:
+  - ls /etc/ | grep release
+  - ls -1 /etc | grep release
+  text-redirection-note:
+  - echo alpha > ~/crc-note.txt; echo beta >> ~/crc-note.txt; cat ~/crc-note.txt
+  - printf 'alpha\n' > ~/crc-note.txt && printf 'beta\n' >> ~/crc-note.txt && cat ~/crc-note.txt
+  text-redirection-command-output:
+  - id > ~/crc-id.txt; cat ~/crc-id.txt
+  - id > $HOME/crc-id.txt && cat $HOME/crc-id.txt
+  files-find-conf-top:
+  - find /etc/ -maxdepth 1 -name '*.conf'
+  - find /etc -maxdepth 1 -name "*.conf" -type f
+  files-find-home-dotfiles:
+  - find ~ -maxdepth 1 -name '.*' -type f
+  - find /home/student -maxdepth 1 -type f -name '.*'
+  linux-permissions-shadow:
+  - stat -c "%A %U %G %n" /etc/shadow
+  - stat --format='%A %U %G %n' /etc/shadow
+  linux-permissions-tmp:
+  - stat -c "%A %U %G %n" /tmp
+  - stat --format '%A %U %G %n' /tmp
+  linux-users-root:
+  - id root
+  linux-group-sudo:
+  - getent group sudo
+  - grep '^sudo:' /etc/group
+wrong_commands:
+  linux-navigation-pwd:
+  - ls
+  - cd /etc
+  linux-navigation-home:
+  - cd ~ && cd /tmp && pwd
+  - 'cd /tmp; ls -d ~ # pwd'
+  - cd . && pwd
+  - echo /home/student
+  - pwd; cd ~
+  linux-navigation-logs:
+  - cd /var/log && cd .. && pwd
+  - 'cd /tmp; ls -d /var/log # pwd'
+  - cd var/log && pwd
+  linux-files-listing:
+  - ls
+  - ls -l
+  linux-files-home-hidden:
+  - ls -la --ignore=.bashrc ~
+  - 'ls -la /etc/skel # ~'
+  - ls -l ~
+  linux-files-skel:
+  - ls -la --ignore=.profile /etc/skel
+  - ls /etc/skel
+  linux-change-and-read:
+  - cat /etc/hostname
+  - cd /etc && pwd
+  linux-reading-shells:
+  - cd /etc && cd / && pwd && cat /etc/shells
+  - cat /etc/shells
+  linux-reading-proc-version:
+  - cd /proc && cd / && pwd && cat /proc/version
+  - cat /proc/version
+  text-pipes-grep:
+  - printf 'CLOSED 22\nLISTEN 8080\nCLOSED 9000\n'
+  text-pipes-bash-users:
+  - cat /etc/passwd | grep 'nologin'
+  - cat /etc/passwd
+  text-pipes-release-files:
+  - ls /etc | grep 'lsb-release'
+  - ls /etc | grep 'host'
+  text-redirection:
+  - printf 'FIRST\n'
+  text-redirection-note:
+  - echo alpha > ~/crc-note.txt && echo beta >> ~/crc-note.txt && echo alpha >> ~/crc-note.txt && cat
+    ~/crc-note.txt
+  - echo beta > ~/crc-note.txt && echo alpha >> ~/crc-note.txt && cat ~/crc-note.txt
+  - 'printf ''alpha\nbeta\n'' > ~/crc-note.txt && cat ~/crc-note.txt # >>'
+  - printf 'alpha\nbeta\n' > ~/crc-note.txt; printf '' >> ~/crc-note.txt; cat ~/crc-note.txt
+  text-redirection-command-output:
+  - id > ~/crc-id.txt && id -un > ~/crc-id.txt && cat ~/crc-id.txt
+  - 'id # > crc-id.txt cat'
+  files-find-safe:
+  - find /etc -name 'hosts'
+  files-find-conf-top:
+  - find /etc -maxdepth 1 -name '*.conf' -empty
+  - find /etc -name '*.conf'
+  files-find-home-dotfiles:
+  - find ~ -maxdepth 1 -type f -name '.*' -empty
+  - find ~ -maxdepth 1 -name '.*'
+  linux-permissions-read:
+  - ls -l /etc/hosts
+  linux-permissions-shadow:
+  - stat -c '%A %U %n' /etc/shadow
+  - ls -l /etc/shadow
+  linux-permissions-tmp:
+  - stat -c '%A %U %n' /tmp
+  - ls -ld /tmp
+  linux-users-groups:
+  - whoami
+  linux-users-root:
+  - id root -u
+  - id
+  linux-group-sudo:
+  - 'grep sudo: /etc/group -c'
+  - groups

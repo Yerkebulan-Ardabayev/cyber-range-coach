@@ -27,9 +27,9 @@ export function EvidencePage() {
       <div className="evidence-map">
         {[...grouped.entries()].map(([skill, items]) => {
           const current = items.sort((a, b) => stages.indexOf(b.stage) - stages.indexOf(a.stage))[0]
-          const targetBacked = curriculum.data?.lessons.some((lesson) => lesson.skill_id === skill && lesson.requires_target) ?? false
+          const targetBacked = curriculum.data?.lessons.some((lesson) => lesson.skill_id === skill && (lesson.requires_target || lesson.ladder_step === 3)) ?? false
           const visibleStages = targetBacked ? stages : stages.slice(0, 3)
-          return <article key={skill}><header><span><EvidenceIcon /></span><div><Eyebrow>НАВЫК</Eyebrow><h2>{skill}</h2></div><span className={`evidence-stage evidence-stage--${current.stage}`}>{stageLabels[current.stage]}</span></header><div className="stage-track" style={{ gridTemplateColumns: `repeat(${visibleStages.length}, minmax(0, 1fr))` }}>{visibleStages.map((stage) => <div key={stage} className={stages.indexOf(stage) <= stages.indexOf(current.stage) ? 'reached' : ''}><i /><span>{stageLabels[stage]}</span></div>)}</div><ul>{items.map((item) => <li key={item.id}><div><strong>{item.fact}</strong><span>Запуск #{item.run_id} · {formatDate(item.created_at)}</span></div><code>{item.target_fingerprint ? shortHash(item.target_fingerprint) : 'контекст Linux VM'}</code></li>)}</ul></article>
+          return <article key={skill}><header><span><EvidenceIcon /></span><div><Eyebrow>НАВЫК</Eyebrow><h2>{skill}</h2></div><span className={`evidence-stage evidence-stage--${current.stage}`}>{stageLabels[current.stage]}</span></header><div className="stage-track" style={{ gridTemplateColumns: `repeat(${visibleStages.length}, minmax(0, 1fr))` }}>{visibleStages.map((stage) => <div key={stage} className={stages.indexOf(stage) <= stages.indexOf(current.stage) ? 'reached' : ''}><i /><span>{stageLabels[stage]}</span></div>)}</div><ul>{items.map((item) => <li key={item.id}><div><strong>{item.fact}</strong><span>Запуск #{item.run_id} · {formatDate(item.created_at)}{item.grader_decision === 'passed_with_help' ? ' · с помощью, навык не поднят' : ''}</span></div><code>{item.target_fingerprint ? shortHash(item.target_fingerprint) : 'контекст Linux VM'}</code></li>)}</ul></article>
         })}
       </div>
     </div>

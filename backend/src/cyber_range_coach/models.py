@@ -172,6 +172,9 @@ class LabRun(Base):
     terminal_session_id: Mapped[str | None] = mapped_column(String(80))
     grader_status: Mapped[str | None] = mapped_column(String(30))
     grader_report: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    # The learner opened the hidden command of a ladder step 2 or 3.
+    help_used: Mapped[bool] = mapped_column(Boolean, default=False)
+    help_opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     relay_port: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     stopped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

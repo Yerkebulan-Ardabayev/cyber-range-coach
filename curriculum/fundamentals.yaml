@@ -114,6 +114,101 @@ lessons:
     explanation_prompt: Что именно доказал вывод `pwd`, а что он не говорит о содержимом каталога?
     review_question: Какая команда фиксирует текущий каталог без изменения состояния?
 
+  - id: linux-navigation-home
+    order: 21
+    title: 'Сам: вернись домой и докажи адрес'
+    summary: Ты где-то в системе. Перейди в свою домашнюю папку и одной строкой покажи её полный адрес.
+    estimated_minutes: 10
+    skill_id: linux-navigation
+    stage: independent
+    ladder_step: 2
+    target_tags: []
+    requires_target: false
+    term:
+      name: домашний каталог
+      definition: Личная папка пользователя, обычно `/home/<имя>`. Знак `~` в команде заменяет её адрес.
+    simple_theory:
+      analogy: Дом, где твоя комната, всегда можно найти по короткому слову «домой». В терминале это знак `~`.
+      what_it_does:
+      - Знак `~` означает твою домашнюю папку.
+      - Сначала переходишь, потом проверяешь адрес.
+      - Две команды можно связать знаком `&&`. Вторая выполнится, только если первая прошла.
+      words: []
+      picture: "где угодно  --(перейти в ~)-->  /home/student\n                                проверить адрес\n \
+        \                               /home/student   <- ответ\n"
+      check_question: Что значит знак `~` в команде?
+      check_answer: Твою домашнюю папку, например `/home/student`.
+    worked_example: Любая работа начинается с понимания, где ты. Домашняя папка это место, куда можно вернуться из
+      любого каталога.
+    prediction_question: С какого слова начнётся адрес домашней папки после проверки?
+    command: cd ~ && pwd
+    command_patterns:
+    - '(?:^|\s)cd(?: (?:~/?|\$HOME/?|/home/[^\s/]+/?))?(?= (?:;|&&)|\n|$)[\s\S]*(?:^|\s)pwd(?:\s|$)'
+    command_tools: [cd, pwd]
+    accepted_commands:
+    - cd && pwd
+    - cd $HOME && pwd
+    - cd ~/ && pwd
+    command_explanation:
+    - cd ~ переводит в домашнюю папку.
+    - '&& запускает pwd, только если переход удался.'
+    - pwd печатает полный адрес.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)/home/[^/\s]+\s*(?:\r?\n|$)
+      forbidden_patterns:
+      - No such file
+      - command not found
+      fact_template: Терминал показал адрес домашней папки после перехода.
+    explanation_prompt: Почему после перехода полезно сразу проверить адрес?
+    review_question: Какой знак заменяет адрес домашней папки?
+
+  - id: linux-navigation-logs
+    order: 22
+    title: 'Перенос: встань туда, где лежат журналы'
+    summary: Журналы системы живут в папке log внутри var от корня. Перейди туда и докажи, что ты на месте.
+    estimated_minutes: 10
+    skill_id: linux-navigation
+    stage: transfer
+    ladder_step: 3
+    target_tags: []
+    requires_target: false
+    term:
+      name: журнал
+      definition: Файл, куда программы записывают, что с ними происходило. В Linux журналы лежат в `/var/log`.
+    simple_theory:
+      analogy: У школы есть архив с дневниками дежурных. Чтобы их читать, сначала надо прийти в архив.
+      what_it_does:
+      - Журналы программ хранятся в одной общей папке.
+      - Путь от корня начинается с косой черты.
+      - Без косой черты в начале поиск пойдёт от текущей папки.
+      words: []
+      picture: "/                 <- корень\n+-- var\n    +-- log       <- журналы, цель\n"
+      check_question: Ты в `/home/student` и пишешь путь `var/log` без косой черты. Куда ты попадёшь?
+      check_answer: Никуда. Будет искаться `/home/student/var/log`, а такой папки нет.
+    worked_example: Разбор инцидента почти всегда начинается с журналов. Сначала надо уверенно встать в их папку.
+    prediction_question: Какой адрес покажет проверка, если переход удался?
+    command: cd /var/log && pwd
+    command_patterns:
+    - '(?:^|\s)cd /var/log/?(?= (?:;|&&)|\n|$)[\s\S]*(?:^|\s)pwd(?:\s|$)'
+    command_tools: [cd, pwd]
+    accepted_commands:
+    - cd /var/log/ && pwd
+    command_explanation:
+    - Путь начинается с / и поэтому идёт от корня.
+    - pwd подтверждает, что ты в папке журналов.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)/var/log\s*(?:\r?\n|$)
+      forbidden_patterns:
+      - No such file
+      - command not found
+      fact_template: Терминал подтвердил переход в папку журналов `/var/log`.
+    explanation_prompt: Что изменилось бы, если бы путь был написан без первой косой черты?
+    review_question: Где в Linux лежат журналы системы?
+
   - id: linux-files-listing
     order: 30
     title: Читать структуру файлов, а не угадывать
@@ -168,6 +263,113 @@ lessons:
       fact_template: Получен длинный листинг с типом объекта и permissions.
     explanation_prompt: Чем первый символ строки отличается от следующих девяти символов permissions?
     review_question: Что добавляют флаги `-l` и `-a`?
+
+  - id: linux-files-home-hidden
+    order: 31
+    title: 'Сам: найди скрытые файлы у себя дома'
+    summary: В твоей домашней папке есть файлы настроек, имена которых начинаются с точки. Покажи их подробным списком,
+      не переходя в эту папку.
+    estimated_minutes: 10
+    skill_id: linux-files
+    stage: independent
+    ladder_step: 2
+    target_tags: []
+    requires_target: false
+    term:
+      name: скрытый файл
+      definition: Файл, имя которого начинается с точки. Обычный список его не показывает.
+    simple_theory:
+      analogy: Некоторые вещи в комнате лежат в ящике стола. Их не видно, пока не откроешь ящик.
+      what_it_does:
+      - Имена с точкой в начале обычный список прячет.
+      - Нужен ключ, который показывает всё.
+      - Папку можно назвать прямо в команде, переходить не нужно.
+      words: []
+      picture: "обычный список:  (пусто)\nполный список:   .bashrc  .profile  .bash_logout\n                 ^ точка\
+        \ в начале = скрытый\n"
+      check_question: Почему файл `.bashrc` не виден в обычном списке?
+      check_answer: Его имя начинается с точки. Такие файлы список прячет, пока не попросишь всё.
+    worked_example: Настройки оболочки хранятся в скрытых файлах домашней папки. Их надо уметь увидеть, не меняя текущий
+      каталог.
+    prediction_question: Какие строки в конце списка будут начинаться с точки?
+    command: ls -la ~
+    command_patterns:
+    - '(?:^|\s)-[a-zA-Z]*a'
+    - '(?:^|\s)-[a-zA-Z]*l'
+    - '(?:^|\s)(?:~/?|\$HOME/?|/home/[^\s/]+/?)(?:\s|$)'
+    command_tools: [ls]
+    accepted_commands:
+    - ls -al ~
+    - ls -la $HOME
+    - ls -al $HOME
+    - ls -la ~/
+    command_explanation:
+    - -l даёт подробную строку на каждый файл.
+    - -a показывает и скрытые имена.
+    - ~ задаёт домашнюю папку без перехода в неё.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)-[rwx-]{9}[^\n]*\s\.bashrc\s*(?:\r?\n|$)
+      - \s\.\.?\s*(?:\r?\n|$)
+      forbidden_patterns:
+      - ls:.*(?:cannot access|No such file)
+      fact_template: Подробный список домашней папки показал скрытый файл `.bashrc`.
+    explanation_prompt: Какой ключ показал скрытые файлы и как ты узнал, что это обычные файлы, а не папки?
+    review_question: Как показать скрытые файлы папки, не переходя в неё?
+
+  - id: linux-files-skel
+    order: 32
+    title: 'Перенос: образец домашней папки'
+    summary: Новому пользователю домашнюю папку заполняют копией из папки skel внутри etc. Покажи её подробным списком
+      со скрытыми файлами.
+    estimated_minutes: 10
+    skill_id: linux-files
+    stage: transfer
+    ladder_step: 3
+    target_tags: []
+    requires_target: false
+    term:
+      name: образец домашней папки
+      definition: Папка `/etc/skel`. Её содержимое копируется в домашнюю папку каждого нового пользователя.
+    simple_theory:
+      analogy: У школы есть образец тетради. Каждому новому ученику выдают такую же.
+      what_it_does:
+      - У системы есть папка-образец для новых пользователей.
+      - В ней лежат те же скрытые файлы, что у тебя дома.
+      - Их хозяин не ты, а главный пользователь системы.
+      words: []
+      picture: '/etc/skel/.bashrc  --копия-->  /home/student/.bashrc
+
+        хозяин: root                   хозяин: student
+
+        '
+      check_question: Чем отличается хозяин файла `.bashrc` в образце и у тебя дома?
+      check_answer: В образце хозяин главный пользователь системы, а у тебя дома ты сам.
+    worked_example: Сравнение с образцом помогает понять, какие файлы появились у пользователя сами, а какие он добавил
+      позже.
+    prediction_question: Кто будет хозяином файлов в папке-образце?
+    command: ls -la /etc/skel
+    command_patterns:
+    - '(?:^|\s)-[a-zA-Z]*a'
+    - '(?:^|\s)-[a-zA-Z]*l'
+    - '(?:^|\s)/etc/skel/?(?:\s|$)'
+    command_tools: [ls]
+    accepted_commands:
+    - ls -al /etc/skel
+    - ls -la /etc/skel/
+    command_explanation:
+    - Тот же подробный список со скрытыми файлами.
+    - Путь от корня ведёт в папку-образец.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)-[rwx-]{9}\s+\d+\s+root\s+root\s[^\n]*\s\.profile\s*(?:\r?\n|$)
+      forbidden_patterns:
+      - ls:.*(?:cannot access|No such file)
+      fact_template: Список папки-образца показал скрытые файлы с хозяином root.
+    explanation_prompt: Что общего у папки-образца и твоей домашней папки и чем они отличаются?
+    review_question: Откуда новый пользователь получает свои первые скрытые файлы?
 
   - id: linux-change-and-read
     order: 35
@@ -227,6 +429,113 @@ lessons:
     explanation_prompt: Почему после cd полезно сразу выполнить pwd и когда less удобнее cat?
     review_question: Какая команда меняет текущий каталог, а какая подтверждает новый путь?
 
+  - id: linux-reading-shells
+    order: 36
+    title: 'Сам: какие оболочки разрешены'
+    summary: В папке etc есть короткий файл shells со списком разрешённых оболочек. Перейди в эту папку, подтверди
+      адрес и прочитай файл целиком.
+    estimated_minutes: 10
+    skill_id: linux-reading
+    stage: independent
+    ladder_step: 2
+    target_tags: []
+    requires_target: false
+    term:
+      name: оболочка
+      definition: Программа, которая принимает твои команды в терминале, например `bash`.
+    simple_theory:
+      analogy: В школе висит список разрешённых кружков. Записаться можно только в те, что в списке.
+      what_it_does:
+      - Система хранит список разрешённых оболочек в файле.
+      - Файл короткий, его удобно печатать целиком.
+      - Перед чтением проверь, что ты в нужной папке.
+      words: []
+      picture: 'перейти в /etc  ->  проверить адрес  ->  напечатать shells
+
+        /etc
+
+        /bin/sh
+
+        /bin/bash      <- твоя оболочка
+
+        '
+      check_question: Почему этот файл удобно печатать целиком, а не листать?
+      check_answer: Он короткий и помещается на один экран.
+    worked_example: Если оболочки пользователя нет в списке разрешённых, вход может не сработать. Список полезно уметь
+      быстро прочитать.
+    prediction_question: Какую знакомую оболочку ты ожидаешь увидеть в списке?
+    command: cd /etc && pwd && cat shells
+    command_patterns:
+    - '(?:^|\s)cd /etc/?(?= (?:;|&&)|\n|$)[\s\S]*(?:^|\s)pwd(?=\s)[\s\S]*(?:^|\s)cat (?:/etc/)?shells(?:\s|$)'
+    command_tools: [cd, pwd, cat]
+    accepted_commands:
+    - cd /etc/ && pwd && cat shells
+    command_explanation:
+    - cd переводит в /etc.
+    - pwd подтверждает адрес.
+    - cat печатает короткий файл целиком.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)/etc\s*(?:\r?\n|$)
+      - (?:^|\n)/bin/bash\s*(?:\r?\n|$)
+      forbidden_patterns:
+      - No such file
+      - command not found
+      - Permission denied
+      fact_template: Ученик перешёл в `/etc`, подтвердил адрес и прочитал список оболочек.
+    explanation_prompt: Как ты доказал, что читал файл именно из `/etc`?
+    review_question: В каком файле лежит список разрешённых оболочек?
+
+  - id: linux-reading-proc-version
+    order: 37
+    title: 'Перенос: файл, который пишет само ядро'
+    summary: Папка proc от корня не хранит файлы на диске, их на лету создаёт ядро. Перейди туда, подтверди адрес
+      и прочитай файл version.
+    estimated_minutes: 10
+    skill_id: linux-reading
+    stage: transfer
+    ladder_step: 3
+    target_tags: []
+    requires_target: false
+    term:
+      name: ядро
+      definition: Главная программа Linux. Она управляет памятью, процессами и устройствами.
+    simple_theory:
+      analogy: Табло на вокзале не напечатано заранее. Оно показывает то, что происходит прямо сейчас.
+      what_it_does:
+      - В этой папке файлы не лежат на диске.
+      - Ядро создаёт их в момент чтения.
+      - Читаются они той же командой, что и обычные файлы.
+      words: []
+      picture: "/proc/version   <- не на диске\n     |\n   ядро пишет ответ в момент чтения\n     |\nLinux version\
+        \ 6.8.0 ...\n"
+      check_question: Почему ответ из этой папки может отличаться на другой машине?
+      check_answer: Ядро пишет сведения о себе прямо сейчас. На другой машине ядро другое.
+    worked_example: Версия ядра нужна, чтобы понять, какие исправления уже стоят в системе. Её можно прочитать как
+      обычный файл.
+    prediction_question: С каких двух слов начнётся строка из файла version?
+    command: cd /proc && pwd && cat version
+    command_patterns:
+    - '(?:^|\s)cd /proc/?(?= (?:;|&&)|\n|$)[\s\S]*(?:^|\s)pwd(?=\s)[\s\S]*(?:^|\s)cat (?:/proc/)?version(?:\s|$)'
+    command_tools: [cd, pwd, cat]
+    accepted_commands:
+    - cd /proc/ && pwd && cat version
+    command_explanation:
+    - Тот же приём, другая папка.
+    - Файл version создаёт ядро в момент чтения.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)/proc\s*(?:\r?\n|$)
+      - (?:^|\n)Linux version \S+
+      forbidden_patterns:
+      - No such file
+      - command not found
+      fact_template: Ученик прочитал версию ядра из `/proc/version`.
+    explanation_prompt: Чем файл из этой папки отличается от файла из `/etc`?
+    review_question: Где прочитать версию ядра без отдельной программы?
+
   - id: text-pipes-grep
     order: 40
     title: Поток данных и фильтрация
@@ -276,6 +585,106 @@ lessons:
     explanation_prompt: Что сделал pipe, а что сделал именно grep?
     review_question: Какая сторона pipe создаёт данные и какая фильтрует?
 
+  - id: text-pipes-bash-users
+    order: 41
+    title: 'Сам: кто входит с оболочкой bash'
+    summary: Файл passwd в папке etc хранит по строке на каждого пользователя. Передай его содержимое фильтру и оставь
+      только строки с оболочкой /bin/bash.
+    estimated_minutes: 10
+    skill_id: linux-text-processing
+    stage: independent
+    ladder_step: 2
+    target_tags: []
+    requires_target: false
+    term:
+      name: учётная запись
+      definition: Строка о пользователе. Поля разделены двоеточием, последнее поле это его оболочка.
+    simple_theory:
+      analogy: Весь список класса проходит через сито. Остаются только те, кто записан в шахматный кружок.
+      what_it_does:
+      - Одна команда печатает весь файл.
+      - Вертикальная черта передаёт этот текст дальше.
+      - Фильтр оставляет только строки с нужным словом.
+      words: []
+      picture: "весь файл --|--> фильтр \"/bin/bash\" --> root:...:/bin/bash\n                                   \
+        \     student:...:/bin/bash\n"
+      check_question: Что делает вертикальная черта между двумя командами?
+      check_answer: Передаёт вывод первой команды на вход второй.
+    worked_example: Живые пользователи обычно имеют настоящую оболочку. Служебные записи получают оболочку, которая
+      не пускает войти.
+    prediction_question: Какой пользователь точно окажется первым в ответе?
+    command: cat /etc/passwd | grep '/bin/bash'
+    command_patterns:
+    - '(?:^|\s)cat /etc/passwd \| grep(?:\s|$)'
+    command_tools: [cat, grep]
+    accepted_commands:
+    - cat /etc/passwd | grep "/bin/bash"
+    - cat /etc/passwd | grep /bin/bash
+    command_explanation:
+    - cat печатает весь файл.
+    - Вертикальная черта передаёт текст фильтру.
+    - grep оставляет строки с /bin/bash.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)root:x:0:0:[^\n]*:/bin/bash\s*(?:\r?\n|$)
+      forbidden_patterns:
+      - nologin
+      - grep:.*error
+      fact_template: Фильтр оставил только учётные записи с оболочкой `/bin/bash`.
+    explanation_prompt: Что сделала первая команда, а что сделал фильтр?
+    review_question: Как отобрать строки файла по слову, передав файл через вертикальную черту?
+
+  - id: text-pipes-release-files
+    order: 42
+    title: 'Перенос: фильтр для списка файлов'
+    summary: Фильтр работает не только с файлами, но и с выводом любой команды. Выведи имена в папке etc и оставь
+      только те, где есть слово release.
+    estimated_minutes: 10
+    skill_id: linux-text-processing
+    stage: transfer
+    ladder_step: 3
+    target_tags: []
+    requires_target: false
+    term:
+      name: поток
+      definition: Текст, который команда печатает. Его можно показать на экране или передать другой команде.
+    simple_theory:
+      analogy: Сито всё равно, что в него сыплют, песок из ведра или из совка.
+      what_it_does:
+      - Список имён тоже текст.
+      - Его можно отправить в фильтр так же, как файл.
+      - Останутся только имена с нужным словом.
+      words: []
+      picture: "список имён в /etc --|--> фильтр \"release\" --> lsb-release\n                                   \
+        \            os-release\n"
+      check_question: Нужен ли файл, чтобы работал фильтр после вертикальной черты?
+      check_answer: Нет. Ему хватает текста, который напечатала первая команда.
+    worked_example: Так быстро находят файл о версии системы, не читая длинный список глазами.
+    prediction_question: Сколько имён ты ожидаешь увидеть и почему не одно?
+    command: ls /etc | grep 'release'
+    command_patterns:
+    - '(?:^|\s)ls(?: -1)? /etc/? \| grep(?:\s|$)'
+    - 'release'
+    command_tools: [ls, grep]
+    accepted_commands:
+    - ls /etc | grep release
+    - ls /etc | grep "release"
+    command_explanation:
+    - ls печатает имена в /etc.
+    - Вертикальная черта отдаёт их фильтру.
+    - grep оставляет имена со словом release.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)os-release\s*(?:\r?\n|$)
+      forbidden_patterns:
+      - (?:^|\n)hostname\s*(?:\r?\n|$)
+      - grep:.*error
+      fact_template: Фильтр отобрал из списка `/etc` только имена со словом release.
+    explanation_prompt: Чем этот фильтр отличается от прошлого, где на входе был файл?
+    review_question: Можно ли фильтровать вывод команды, а не файл?
+
   - id: text-redirection
     order: 45
     title: Перенаправление без потери исходных данных
@@ -302,6 +711,106 @@ lessons:
       fact_template: Временный файл показал различие между перезаписью и добавлением stdout.
     explanation_prompt: Что произошло бы со строкой FIRST, если второй оператор тоже был бы одиночным >?
     review_question: Чем > отличается от >>?
+
+  - id: text-redirection-note
+    order: 46
+    title: 'Сам: записка из двух строк'
+    summary: Создай у себя дома файл crc-note.txt. Первой строкой запиши alpha, стерев старое, второй допиши beta,
+      затем прочитай файл.
+    estimated_minutes: 10
+    skill_id: linux-redirection
+    stage: independent
+    ladder_step: 2
+    target_tags: []
+    requires_target: false
+    term:
+      name: запись в файл
+      definition: Отправка текста команды в файл вместо экрана. Один знак `>` стирает старое, два знака `>>` дописывают.
+    simple_theory:
+      analogy: Один знак как новый лист. Два знака как строчка внизу старого листа.
+      what_it_does:
+      - Команда `echo` печатает слово.
+      - Один знак `>` кладёт слово в файл и стирает старое.
+      - Два знака `>>` дописывают слово в конец.
+      words: []
+      picture: "alpha  >   файл   ->  alpha\nbeta   >>  файл   ->  alpha\n                      beta\n"
+      check_question: Ты повторил задание ещё раз. Почему в файле снова только две строки?
+      check_answer: Первая запись одним знаком `>` каждый раз стирает старое содержимое.
+    worked_example: Отчёт собирают по строке. Первая запись начинает файл заново, остальные дописываются.
+    prediction_question: Что покажет чтение файла, если повторить задание дважды?
+    command: echo alpha > ~/crc-note.txt && echo beta >> ~/crc-note.txt && cat ~/crc-note.txt
+    command_patterns:
+    - '(?:^|\s)(?:echo|printf) alpha(?:\\n)? > \S*crc-note\.txt(?:\s|$)'
+    - '(?:^|\s)(?:echo|printf) beta(?:\\n)? >> \S*crc-note\.txt(?:\s|$)'
+    - '(?:^|\s)cat \S*crc-note\.txt(?:\s|$)'
+    command_tools: [echo, printf, cat]
+    accepted_commands:
+    - echo alpha > ~/crc-note.txt; echo beta >> ~/crc-note.txt; cat ~/crc-note.txt
+    command_explanation:
+    - Один > начинает файл заново со строки alpha.
+    - Два >> дописывают beta.
+    - cat показывает результат.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)alpha(?:\r?\n)beta\s*(?:\r?\n|$)
+      forbidden_patterns:
+      - beta(?:\r?\n)(?:alpha|beta)
+      - Permission denied
+      - No such file
+      fact_template: Файл содержит ровно alpha и beta, перезапись и дописывание различены.
+    explanation_prompt: Что случилось бы при повторе, если бы и первая запись была двумя знаками?
+    review_question: Какой знак дописывает в конец файла?
+
+  - id: text-redirection-command-output
+    order: 47
+    title: 'Перенос: сохранить ответ команды'
+    summary: Сохрани в файл crc-id.txt у себя дома то, что печатает команда id, а потом прочитай этот файл.
+    estimated_minutes: 10
+    skill_id: linux-redirection
+    stage: transfer
+    ladder_step: 3
+    target_tags: []
+    requires_target: false
+    term:
+      name: снимок вывода
+      definition: Сохранённый в файл ответ команды. Его можно прочитать позже и приложить к отчёту.
+    simple_theory:
+      analogy: Ответ учителя можно не только услышать, но и записать в тетрадь, чтобы показать дома.
+      what_it_does:
+      - В файл можно отправить ответ любой команды.
+      - На экране при этом ничего не появится.
+      - Потом файл читается отдельно.
+      words: []
+      picture: 'id  --(>)-->  crc-id.txt   экран: пусто
+
+        cat crc-id.txt  ->  uid=1000(student) ...
+
+        '
+      check_question: Почему команда `id` ничего не напечатала на экран?
+      check_answer: Её ответ ушёл в файл, а не на экран.
+    worked_example: Снимок вывода сохраняют как доказательство. Позже его прикладывают к отчёту без повторного запуска.
+    prediction_question: С какого слова начнётся текст в сохранённом файле?
+    command: id > ~/crc-id.txt && cat ~/crc-id.txt
+    command_patterns:
+    - '(?:^|\s)id > \S*crc-id\.txt(?:\s|$)'
+    - '(?:^|\s)cat \S*crc-id\.txt(?:\s|$)'
+    command_tools: [id, cat]
+    accepted_commands:
+    - id > ~/crc-id.txt; cat ~/crc-id.txt
+    command_explanation:
+    - id печатает сведения о тебе, но > отправляет их в файл.
+    - cat читает сохранённый снимок.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)uid=\d+\(\S+\) gid=\d+
+      forbidden_patterns:
+      - Permission denied
+      - No such file
+      fact_template: Ответ команды `id` сохранён в файл и прочитан из него.
+    explanation_prompt: Чем снимок в файле полезнее ответа на экране?
+    review_question: Как сохранить ответ команды в файл?
 
   - id: files-find-safe
     order: 50
@@ -330,6 +839,122 @@ lessons:
     explanation_prompt: Какой флаг ограничил глубину и почему это важно в рабочей системе?
     review_question: Как задать find явный каталог и максимальную глубину?
 
+  - id: files-find-conf-top
+    order: 51
+    title: 'Сам: настройки только верхнего этажа'
+    summary: В папке etc много файлов с окончанием conf, и во вложенных папках тоже. Найди только те, что лежат прямо
+      в etc, не спускаясь глубже.
+    estimated_minutes: 10
+    skill_id: linux-search
+    stage: independent
+    ladder_step: 2
+    target_tags: []
+    requires_target: false
+    term:
+      name: шаблон имени
+      definition: Имя со звёздочкой. Звёздочка заменяет любое количество любых букв.
+    simple_theory:
+      analogy: Ищешь все синие тетради, но только на верхней полке. Нижние полки не трогаешь.
+      what_it_does:
+      - Звёздочка в имени значит «любые буквы».
+      - Ограничение глубины не пускает поиск вниз.
+      - Шаблон берут в кавычки, чтобы звёздочку понял поиск.
+      words: []
+      picture: '/etc/ld.so.conf              <- верхний этаж, нашли
+
+        /etc/ld.so.conf.d/x.conf     <- ниже, не ищем
+
+        '
+      check_question: Что заменяет звёздочка в шаблоне `*.conf`?
+      check_answer: Любое начало имени. Главное, чтобы имя кончалось на `.conf`.
+    worked_example: Настройки служб часто лежат прямо в `/etc`. Короткий поиск по верхнему этажу даёт ответ без мусора
+      из подпапок.
+    prediction_question: Почему в ответе не будет адресов с двумя косыми чертами после etc?
+    command: find /etc -maxdepth 1 -name '*.conf'
+    command_patterns:
+    - '(?:^|\s)find /etc/?(?:\s|$)'
+    - '(?:^|\s)-maxdepth 1(?:\s|$)'
+    - '(?:^|\s)-name \*\.conf(?:\s|$)'
+    command_tools: [find]
+    accepted_commands:
+    - find /etc -maxdepth 1 -name "*.conf"
+    - find /etc -maxdepth 1 -name '*.conf' -print
+    - find /etc -maxdepth 1 -name "*.conf" -print
+    command_explanation:
+    - /etc задаёт, где искать.
+    - -maxdepth 1 не пускает вниз.
+    - -name '*.conf' задаёт шаблон имени.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)/etc/ld\.so\.conf\s*(?:\r?\n|$)
+      forbidden_patterns:
+      - (?:^|\n)/etc/[^/\s]+/\S+
+      - Permission denied
+      - find:.*error
+      fact_template: Найдены файлы настроек только верхнего этажа `/etc`.
+    explanation_prompt: Что появилось бы в ответе без ограничения глубины?
+    review_question: Как найти файлы по шаблону, не спускаясь во вложенные папки?
+
+  - id: files-find-home-dotfiles
+    order: 52
+    title: 'Перенос: только файлы, не папки'
+    summary: Найди у себя дома скрытые файлы на верхнем этаже. Скрытые папки в ответ попасть не должны.
+    estimated_minutes: 10
+    skill_id: linux-search
+    stage: transfer
+    ladder_step: 3
+    target_tags: []
+    requires_target: false
+    term:
+      name: тип объекта
+      definition: Что это, файл или папка. Поиск умеет отбирать только нужный тип.
+    simple_theory:
+      analogy: Ищешь в ящике только тетради, а коробки с тетрадями пропускаешь.
+      what_it_does:
+      - Скрытыми бывают и файлы, и папки.
+      - Поиск умеет отбирать только обычные файлы.
+      - Глубина по-прежнему один этаж.
+      words: []
+      picture: '~/.bashrc     файл   <- берём
+
+        ~/.profile    файл   <- берём
+
+        ~/.cache/     папка  <- пропускаем
+
+        '
+      check_question: Почему папка `.cache` не попадёт в ответ, хотя начинается с точки?
+      check_answer: Это папка, а мы просим только обычные файлы.
+    worked_example: При разборе чужой домашней папки сначала смотрят скрытые файлы настроек. Папки с кешем только
+      мешают.
+    prediction_question: Какие два имени точно окажутся в ответе?
+    command: find ~ -maxdepth 1 -type f -name '.*'
+    command_patterns:
+    - '(?:^|\s)find (?:~/?|\$HOME/?|/home/[^\s/]+/?)(?:\s|$)'
+    - '(?:^|\s)-maxdepth 1(?:\s|$)'
+    - '(?:^|\s)-type f(?:\s|$)'
+    - '(?:^|\s)-name \.\*(?:\s|$)'
+    command_tools: [find]
+    accepted_commands:
+    - find ~ -maxdepth 1 -type f -name ".*"
+    - find $HOME -maxdepth 1 -type f -name '.*'
+    - find $HOME -maxdepth 1 -type f -name ".*"
+    command_explanation:
+    - ~ задаёт домашнюю папку.
+    - -type f оставляет только обычные файлы.
+    - -name '.*' берёт имена с точкой в начале.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)/home/[^/\s]+/\.bashrc\s*(?:\r?\n|$)
+      forbidden_patterns:
+      - /\.cache\s*(?:\r?\n|$)
+      - (?:^|\n)/home/[^/\s]+/[^\s]+/
+      - find:.*error
+      fact_template: Найдены только скрытые файлы верхнего этажа домашней папки.
+    explanation_prompt: Какой ключ отсёк папки и как ты это проверил по ответу?
+    review_question: Как найти только файлы, а не папки?
+
   - id: linux-permissions-read
     order: 60
     title: Permissions как проверяемая граница
@@ -357,6 +982,102 @@ lessons:
     explanation_prompt: Какие права относятся к owner, group и others в полученной строке?
     review_question: Почему просмотр permissions безопаснее начинать со stat, а не с chmod?
 
+  - id: linux-permissions-shadow
+    order: 61
+    title: 'Сам: права на файл паролей'
+    summary: В папке etc лежит файл shadow с закрытыми данными паролей. Покажи одной строкой его права, хозяина, группу
+      и имя, не открывая сам файл.
+    estimated_minutes: 10
+    skill_id: linux-permissions
+    stage: independent
+    ladder_step: 2
+    target_tags: []
+    requires_target: false
+    term:
+      name: закрытый файл
+      definition: Файл, который обычный пользователь не может читать. Его права и хозяина видно и без чтения.
+    simple_theory:
+      analogy: Сейф стоит в комнате. Ты видишь, чей он и какой на нём замок, но открыть не можешь.
+      what_it_does:
+      - Сведения о файле видно, даже если читать его нельзя.
+      - Права пишутся тремя тройками букв.
+      - Группа тоже может получить доступ.
+      words: []
+      picture: "-rw-r-----  root  shadow  /etc/shadow\n rw-  хозяин: читать и менять\n    r--  группа shadow: читать\n\
+        \       ---  остальные: ничего\n"
+      check_question: Может ли обычный ученик прочитать этот файл по таким правам?
+      check_answer: Нет. Последняя тройка из черт, остальным нельзя ничего.
+    worked_example: Права на файл паролей первыми смотрят при проверке системы. Слишком открытые права это серьёзная
+      находка.
+    prediction_question: Какой будет последняя тройка прав у файла с паролями?
+    command: stat -c '%A %U %G %n' /etc/shadow
+    command_patterns:
+    - '(?:^|\s)/etc/shadow(?:\s|$)'
+    command_tools: [stat]
+    accepted_commands:
+    - stat -c "%A %U %G %n" /etc/shadow
+    command_explanation:
+    - stat читает сведения о файле, а не сам файл.
+    - '%A права, %U хозяин, %G группа, %n имя.'
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)-rw-r-----\s+root\s+shadow\s+/etc/shadow
+      forbidden_patterns:
+      - stat:.*(?:failed|No such file)
+      fact_template: Получены права, хозяин и группа файла `/etc/shadow`.
+    explanation_prompt: Почему права файла видны, хотя читать его нельзя?
+    review_question: Как узнать права файла, не открывая его?
+
+  - id: linux-permissions-tmp
+    order: 62
+    title: 'Перенос: права общей папки'
+    summary: Папка tmp от корня общая, туда пишут все. Покажи одной строкой её права, хозяина, группу и имя и найди
+      необычную букву.
+    estimated_minutes: 10
+    skill_id: linux-permissions
+    stage: transfer
+    ladder_step: 3
+    target_tags: []
+    requires_target: false
+    term:
+      name: общая папка
+      definition: Папка, куда могут писать все пользователи. Особая буква `t` не даёт удалять чужие файлы.
+    simple_theory:
+      analogy: Общая полка в классе. Класть может каждый, а забрать чужое нельзя.
+      what_it_does:
+      - Первая буква `d` значит, что это папка.
+      - Писать сюда могут все.
+      - Буква `t` в конце защищает чужие файлы от удаления.
+      words: []
+      picture: 'drwxrwxrwt  root  root  /tmp
+
+        ^ папка            ^ t = чужое не удалить
+
+        '
+      check_question: Что было бы без буквы `t` в конце?
+      check_answer: Любой мог бы удалить чужой файл в этой папке.
+    worked_example: Общие папки часто используют для временных файлов. Защита от удаления чужого здесь обязательна.
+    prediction_question: Какой будет первая буква строки прав и почему?
+    command: stat -c '%A %U %G %n' /tmp
+    command_patterns:
+    - '(?:^|\s)/tmp/?(?:\s|$)'
+    command_tools: [stat]
+    accepted_commands:
+    - stat -c "%A %U %G %n" /tmp
+    command_explanation:
+    - Тот же приём, но цель это папка.
+    - Последняя буква прав у общей папки особая.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)drwxrwxrwt\s+root\s+root\s+/tmp\s*(?:\r?\n|$)
+      forbidden_patterns:
+      - stat:.*(?:failed|No such file)
+      fact_template: Получены права общей папки `/tmp` с защитой от удаления чужих файлов.
+    explanation_prompt: Какая буква отличает эти права от обычной папки и что она защищает?
+    review_question: Какая буква в правах общей папки защищает чужие файлы?
+
   - id: linux-users-groups
     order: 65
     title: Пользователь, primary group и дополнительные группы
@@ -383,6 +1104,93 @@ lessons:
       fact_template: Получены uid, primary gid и дополнительные группы текущего student.
     explanation_prompt: Почему членство в группе ещё надо сопоставить с group bits конкретного файла?
     review_question: Какая команда показывает uid, gid и дополнительные группы одной строкой?
+
+  - id: linux-users-root
+    order: 66
+    title: 'Сам: кто такой главный пользователь'
+    summary: Узнай номер, главную группу и все группы не свои, а главного пользователя системы root.
+    estimated_minutes: 10
+    skill_id: linux-identity
+    stage: independent
+    ladder_step: 2
+    target_tags: []
+    requires_target: false
+    term:
+      name: главный пользователь
+      definition: Пользователь `root` с номером 0. Ему разрешено всё.
+    simple_theory:
+      analogy: В школе есть директор. У него ключи от всех дверей и номер один в списке.
+      what_it_does:
+      - Та же команда покажет сведения о другом человеке.
+      - Имя пишется после команды.
+      - У главного пользователя номер всегда ноль.
+      words: []
+      picture: "сведения о root\nuid=0(root) gid=0(root) groups=0(root)\n    ^ номер ноль = главный\n"
+      check_question: Какой номер у главного пользователя в любой такой системе?
+      check_answer: Ноль.
+    worked_example: При разборе журналов важно знать, что номер 0 это главный пользователь, как бы его ни назвали.
+    prediction_question: Какое число будет после uid=?
+    command: id root
+    command_patterns:
+    - '(?:^|\s)id root(?:\s|$)'
+    command_tools: [id]
+    command_explanation:
+    - id с именем показывает сведения о другом пользователе.
+    grader:
+      source: transcript
+      required_patterns:
+      - (?:^|\n)uid=0\(root\) gid=0\(root\)
+      forbidden_patterns:
+      - no such user
+      - command not found
+      fact_template: Получены номер и группы главного пользователя root.
+    explanation_prompt: Почему номер 0 важнее самого имени root?
+    review_question: Как узнать номер и группы другого пользователя?
+
+  - id: linux-group-sudo
+    order: 67
+    title: 'Перенос: кто в группе sudo'
+    summary: Теперь спроси не про человека, а про группу. Покажи запись группы sudo и узнай, кто в ней состоит.
+    estimated_minutes: 10
+    skill_id: linux-identity
+    stage: transfer
+    ladder_step: 3
+    target_tags: []
+    requires_target: false
+    term:
+      name: запись группы
+      definition: Строка о группе. Поля через двоеточие, в конце список её участников.
+    simple_theory:
+      analogy: Можно спросить не «в каких кружках Аня», а «кто ходит в шахматный кружок».
+      what_it_does:
+      - У каждой группы есть своя строка.
+      - Последнее поле это список участников.
+      - Участники группы `sudo` могут просить права главного пользователя.
+      words: []
+      picture: 'sudo:x:27:student
+
+        ^имя  ^номер ^участники
+
+        '
+      check_question: В каком поле строки группы стоят её участники?
+      check_answer: В последнем, после третьего двоеточия.
+    worked_example: Список участников группы sudo показывает, кто может действовать с правами главного пользователя.
+    prediction_question: Какой номер у группы sudo в Ubuntu?
+    command: getent group sudo
+    command_patterns:
+    - '(?:^|\s)(?:getent group sudo|\^?sudo: /etc/group)(?:\s|$)'
+    command_tools: [getent, grep]
+    command_explanation:
+    - getent group читает запись одной группы.
+    grader:
+      source: transcript
+      required_patterns:
+      - '(?:^|\n)sudo:x:27:'
+      forbidden_patterns:
+      - command not found
+      fact_template: Получена запись группы sudo со списком участников.
+    explanation_prompt: Чем вопрос «в каких я группах» отличается от вопроса «кто в этой группе»?
+    review_question: Как увидеть участников группы?
 
   - id: network-ip-route
     order: 70

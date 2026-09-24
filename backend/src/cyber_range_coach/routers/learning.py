@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import cast
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from ..errors import AppError
@@ -40,6 +40,7 @@ from ..schemas import (
     TutorFeedbackResponse,
 )
 from ..security import Principal, require_role
+from ..services.curriculum import Lesson, step_cleanly_passed
 from ..services.grader import grade_run, record_evidence
 from ..services.network import verify_target
 from ..services.preflight import missing_learning_tools
@@ -66,6 +67,9 @@ def _lesson_variables(
     return variables
 
 
+HELP_WINDOW = timedelta(days=1)
+
+
 @router.get("/curriculum")
 def curriculum(
     request: Request,
@@ -74,7 +78,7 @@ def curriculum(
     store = request.app.state.curriculum
     return {
         "tracks": [track.model_dump() for track in store.tracks.values()],
-        "lessons": [lesson.model_dump() for lesson in store.ordered_lessons()],
+        "lessons": [lesson.public_dump() for lesson in store.ordered_lessons()],
     }
 
 
@@ -84,7 +88,8 @@ def lesson(
     request: Request,
     _principal: Principal = Depends(require_role("viewer")),
 ) -> dict[str, object]:
-    return cast(dict[str, object], request.app.state.curriculum.lesson(lesson_id).model_dump())
+    lesson_item: Lesson = request.app.state.curriculum.lesson(lesson_id)
+    return lesson_item.public_dump()
 
 
 @router.post("/session-plans", response_model=SessionPlanResponse)
@@ -148,6 +153,14 @@ async def _new_run_unlocked(
         learning_session = session.get(LearningSession, payload.session_id)
         if learning_session is None:
             raise AppError(404, "session_not_found", "Учебная сессия не найдена.")
+        previous = request.app.state.curriculum.previous_step(lesson)
+        if previous is not None and not step_cleanly_passed(session, previous.id):
+            raise AppError(
+                409,
+                "ladder_step_locked",
+                f"Сначала пройдите без подсказки предыдущую ступень: {previous.title}.",
+                {"previous_lesson_id": previous.id},
+            )
         if payload.lesson_id not in learning_session.lesson_ids:
             raise AppError(
                 409,
@@ -323,11 +336,37 @@ def get_run_lesson(
             raise AppError(404, "run_not_found", "Lab run не найден.")
         lesson_item = request.app.state.curriculum.lesson(run.lesson_id)
         target = session.get(TargetProfile, run.target_id) if run.target_id else None
+        help_used = run.help_used
     variables = _lesson_variables(run, target, request)
-    rendered = lesson_item.command
+    public = lesson_item.public_dump(reveal_command=help_used)
+    rendered = str(public["command"])
     for key, value in variables.items():
         rendered = rendered.replace("{{" + key + "}}", value)
-    return {**lesson_item.model_dump(), "rendered_command": rendered, "variables": variables}
+    return {**public, "rendered_command": rendered, "variables": variables}
+
+
+@router.post("/lab-runs/{run_id}/reveal-command")
+def reveal_command(
+    run_id: int,
+    request: Request,
+    _principal: Principal = Depends(require_role("operator")),
+) -> dict[str, object]:
+    """Open the hidden command of a ladder step; this counts as help."""
+    with request.app.state.db.session_factory() as session:
+        run = session.get(LabRun, run_id)
+        if run is None or run.status != RunStatus.active.value:
+            raise AppError(404, "active_run_not_found", "Активный lab run не найден.")
+        if request.app.state.curriculum.lesson(run.lesson_id).ladder_step == 3:
+            raise AppError(
+                409,
+                "no_help_on_transfer",
+                "На ступени переноса подсказок нет: задачу решают без показа команды.",
+            )
+        if not run.help_used:
+            run.help_used = True
+            run.help_opened_at = datetime.now(UTC)
+        session.commit()
+    return get_run_lesson(run_id, request, _principal)
 
 
 @router.post("/lab-runs/{run_id}/explanation", response_model=LabRunResponse)
@@ -487,7 +526,30 @@ async def finalize_run(
             f"Ограничение: {payload.limitation}\n"
             f"Следующая проверка: {payload.next_test}"
         )
-        stage = record_evidence(session, run, lesson_item)
+        # Opened help counts for a full day in any learning session, so the
+        # command seen a minute ago can not be re-typed for a clean credit;
+        # the clean attempt belongs to tomorrow's review (spec 11.3 Д).
+        last_clean_credit = session.scalar(
+            select(func.max(Evidence.created_at))
+            .join(LabRun, LabRun.id == Evidence.run_id)
+            .where(LabRun.lesson_id == run.lesson_id, Evidence.grader_decision == "passed")
+        )
+        help_query = select(LabRun.id).where(
+            LabRun.lesson_id == run.lesson_id,
+            LabRun.help_used.is_(True),
+            LabRun.help_opened_at > datetime.now(UTC) - HELP_WINDOW,
+        )
+        if last_clean_credit is not None:
+            help_query = help_query.where(LabRun.help_opened_at > last_clean_credit)
+        # Help opened in this very run always counts, however old the run is.
+        help_used = run.help_used or session.scalar(help_query.limit(1))
+        stage = record_evidence(
+            session,
+            run,
+            lesson_item,
+            ladder=request.app.state.curriculum.has_ladder(lesson_item.skill_id),
+            help_used=bool(help_used),
+        )
         run.status = RunStatus.completed.value
         run.stopped_at = datetime.now(UTC)
         learning_session = session.get(LearningSession, run.session_id)

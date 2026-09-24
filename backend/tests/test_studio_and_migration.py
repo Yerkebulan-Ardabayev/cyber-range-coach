@@ -67,7 +67,11 @@ def test_runtime_database_uses_alembic_head_and_fts(client: TestClient) -> None:
         linux_host_columns = {
             row[1] for row in connection.exec_driver_sql("PRAGMA table_info(linux_hosts)")
         }
-    assert revision == "20260906_0005"
+        lab_run_columns = {
+            row[1] for row in connection.exec_driver_sql("PRAGMA table_info(lab_runs)")
+        }
+    assert revision == "20260924_0006"
+    assert "help_used" in lab_run_columns
     assert fts == 2
     assert "relay_source_ip" in linux_host_columns
 

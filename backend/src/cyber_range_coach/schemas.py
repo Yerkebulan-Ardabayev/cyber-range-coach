@@ -203,6 +203,7 @@ class LessonSummary(ApiModel):
     skill_id: str
     stage: str
     target_tags: list[str]
+    ladder_step: int = 1
 
 
 class SessionPlanResponse(ApiModel):
@@ -256,6 +257,8 @@ class LabRunResponse(ApiModel):
     terminal_session_id: str | None
     grader_status: str | None
     grader_report: dict[str, Any]
+    help_used: bool = False
+    help_opened_at: datetime | None = None
     relay_port: int | None
     created_at: datetime
     stopped_at: datetime | None

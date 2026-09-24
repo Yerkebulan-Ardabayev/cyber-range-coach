@@ -53,6 +53,7 @@ export function LessonPage({ principal }: { principal: Principal }) {
             <section className="paper-card"><Eyebrow>РАЗОБРАННЫЙ ПРИМЕР</Eyebrow><p className="large-copy">{item.worked_example}</p></section>
           </>
         )}
+        {item.command_hidden ? <p className="notice notice--warning">Ступень {item.ladder_step} из 3: команду пишешь сам, любой верной записью. {item.ladder_step === 3 ? 'Это перенос, подсказок нет.' : 'В лаборатории её можно открыть кнопкой, но это засчитается как помощь, и навык не поднимется.'}</p> : null}
         <section className="paper-card paper-card--prediction">
           <div><Eyebrow>ПРОГНОЗ ДО КОМАНДЫ</Eyebrow><h2>{item.prediction_question}</h2><p>Команда появится только после сохранения прогноза и создания lab run.</p></div>
           <textarea value={prediction} onChange={(event) => setPrediction(event.target.value)} rows={5} placeholder="Я ожидаю увидеть… Потому что…" disabled={principal.role === 'viewer'} />

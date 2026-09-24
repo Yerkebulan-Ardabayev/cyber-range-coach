@@ -39,7 +39,8 @@ export interface Lesson {
   summary: string
   estimated_minutes: number
   skill_id: string
-  stage: 'introduced' | 'guided' | 'independent'
+  stage: 'introduced' | 'guided' | 'independent' | 'transfer'
+  ladder_step: 1 | 2 | 3
   target_tags: string[]
   requires_target: boolean
   term: { name: string; definition: string }
@@ -47,6 +48,8 @@ export interface Lesson {
   worked_example: string
   prediction_question: string
   command: string
+  accepted_commands?: string[]
+  command_hidden?: boolean
   command_explanation: string[]
   explanation_prompt: string
   review_question: string
@@ -142,6 +145,7 @@ export interface LabRun {
   terminal_input_offsets: number[]
   grader_status: string | null
   grader_report: Record<string, unknown>
+  help_used: boolean
   relay_port: number | null
   created_at: string
   stopped_at: string | null

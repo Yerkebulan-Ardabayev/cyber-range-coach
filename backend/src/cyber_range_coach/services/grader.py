@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import shlex
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
@@ -74,6 +75,51 @@ def _render_command(command: str, variables: dict[str, str]) -> str:
     return rendered
 
 
+COMMAND_SEPARATORS = {";", "&&", "||", "|", "&", "(", ")"}
+
+
+def shell_tokens(line: str) -> list[str] | None:
+    """Split one terminal line the way the shell reads it; None if unparsable.
+
+    Quotes are removed and ``#`` comments dropped, so words in a comment can
+    not satisfy a pattern. Operators such as ``>``, ``>>`` and ``|`` become
+    their own tokens.
+    """
+    lexer = shlex.shlex(line, posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    lexer.commenters = "#"
+    try:
+        return list(lexer)
+    except ValueError:
+        return None
+
+
+def programs(tokens: list[str]) -> list[str]:
+    found: list[str] = []
+    expect_program = True
+    for token in tokens:
+        if token in COMMAND_SEPARATORS:
+            expect_program = True
+        elif expect_program:
+            found.append(token)
+            expect_program = False
+    return found
+
+
+def command_by_meaning(lesson: Lesson, lines: list[str]) -> bool:
+    parsed = [shell_tokens(line) for line in lines]
+    if not lines or any(tokens is None for tokens in parsed):
+        return False
+    token_lines = [tokens for tokens in parsed if tokens is not None]
+    text = "\n".join(" ".join(tokens) for tokens in token_lines)
+    used = [program for tokens in token_lines for program in programs(tokens)]
+    return (
+        bool(used)
+        and all(program in lesson.command_tools for program in used)
+        and all(re.search(pattern, text) for pattern in lesson.command_patterns)
+    )
+
+
 def _same_command(actual: str, expected: str) -> bool:
     return " ".join(actual.split()) == " ".join(expected.split())
 
@@ -86,17 +132,23 @@ def grade_run(
     observation: str | None = None,
 ) -> GradeResponse:
     variables = variables or {}
-    rendered_command = _render_command(lesson.command, variables)
+    rendered_commands = [_render_command(command, variables) for command in lesson.commands()]
     submitted_commands = list(run.terminal_inputs or [])
     matching_command_indexes = [
         index
         for index, actual in enumerate(submitted_commands)
-        if _same_command(actual, rendered_command)
+        if any(_same_command(actual, expected) for expected in rendered_commands)
     ]
     command_seen = bool(matching_command_indexes)
     clean_attempt_boundary = command_seen and matching_command_indexes[-1] == 0
     response_count_ok = True
-    if command_seen:
+    by_meaning = bool(lesson.command_patterns)
+    if by_meaning:
+        # The whole clean run is the answer; any correct spelling counts.
+        command_seen = command_by_meaning(lesson, submitted_commands)
+        clean_attempt_boundary = command_seen
+        matching_command_indexes = [0] if command_seen else []
+    elif command_seen:
         responses = submitted_commands[matching_command_indexes[-1] + 1 :]
         response_count_ok = len(responses) == lesson.grader.response_count and all(
             response.strip() for response in responses
@@ -109,7 +161,7 @@ def grade_run(
             submitted_commands,
             matching_command_indexes[-1] if matching_command_indexes else 0,
             list(run.terminal_input_offsets or []),
-            lesson.grader.response_count,
+            max(len(submitted_commands) - 1, 0) if by_meaning else lesson.grader.response_count,
         )
     else:
         source = run.explanation or ""
@@ -192,7 +244,27 @@ def grade_run(
     return report
 
 
-def record_evidence(session: Session, run: LabRun, lesson: Lesson) -> str:
+LADDER_STAGE = {
+    1: SkillStage.guided.value,
+    2: SkillStage.independent.value,
+    3: SkillStage.transfer.value,
+}
+
+
+def record_evidence(
+    session: Session,
+    run: LabRun,
+    lesson: Lesson,
+    *,
+    ladder: bool = False,
+    help_used: bool = False,
+) -> str:
+    """Record a passed run and move the skill.
+
+    For a skill with a ladder (spec 11.3 Д) the step sets the stage; a step 2
+    or 3 passed with help does not raise the skill and is repeated tomorrow.
+    Skills without a ladder keep the earlier one-step-per-evidence rule.
+    """
     existing = session.scalar(
         select(Evidence).where(Evidence.run_id == run.id, Evidence.skill_id == lesson.skill_id)
     )
@@ -206,10 +278,14 @@ def record_evidence(session: Session, run: LabRun, lesson: Lesson) -> str:
     if run.target_fingerprint and run.target_fingerprint not in fingerprints:
         fingerprints.append(run.target_fingerprint)
     current_rank = STAGE_ORDER.get(state.stage, 0)
-    candidate_rank = min(STAGE_ORDER[SkillStage.independent.value], current_rank + 1)
-    candidate = next(stage for stage, rank in STAGE_ORDER.items() if rank == candidate_rank)
-    if len(fingerprints) >= 2 and current_rank >= STAGE_ORDER[SkillStage.independent.value]:
-        candidate = SkillStage.transfer.value
+    assisted = ladder and help_used and lesson.ladder_step > 1
+    if ladder:
+        candidate = state.stage if assisted else LADDER_STAGE[lesson.ladder_step]
+    else:
+        candidate_rank = min(STAGE_ORDER[SkillStage.independent.value], current_rank + 1)
+        candidate = next(stage for stage, rank in STAGE_ORDER.items() if rank == candidate_rank)
+        if len(fingerprints) >= 2 and current_rank >= STAGE_ORDER[SkillStage.independent.value]:
+            candidate = SkillStage.transfer.value
     if STAGE_ORDER[candidate] > STAGE_ORDER.get(state.stage, 0):
         state.stage = candidate
     state.successful_fingerprints = fingerprints
@@ -220,6 +296,8 @@ def record_evidence(session: Session, run: LabRun, lesson: Lesson) -> str:
         SkillStage.independent.value: 7,
         SkillStage.transfer.value: 21,
     }[state.stage]
+    if assisted:
+        interval = 1
     state.next_review_at = datetime.now(UTC) + timedelta(days=interval)
     session.add(
         Evidence(
@@ -230,7 +308,7 @@ def record_evidence(session: Session, run: LabRun, lesson: Lesson) -> str:
             source_id=str(run.id),
             target_fingerprint=run.target_fingerprint,
             fact=lesson.grader.fact_template,
-            grader_decision="passed",
+            grader_decision="passed_with_help" if assisted else "passed",
         )
     )
     now = datetime.now(UTC)
