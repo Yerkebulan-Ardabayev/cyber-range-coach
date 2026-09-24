@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from ..errors import AppError
 from ..models import ReviewItem, SkillState
 from ..schemas import LessonSummary, SessionPlanResponse
+from .simple_theory import SimpleTheory
 
 
 class Term(BaseModel):
@@ -40,6 +41,7 @@ class Lesson(BaseModel):
     target_tags: list[str]
     requires_target: bool
     term: Term
+    simple_theory: SimpleTheory | None = None
     worked_example: str
     prediction_question: str
     command: str

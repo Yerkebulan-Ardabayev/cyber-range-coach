@@ -6,6 +6,7 @@ import { api, jsonBody } from '../api'
 import { ArrowIcon, TerminalIcon } from '../icons'
 import type { LabRun, LearningSession, Lesson, Principal, Target } from '../types'
 import { ErrorNotice, Eyebrow, LoadingBlock, PageHeader, StatusPill, shortHash } from '../components/Common'
+import { SimpleTheoryCard } from '../components/SimpleTheoryCard'
 
 export function LessonPage({ principal }: { principal: Principal }) {
   const { lessonId = '' } = useParams()
@@ -39,8 +40,19 @@ export function LessonPage({ principal }: { principal: Principal }) {
     <div className="page lesson-detail">
       <PageHeader kicker={`УРОК ${String(item.order).padStart(3, '0')} / ${item.skill_id}`} title={item.title} lead={item.summary} action={<StatusPill status={item.requires_target ? 'warning' : 'neutral'}>{item.requires_target ? 'нужна Docker-цель' : 'только Linux VM'}</StatusPill>} />
       <div className="lesson-brief">
-        <section className="paper-card paper-card--term"><Eyebrow>ТЕРМИН</Eyebrow><h2>{item.term.name}</h2><p>{item.term.definition}</p></section>
-        <section className="paper-card"><Eyebrow>РАЗОБРАННЫЙ ПРИМЕР</Eyebrow><p className="large-copy">{item.worked_example}</p></section>
+        {item.simple_theory ? <SimpleTheoryCard theory={item.simple_theory} /> : null}
+        {item.simple_theory ? (
+          <details className="lesson-more">
+            <summary>Подробнее: термин и разобранный пример</summary>
+            <section className="paper-card paper-card--term"><Eyebrow>ТЕРМИН</Eyebrow><h2>{item.term.name}</h2><p>{item.term.definition}</p></section>
+            <section className="paper-card"><Eyebrow>РАЗОБРАННЫЙ ПРИМЕР</Eyebrow><p className="large-copy">{item.worked_example}</p></section>
+          </details>
+        ) : (
+          <>
+            <section className="paper-card paper-card--term"><Eyebrow>ТЕРМИН</Eyebrow><h2>{item.term.name}</h2><p>{item.term.definition}</p></section>
+            <section className="paper-card"><Eyebrow>РАЗОБРАННЫЙ ПРИМЕР</Eyebrow><p className="large-copy">{item.worked_example}</p></section>
+          </>
+        )}
         <section className="paper-card paper-card--prediction">
           <div><Eyebrow>ПРОГНОЗ ДО КОМАНДЫ</Eyebrow><h2>{item.prediction_question}</h2><p>Команда появится только после сохранения прогноза и создания lab run.</p></div>
           <textarea value={prediction} onChange={(event) => setPrediction(event.target.value)} rows={5} placeholder="Я ожидаю увидеть… Потому что…" disabled={principal.role === 'viewer'} />

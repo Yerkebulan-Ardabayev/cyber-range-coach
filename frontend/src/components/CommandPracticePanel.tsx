@@ -297,12 +297,24 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
               value={answer}
               onChange={(event) => { setAnswer(event.target.value); if (result?.verification_status === 'unverified') setResult(null) }}
               onBlur={() => principal.role !== 'viewer' && !result?.correct && saveDraft.mutate({ answer, observationAnswer: observation })}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
+                event.preventDefault()
+                if (!result && answer.trim() && principal.role !== 'viewer' && !complete.isPending) complete.mutate(false)
+              }}
               disabled={principal.role === 'viewer' || Boolean(result?.correct || result?.completed)}
-              placeholder="Введите команду. Coach не исполняет этот ответ."
+              placeholder="Введите команду и нажмите Enter. Coach не исполняет этот ответ."
               rows={3}
             />
           </label>
-          {result?.correct ? (
+          {result?.correct && result.completed && result.observation_fields.length === 0 ? (
+            <div className="command-practice__result is-correct" role="status">
+              <strong>{reasonText[result.reason]}</strong>
+              <p>{result.detail}</p>
+              <small>Пример вывода появится после снимка со стенда, поэтому разбора вывода сейчас нет.</small>
+              <button className="button button--primary" onClick={() => void nextItem()}>Следующий приём <ArrowIcon /></button>
+            </div>
+          ) : result?.correct ? (
             <div className="command-practice__observation">
               <div className="command-practice__result is-correct" role="status">
                 <strong>{reasonText[result.reason]}</strong>
@@ -342,6 +354,15 @@ export function CommandPracticePanel({ principal }: { principal: Principal }) {
             <div className={`command-practice__result ${result.correct ? 'is-correct' : 'is-error'}`} role="status">
               <strong>{reasonText[result.reason]}</strong>
               <p>{result.detail}</p>
+              {result.correction ? (
+                <div className="command-practice__correction">
+                  <strong>Правильно так</strong>
+                  <pre className="command-practice__example">{result.correction.answer}</pre>
+                  <p>Зачем: {result.correction.purpose}</p>
+                  <p>Частая ошибка: {result.correction.typical_error}</p>
+                  <small>Ответ показан, поэтому повтор сегодня считается тренировкой и срок не сдвигает.</small>
+                </div>
+              ) : null}
               <small>{result.next_due_at ? `Следующий срок: ${formatDate(result.next_due_at)}.` : 'Следующий срок ещё не назначен.'}</small>
               {result.verification_status === 'unverified' ? (
                 <button className="button" onClick={() => setResult(null)}>Изменить форму записи</button>

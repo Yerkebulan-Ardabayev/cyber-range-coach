@@ -162,4 +162,76 @@ describe('CommandPracticePanel', () => {
     expect(completions).toBe(2)
     expect(paths.filter((path) => path.includes('/command-practice/plan'))).toHaveLength(1)
   })
+
+  it('submits on Enter, keeps Shift+Enter, and shows the correction after a wrong answer', async () => {
+    let completions = 0
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      const path = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+      if (path.includes('/command-practice/plan')) {
+        return Promise.resolve(new Response(JSON.stringify(practicePlan), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      }
+      if (path.endsWith('/complete')) {
+        completions += 1
+        return Promise.resolve(new Response(JSON.stringify({
+          attempt_id: 1, technique_id: 'linux-find-executable-files', reason: 'wrong_tool',
+          correct: false, independent: false, observation_correct: false,
+          next_due_at: '2026-09-25T00:00:00Z', interval_days: null, retry_in_session: true, duplicate: false,
+          verification_status: 'verified', detail: 'Другой инструмент.', attempt_type: 'assessment', completed: true,
+          observation_example: null, observation_fields: [],
+          correction: { answer: 'find . -type f -perm -111', purpose: 'Найти исполняемые файлы.', typical_error: 'Забыть -type f.' },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      }
+      return Promise.resolve(new Response(JSON.stringify({ attempt_id: 1, saved: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+    })
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CommandPracticePanel principal={{ role: 'owner', device_id: null, local_owner: true }} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByText('Найдите обычные исполняемые файлы в синтетическом дереве.')
+    const field = screen.getByLabelText('Команда в Bash')
+    fireEvent.change(field, { target: { value: 'ls' } })
+    fireEvent.keyDown(field, { key: 'Enter', shiftKey: true })
+    expect(completions).toBe(0)
+    fireEvent.keyDown(field, { key: 'Enter' })
+    await screen.findByText('Правильно так')
+    expect(completions).toBe(1)
+    expect(screen.getByText('find . -type f -perm -111')).toBeTruthy()
+    expect(screen.getByText('Частая ошибка: Забыть -type f.')).toBeTruthy()
+  })
+
+  it('skips the output step when the example is still pending', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      const path = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+      if (path.includes('/command-practice/plan')) {
+        return Promise.resolve(new Response(JSON.stringify(practicePlan), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      }
+      if (path.endsWith('/complete')) {
+        return Promise.resolve(new Response(JSON.stringify({
+          attempt_id: 1, technique_id: 'linux-find-executable-files', reason: 'correct',
+          correct: true, independent: true, observation_correct: false,
+          next_due_at: '2026-09-25T00:00:00Z', interval_days: 1, retry_in_session: false, duplicate: false,
+          verification_status: 'verified', detail: 'Команда совпала.', attempt_type: 'assessment', completed: true,
+          observation_example: null, observation_fields: [], correction: null,
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      }
+      return Promise.resolve(new Response(JSON.stringify({ attempt_id: 1, saved: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+    })
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CommandPracticePanel principal={{ role: 'owner', device_id: null, local_owner: true }} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByText('Найдите обычные исполняемые файлы в синтетическом дереве.')
+    fireEvent.change(screen.getByLabelText('Команда в Bash'), { target: { value: 'find . -type f -perm -111' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Проверить на сервере' }))
+    await screen.findByText(/Пример вывода появится после снимка со стенда/)
+    expect(screen.queryByRole('button', { name: 'Проверить факты' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Следующий приём/ }))
+    await screen.findByRole('heading', { name: 'Разминка завершена' })
+  })
 })

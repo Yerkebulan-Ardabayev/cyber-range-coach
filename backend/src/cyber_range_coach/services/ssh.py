@@ -4,6 +4,7 @@ import asyncio
 import base64
 import json
 import os
+import re
 import uuid
 from pathlib import Path
 from typing import Any, ClassVar
@@ -798,3 +799,57 @@ class TerminalManager:
     async def stop_all(self) -> None:
         for run_id in tuple(self.sessions):
             await self.stop(run_id)
+
+
+MISSION_DIRECTORY = re.compile(r"^[a-z0-9][a-z0-9-]+$")
+
+
+async def seed_student_missions(runner: RangeRunner, variant_id: str, archive: bytes) -> None:
+    """Unpack mission files into ~/missions/<variant> as the learner, nowhere else."""
+    if not MISSION_DIRECTORY.fullmatch(variant_id):
+        raise AppError(400, "mission_variant_invalid", "Недопустимое имя варианта миссии.")
+    if runner.protector is None:
+        raise AppError(503, "secret_storage_unavailable", "SSH secret storage недоступно.")
+    host = runner._host()
+    known_hosts = write_known_hosts(runner.settings, host)
+    key = import_private_key(host, runner.protector)
+    command = (
+        "set -eu; "
+        f'd="$HOME/missions/{variant_id}"; '
+        'rm -rf -- "$d"; mkdir -p -- "$d"; '
+        'tar -xzf - -C "$d" --no-same-owner --no-overwrite-dir'
+    )
+    try:
+        connection = await asyncio.wait_for(
+            asyncssh.connect(
+                host.host,
+                port=host.port,
+                username=host.username,
+                client_keys=[key],
+                known_hosts=str(known_hosts),
+                agent_path=None,
+            ),
+            timeout=runner.settings.ssh_connect_timeout_seconds,
+        )
+        try:
+            result = await asyncio.wait_for(
+                connection.run(command, input=archive, encoding=None, check=False),
+                timeout=runner.settings.ssh_connect_timeout_seconds,
+            )
+        finally:
+            connection.close()
+            await connection.wait_closed()
+    except (asyncssh.Error, OSError, TimeoutError) as exc:
+        raise AppError(
+            503,
+            "mission_seed_failed",
+            "Не удалось разложить файлы миссии в Linux VM.",
+            {"error": type(exc).__name__},
+        ) from exc
+    if result.exit_status != 0:
+        raise AppError(
+            409,
+            "mission_seed_failed",
+            "Linux VM отклонила раскладку файлов миссии.",
+            {"exit_status": result.exit_status},
+        )

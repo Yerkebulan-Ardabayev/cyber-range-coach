@@ -47,7 +47,11 @@ def test_command_catalog_covers_every_source_block_and_has_no_images(settings) -
     assert all(source.embedded_images == 0 for source in catalog.sources)
     assert all(catalog.challenges[identifier].hints[0].level == 1 for identifier in catalog.techniques)
     assert all(catalog.challenges[identifier].context.named_inputs for identifier in catalog.techniques)
-    assert all(catalog.challenges[identifier].observation.fields for identifier in catalog.techniques)
+    assert all(
+        catalog.challenges[identifier].observation.fields
+        or catalog.challenges[identifier].observation.output_source == "pending"
+        for identifier in catalog.techniques
+    )
 
 
 def test_both_environments_are_merged_and_windows_waits_for_a_stand(settings) -> None:
@@ -698,3 +702,104 @@ def _as_utc_for_test(value: datetime | None) -> datetime | None:
     if value is None:
         return None
     return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+
+
+def test_wrong_answer_shows_correction_and_retry_does_not_advance(client) -> None:
+    catalog = client.app.state.command_catalog
+    technique_id = "linux-pwd-current-directory"
+    now = datetime(2026, 9, 24, 12, 0, tzinfo=UTC)
+    with client.app.state.db.session_factory() as session:
+        wrong = complete_command_attempt(
+            session,
+            catalog,
+            attempt_key="correction-attempt-0001",
+            technique_id=technique_id,
+            answer_shell="bash",
+            answer="ls",
+            observation_answer="",
+            dont_remember=False,
+            timezone="Asia/Almaty",
+            now=now,
+        )
+        assert wrong.correct is False
+        assert wrong.correction is not None
+        assert wrong.correction.answer == "pwd"
+        assert wrong.correction.purpose
+        assert wrong.correction.typical_error
+        repeated = complete_command_attempt(
+            session,
+            catalog,
+            attempt_key="correction-attempt-0001",
+            technique_id=technique_id,
+            answer_shell="bash",
+            answer="ls",
+            observation_answer="",
+            dont_remember=False,
+            timezone="Asia/Almaty",
+            now=now,
+        )
+        assert repeated.duplicate is True
+        assert repeated.correction is not None
+        retry = complete_command_attempt(
+            session,
+            catalog,
+            attempt_key="correction-attempt-0002",
+            technique_id=technique_id,
+            answer_shell="bash",
+            answer="pwd",
+            observation_answer="",
+            dont_remember=False,
+            timezone="Asia/Almaty",
+            now=now + timedelta(minutes=1),
+        )
+        state = session.get(CommandPracticeState, technique_id)
+        assert state is not None
+        assert retry.correct is True
+        assert retry.independent is False
+        assert retry.interval_days is None
+        assert retry.correction is None
+        assert state.interval_index == 0
+
+
+def test_correct_and_unverified_answers_do_not_reveal_correction(client) -> None:
+    catalog = client.app.state.command_catalog
+    now = datetime(2026, 9, 24, 12, 0, tzinfo=UTC)
+    with client.app.state.db.session_factory() as session:
+        correct = complete_command_attempt(
+            session,
+            catalog,
+            attempt_key="no-correction-0001",
+            technique_id="linux-pwd-current-directory",
+            answer_shell="bash",
+            answer="pwd",
+            observation_answer="",
+            dont_remember=False,
+            timezone="Asia/Almaty",
+            now=now,
+        )
+        assert correct.correct is True
+        assert correct.correction is None
+
+
+def test_pending_windows_output_skips_the_observation_step(client) -> None:
+    catalog = client.app.state.command_catalog
+    technique_id = "win-systeminfo-full-configuration"
+    assert catalog.challenge(technique_id).observation.output_source == "pending"
+    with client.app.state.db.session_factory() as session:
+        result = complete_command_attempt(
+            session,
+            catalog,
+            attempt_key="pending-output-0001",
+            technique_id=technique_id,
+            answer_shell="cmd",
+            answer="systeminfo",
+            observation_answer="",
+            dont_remember=False,
+            timezone="Asia/Almaty",
+            now=datetime(2026, 9, 24, 12, 0, tzinfo=UTC),
+        )
+    assert result.correct is True
+    assert result.completed is True
+    assert result.observation_example is None
+    assert result.observation_fields == []
+

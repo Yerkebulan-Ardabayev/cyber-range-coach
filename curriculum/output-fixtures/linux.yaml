@@ -1,0 +1,686 @@
+version: 1
+image: cyber-range-coach-reference:24.04
+fixtures:
+  linux-pwd-current-directory:
+    setup: 'printf ''MISSION: aurora\n'' > briefing.txt
+
+      chown student:student briefing.txt
+
+      '
+  linux-ls-directory-listing:
+    setup: 'install -d -o student -g student recon
+
+      printf ''MISSION: aurora\n'' > briefing.txt
+
+      printf ''10.0.5.11\n10.0.5.12\n'' > targets.lst
+
+      printf ''port 22 open\n'' > scan.log
+
+      chown student:student briefing.txt targets.lst scan.log
+
+      '
+  linux-cd-change-directory:
+    setup: 'install -d -o student -g student recon
+
+      '
+    followups:
+    - pwd
+  linux-cat-read-text-file:
+    setup: 'printf ''MISSION: aurora\nTARGET: 10.0.5.11\nDEADLINE: 18:00\n'' > briefing.txt
+
+      chown student:student briefing.txt
+
+      '
+  linux-grep-text-pattern:
+    setup: 'printf ''MISSION: aurora\nCRED: analyst/training-only\nNOTE: rotate after lab\n'' > briefing.txt
+
+      chown student:student briefing.txt
+
+      '
+  linux-chmod-add-execute:
+    setup: 'printf ''#!/bin/bash\necho "Next checkpoint: relay-7"\n'' > reveal.sh
+
+      chmod 644 reveal.sh
+
+      chown student:student reveal.sh
+
+      touch -d ''2026-09-01 10:00'' reveal.sh
+
+      '
+    followups:
+    - ls -l reveal.sh
+  linux-run-current-directory-file:
+    setup: 'cat > reveal.sh <<''EOF''
+
+      #!/bin/bash
+
+      echo "reveal: decoding checkpoint..."
+
+      echo "Next checkpoint: relay-7"
+
+      EOF
+
+      chmod 755 reveal.sh
+
+      chown student:student reveal.sh
+
+      '
+  linux-tool-version-option:
+    setup: "cat > reconctl <<'EOF'\n#!/bin/bash\ncase \"$1\" in\n  --version) echo \"reconctl 2.4.1 (training\
+      \ build)\" ;;\n  -h|--help) echo \"Usage: ./reconctl [--version] [--help] scan TARGET\" ;;\n  *)\
+      \ echo \"reconctl: unknown command, try --help\" >&2; exit 2 ;;\nesac\nEOF\nchmod 755 reconctl\n\
+      chown student:student reconctl\n"
+  linux-cut-equals-field: {}
+  linux-cut-colon-field: {}
+  linux-shell-glob-extension:
+    setup: 'printf ''KEY-ALPHA: training-only-1\n'' > alpha.key
+
+      printf ''KEY-BETA: training-only-2\n'' > beta.key
+
+      printf ''not a key\n'' > notes.txt
+
+      chown student:student alpha.key beta.key notes.txt
+
+      '
+  linux-grep-recursive-tree:
+    setup: 'install -d -o student -g student loot loot/hosts loot/hosts/web01 loot/hosts/db01
+
+      printf ''collected on day 1\n'' > loot/readme.txt
+
+      printf ''listen 8080\nCRED: webadmin/training-only\n'' > loot/hosts/web01/config.txt
+
+      printf ''engine: postgres\n'' > loot/hosts/db01/notes.txt
+
+      chown -R student:student loot
+
+      '
+  linux-cat-leading-dash-file:
+    setup: 'printf ''PIN: 4711-training\n'' > ./-
+
+      chown student:student ./-
+
+      '
+  linux-cat-quoted-filename:
+    setup: 'printf ''Backup host: vault-02\n'' > ''server notes.txt''
+
+      chown student:student ''server notes.txt''
+
+      '
+  linux-ls-show-hidden:
+    setup: 'printf ''MISSION: aurora\n'' > briefing.txt
+
+      printf ''token: training-only\n'' > .mission_key
+
+      chown student:student briefing.txt .mission_key
+
+      '
+  linux-ls-long-details:
+    setup: 'head -c 2048 /dev/zero | tr ''\0'' ''x'' > scan.log
+
+      printf ''MISSION: aurora\n'' > briefing.txt
+
+      chmod 600 scan.log
+
+      chmod 644 briefing.txt
+
+      chown student:student scan.log briefing.txt
+
+      touch -d ''2026-09-01 10:00'' scan.log briefing.txt
+
+      '
+  linux-find-executable-files:
+    setup: 'install -d -o student -g student tools docs
+
+      printf ''#!/bin/bash\necho probe\n'' > tools/probe.sh
+
+      printf ''#!/bin/bash\necho draft\n'' > tools/draft.sh
+
+      printf ''read me\n'' > docs/readme.txt
+
+      chmod 755 tools/probe.sh
+
+      chmod 744 tools/draft.sh
+
+      chmod 644 docs/readme.txt
+
+      chown -R student:student tools docs
+
+      '
+  linux-find-size-bytes:
+    setup: 'install -d -o student -g student data
+
+      head -c 1271 /dev/zero | tr ''\0'' ''a'' > data/report-1.txt
+
+      head -c 1272 /dev/zero | tr ''\0'' ''b'' > data/report-2.txt
+
+      head -c 1300 /dev/zero | tr ''\0'' ''c'' > data/report-3.txt
+
+      chown -R student:student data
+
+      '
+  linux-sort-unique-line:
+    setup: 'printf ''token-A1\ntoken-9X\ntoken-A1\ntoken-7Q2\ntoken-9X\ntoken-A1\n'' > records.txt
+
+      chown student:student records.txt
+
+      '
+  linux-base64-decode:
+    setup: 'printf ''Meeting point: dock-4\n'' | base64 > encoded.txt
+
+      chown student:student encoded.txt
+
+      '
+  linux-tool-help:
+    setup: "cat > auditbox <<'EOF'\n#!/bin/bash\nusage() {\n  cat <<'USAGE'\nUsage: ./auditbox [OPTIONS]\
+      \ MODE\nModes:\n  quick      check file permissions only\n  full       check permissions, owners\
+      \ and hidden files\nOptions:\n  -h, --help     show this help and exit\n  --version      print version\
+      \ and exit\n  --dry-run      list checks without running them\nUSAGE\n}\ncase \"$1\" in\n  -h|--help)\
+      \ usage ;;\n  --version) echo \"auditbox 0.9.3\" ;;\n  *) echo \"auditbox: missing MODE, try --help\"\
+      \ >&2; exit 2 ;;\nesac\nEOF\nchmod 755 auditbox\nchown student:student auditbox\n"
+  linux-source-environment-file:
+    setup: 'printf ''export MISSION_ZONE=blue-sector\nexport TOKEN_TTL=900\n'' > profile.env
+
+      chown student:student profile.env
+
+      '
+    followups:
+    - echo "$MISSION_ZONE"
+  linux-echo-variable:
+    prelude: export NEXT_STEP='scan-ports'
+  linux-id-identity-groups:
+    setup: 'groupadd -g 1500 analysts
+
+      usermod -aG analysts student
+
+      '
+  linux-uname-kernel:
+    volatile: true
+  linux-os-release: {}
+  linux-hostname: {}
+  linux-grep-invert-tmp:
+    setup: 'cd /home/student/training
+
+      for f in brief.txt scan.tmp report.log cache.tmp; do printf ''x\n'' > "$f"; done
+
+      chown student:student brief.txt scan.tmp report.log cache.tmp
+
+      '
+  linux-rm-glob-lab-only:
+    setup: 'cd /home/student/training
+
+      for f in scan.tmp cache.tmp keep.txt; do printf ''x\n'' > "$f"; done
+
+      chown student:student scan.tmp cache.tmp keep.txt
+
+      '
+    followups:
+    - ls
+  linux-cat-concatenate-parts:
+    setup: 'cd /home/student/training
+
+      printf ''MISSION: aurora\n'' > part_1
+
+      printf ''STEP: collect logs\n'' > part_2
+
+      printf ''STATUS: training-only\n'' > part_3
+
+      chown student:student part_1 part_2 part_3
+
+      '
+    followups:
+    - cat joined.txt
+  linux-readlink-final-target:
+    setup: 'cd /home/student/training
+
+      install -d -o student -g student vault
+
+      printf ''token: training-only\n'' > vault/final.txt
+
+      ln -s vault/final.txt hop
+
+      ln -s hop start
+
+      chown -h student:student hop start vault/final.txt
+
+      '
+  linux-cat-resolved-link:
+    setup: 'cd /home/student/training
+
+      install -d -o student -g student vault
+
+      printf ''token: training-only\n'' > vault/final.txt
+
+      ln -s vault/final.txt hop
+
+      ln -s hop start
+
+      chown -h student:student hop start vault/final.txt
+
+      '
+  linux-grep-anchor-cut-field:
+    setup: 'cd /home/student/training
+
+      printf ''analyst:x:1001:1001::/home/analyst:/bin/bash\ngatekeeper:x:1500:1500::/home/gatekeeper:/bin/bash\nkeeper:x:1042:1042::/home/keeper:/bin/bash\n''
+      > accounts.txt
+
+      chown student:student accounts.txt
+
+      '
+  linux-awk-field-condition:
+    setup: 'cd /home/student/training
+
+      printf ''id,zone,item\n1,LAB,router-02\n2,VAULT,drive-07\n3,DMZ,web-01\n4,VAULT,badge-12\n'' > inventory.csv
+
+      chown student:student inventory.csv
+
+      '
+  linux-sed-remove-marker: {}
+  linux-diff-files:
+    setup: 'cd /home/student/training
+
+      printf ''host=training-vm\nport=22\nmode=lab\n'' > before.txt
+
+      printf ''host=training-vm\nport=2222\nmode=lab\n'' > after.txt
+
+      chown student:student before.txt after.txt
+
+      '
+  linux-find-setuid:
+    setup: 'install -d -o student -g student bin notes
+
+      printf ''#!/bin/sh\necho report\n'' > bin/report-tool
+
+      printf ''#!/bin/sh\necho backup\n'' > bin/backup-tool
+
+      printf ''plain text\n'' > notes/readme.txt
+
+      chown student:student bin/* notes/*
+
+      chmod 4755 bin/report-tool
+
+      chmod 0755 bin/backup-tool
+
+      chmod 0644 notes/readme.txt
+
+      touch -d ''2026-09-01 10:00'' bin/* notes/*
+
+      '
+    volatile: true
+  linux-find-setgid:
+    setup: 'install -d -o student -g student bin notes
+
+      printf ''#!/bin/sh\necho mail\n'' > bin/mail-queue
+
+      printf ''#!/bin/sh\necho list\n'' > bin/list-tool
+
+      printf ''plain text\n'' > notes/readme.txt
+
+      chown student:student bin/* notes/*
+
+      chmod 2755 bin/mail-queue
+
+      chmod 0755 bin/list-tool
+
+      chmod 0644 notes/readme.txt
+
+      touch -d ''2026-09-01 10:00'' bin/* notes/*
+
+      '
+    volatile: true
+  linux-find-world-writable:
+    setup: 'install -d -o student -g student shared private
+
+      printf ''drop zone\n'' > shared/upload.log
+
+      printf ''owner only\n'' > private/plan.txt
+
+      printf ''group notes\n'' > shared/team.txt
+
+      chown student:student shared/* private/*
+
+      chmod 0666 shared/upload.log
+
+      chmod 0600 private/plan.txt
+
+      chmod 0664 shared/team.txt
+
+      touch -d ''2026-09-01 10:00'' shared/* private/*
+
+      '
+    volatile: true
+  linux-find-sticky-directories:
+    setup: 'install -d -o student -g student -m 1777 dropbox
+
+      install -d -o student -g student -m 0755 archive
+
+      install -d -o student -g student -m 0777 open-share
+
+      touch -d ''2026-09-01 10:00'' dropbox archive open-share .
+
+      '
+    volatile: true
+  linux-grep-uid0-nonroot:
+    setup: 'printf ''%s\n'' ''root:x:0:0:root:/root:/bin/bash'' ''daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin''
+      ''analyst:x:1001:1001:Analyst:/home/analyst:/bin/bash'' ''backupsvc:x:0:0:Backup:/srv/backup:/bin/bash''
+      ''guest:x:1002:100:Guest:/home/guest:/bin/bash'' > passwd.demo
+
+      chown student:student passwd.demo
+
+      '
+  linux-grep-recursive-line-numbers:
+    setup: 'install -d -o student -g student etc-demo etc-demo/sudoers.d
+
+      printf ''%s\n'' ''# demo sudoers'' ''root ALL=(ALL:ALL) ALL'' ''%admin ALL=(ALL) ALL'' > etc-demo/sudoers
+
+      printf ''%s\n'' ''# training rule'' ''deploy ALL=(root) NOPASSWD: /usr/local/bin/demo-report'' >
+      etc-demo/sudoers.d/deploy
+
+      printf ''%s\n'' ''# audit rule'' ''analyst ALL=(root) /usr/bin/journalctl'' > etc-demo/sudoers.d/audit
+
+      chown -R student:student etc-demo
+
+      '
+  linux-find-readable-private-key:
+    setup: 'install -d -o student -g student -m 0755 keys-a keys-b
+
+      printf ''TRAINING PLACEHOLDER, NOT A REAL KEY\n'' > keys-a/id_rsa
+
+      printf ''TRAINING PLACEHOLDER, NOT A REAL KEY\n'' > keys-b/id_rsa
+
+      chown student:student keys-a/id_rsa keys-b/id_rsa
+
+      chmod 0644 keys-a/id_rsa
+
+      chmod 0600 keys-b/id_rsa
+
+      touch -d ''2026-09-01 10:00'' keys-a/id_rsa keys-b/id_rsa
+
+      '
+    volatile: true
+  linux-grep-context-after:
+    setup: 'cd /home/student/training
+
+      printf ''intro line\nHEADER\nrecord=alpha-17\nfooter line\n'' > data.txt
+
+      chown student:student data.txt
+
+      '
+  linux-awk-last-field:
+    setup: 'cd /home/student/training
+
+      printf ''2026-09-01 10:00 login ok user=guest src=10.10.5.10\n2026-09-01 10:05 login ok user=analyst
+      src=10.10.5.23\n2026-09-01 10:09 logout user=guest src=10.10.5.10\n'' > auth.log
+
+      chown student:student auth.log
+
+      '
+  linux-find-path-executable:
+    setup: 'cd /home/student/training
+
+      mkdir -p evidence/secret evidence/public
+
+      printf ''#!/bin/sh\necho lab\n'' > evidence/secret/unlock.sh
+
+      printf ''read me\n'' > evidence/secret/readme.txt
+
+      printf ''#!/bin/sh\necho lab\n'' > evidence/public/tool.sh
+
+      chmod 755 evidence/secret/unlock.sh evidence/public/tool.sh
+
+      chmod 644 evidence/secret/readme.txt
+
+      chown -R student:student evidence
+
+      '
+  linux-base64-decode-to-file:
+    setup: 'cd /home/student/training
+
+      printf ''note: training-only\n'' | base64 > encoded.txt
+
+      chown student:student encoded.txt
+
+      '
+    followups:
+    - cat decoded.txt
+  linux-whoami-current-user: {}
+  linux-getent-current-user:
+    setup: ':'
+  linux-export-path:
+    setup: 'install -d /opt/demo/bin
+
+      printf ''#!/bin/sh\necho "demo-tool: ready"\n'' > /opt/demo/bin/demo-tool
+
+      chmod 755 /opt/demo/bin/demo-tool
+
+      '
+    followups:
+    - command -v demo-tool
+    - demo-tool
+  linux-grep-fixed-string:
+    setup: ':'
+  linux-pgrep-full-command:
+    volatile: true
+    setup: 'printf ''#!/bin/bash\nwhile :; do sleep 30; done\n'' > /usr/local/bin/magpie-demo
+
+      chmod 755 /usr/local/bin/magpie-demo
+
+      '
+    prelude: magpie-demo --watch nest.log &
+    volatile_fields:
+    - pid
+  linux-tail-follow:
+    setup: 'printf ''10:00:01 feed started\n10:00:02 item 1 received\n10:00:03 item 2 received\n'' > feed.demo.log
+
+      touch -d ''2026-09-01 10:00'' feed.demo.log
+
+      chown student:student feed.demo.log
+
+      '
+    run: '{ sleep 1; printf ''10:00:04 item 3 received\n'' >> feed.demo.log; } & timeout 3 tail -f feed.demo.log'
+    timeout: 60
+  linux-dpkg-file-owner:
+    setup: ':'
+  linux-read-system-cron:
+    setup: 'rm -f /etc/cron.d/e2scrub_all
+
+      printf ''# synthetic training job\n30 2 * * * root /usr/local/bin/demo-backup.sh\n'' > /etc/cron.d/demo-backup
+
+      chmod 644 /etc/cron.d/demo-backup
+
+      '
+  linux-apt-installed-version:
+    setup: ':'
+  linux-sudo-list-rules:
+    setup: 'printf ''#!/bin/sh\necho "demo-report: user=$(id -un)"\necho "demo-report: 3 synthetic events"\n''
+      > /usr/local/bin/demo-report
+
+      chmod 755 /usr/local/bin/demo-report
+
+      printf ''student ALL=(root) NOPASSWD: /usr/local/bin/demo-report\n'' > /etc/sudoers.d/student-demo
+
+      chmod 440 /etc/sudoers.d/student-demo
+
+      '
+  linux-sudo-exact-allowed-command:
+    setup: 'printf ''#!/bin/sh\necho "demo-report: user=$(id -un)"\necho "demo-report: 3 synthetic events"\n''
+      > /usr/local/bin/demo-report
+
+      chmod 755 /usr/local/bin/demo-report
+
+      printf ''student ALL=(root) NOPASSWD: /usr/local/bin/demo-report\n'' > /etc/sudoers.d/student-demo
+
+      chmod 440 /etc/sudoers.d/student-demo
+
+      '
+  linux-su-login-shell:
+    setup: 'echo ''root:training-only'' | chpasswd
+
+      '
+    run: '{ sleep 1; echo training-only; sleep 1; echo id -un; sleep 0.5; echo pwd; sleep 0.5; echo exit;
+      sleep 0.5; } | script -qc ''su -'' /dev/null'
+    timeout: 60
+  linux-exit-shell:
+    prelude: ROLE=parent-shell
+    run: script -qc 'bash -ic exit' /dev/null < /dev/null
+    followups:
+    - echo "$ROLE"
+  linux-lsblk-devices:
+    privileged: true
+    volatile: true
+    setup: 'install -d /srv/lab/seed /srv/evidence
+
+      printf ''case: 2026-117\nanalyst: training-only\n'' > /srv/lab/seed/case-notes.txt
+
+      truncate -s 16M /srv/lab/case-disk.img
+
+      mkfs.ext4 -q -F -L evidence -U 3f6c2a10-5b7e-4d21-9a0c-117000000001 -d /srv/lab/seed /srv/lab/case-disk.img
+
+      # mount -o loop включает autoclear: loop-устройство освободится вместе с контейнером.
+
+      mount -o loop /srv/lab/case-disk.img /srv/evidence
+
+      LOOPDEV=$(findmnt -no SOURCE /srv/evidence)
+
+      LOOPNUM=${LOOPDEV#/dev/loop}
+
+      read -r MA MI < <(stat -c ''%t %T'' "$LOOPDEV")
+
+      mknod /dev/vdc1 b $((16#$MA)) $((16#$MI))
+
+      chgrp disk /dev/vdc1; chmod 660 /dev/vdc1
+
+      usermod -aG disk student
+
+      install -d /run/udev/data
+
+      printf ''E:ID_FS_TYPE=ext4\nE:ID_FS_VERSION=1.0\nE:ID_FS_LABEL=evidence\nE:ID_FS_LABEL_ENC=evidence\nE:ID_FS_UUID=3f6c2a10-5b7e-4d21-9a0c-117000000001\nE:ID_FS_UUID_ENC=3f6c2a10-5b7e-4d21-9a0c-117000000001\nE:ID_FS_USAGE=filesystem\n''
+      > "/run/udev/data/b7:$LOOPNUM"
+
+      '
+  linux-lsblk-filesystems:
+    privileged: true
+    volatile: true
+    setup: 'install -d /srv/lab/seed /srv/evidence
+
+      printf ''case: 2026-117\nanalyst: training-only\n'' > /srv/lab/seed/case-notes.txt
+
+      truncate -s 16M /srv/lab/case-disk.img
+
+      mkfs.ext4 -q -F -L evidence -U 3f6c2a10-5b7e-4d21-9a0c-117000000001 -d /srv/lab/seed /srv/lab/case-disk.img
+
+      # mount -o loop включает autoclear: loop-устройство освободится вместе с контейнером.
+
+      mount -o loop /srv/lab/case-disk.img /srv/evidence
+
+      LOOPDEV=$(findmnt -no SOURCE /srv/evidence)
+
+      LOOPNUM=${LOOPDEV#/dev/loop}
+
+      read -r MA MI < <(stat -c ''%t %T'' "$LOOPDEV")
+
+      mknod /dev/vdc1 b $((16#$MA)) $((16#$MI))
+
+      chgrp disk /dev/vdc1; chmod 660 /dev/vdc1
+
+      usermod -aG disk student
+
+      install -d /run/udev/data
+
+      printf ''E:ID_FS_TYPE=ext4\nE:ID_FS_VERSION=1.0\nE:ID_FS_LABEL=evidence\nE:ID_FS_LABEL_ENC=evidence\nE:ID_FS_UUID=3f6c2a10-5b7e-4d21-9a0c-117000000001\nE:ID_FS_UUID_ENC=3f6c2a10-5b7e-4d21-9a0c-117000000001\nE:ID_FS_USAGE=filesystem\n''
+      > "/run/udev/data/b7:$LOOPNUM"
+
+      '
+  linux-blkid-partition:
+    privileged: true
+    setup: 'install -d /srv/lab/seed /srv/evidence
+
+      printf ''case: 2026-117\nanalyst: training-only\n'' > /srv/lab/seed/case-notes.txt
+
+      truncate -s 16M /srv/lab/case-disk.img
+
+      mkfs.ext4 -q -F -L evidence -U 3f6c2a10-5b7e-4d21-9a0c-117000000001 -d /srv/lab/seed /srv/lab/case-disk.img
+
+      # mount -o loop включает autoclear: loop-устройство освободится вместе с контейнером.
+
+      mount -o loop /srv/lab/case-disk.img /srv/evidence
+
+      LOOPDEV=$(findmnt -no SOURCE /srv/evidence)
+
+      LOOPNUM=${LOOPDEV#/dev/loop}
+
+      read -r MA MI < <(stat -c ''%t %T'' "$LOOPDEV")
+
+      mknod /dev/vdc1 b $((16#$MA)) $((16#$MI))
+
+      chgrp disk /dev/vdc1; chmod 660 /dev/vdc1
+
+      usermod -aG disk student
+
+      install -d /run/udev/data
+
+      printf ''E:ID_FS_TYPE=ext4\nE:ID_FS_VERSION=1.0\nE:ID_FS_LABEL=evidence\nE:ID_FS_LABEL_ENC=evidence\nE:ID_FS_UUID=3f6c2a10-5b7e-4d21-9a0c-117000000001\nE:ID_FS_UUID_ENC=3f6c2a10-5b7e-4d21-9a0c-117000000001\nE:ID_FS_USAGE=filesystem\n''
+      > "/run/udev/data/b7:$LOOPNUM"
+
+      '
+  linux-mkdir-parents:
+    followups:
+    - stat -c '%F %U %n' /tmp/demo-mount
+  linux-mount-partition:
+    privileged: true
+    setup: 'install -d /srv/lab/seed /srv/evidence /mnt/case
+
+      printf ''case: 2026-117\nanalyst: training-only\n'' > /srv/lab/seed/case-notes.txt
+
+      truncate -s 16M /srv/lab/case-disk.img
+
+      mkfs.ext4 -q -F -L evidence -U 3f6c2a10-5b7e-4d21-9a0c-117000000001 -d /srv/lab/seed /srv/lab/case-disk.img
+
+      mount -o loop /srv/lab/case-disk.img /srv/evidence
+
+      LOOPDEV=$(findmnt -no SOURCE /srv/evidence)
+
+      read -r MA MI < <(stat -c ''%t %T'' "$LOOPDEV")
+
+      mknod /dev/vdc1 b $((16#$MA)) $((16#$MI))
+
+      chgrp disk /dev/vdc1; chmod 660 /dev/vdc1
+
+      printf ''student ALL=(root) NOPASSWD: /usr/bin/mount /dev/vdc1 /mnt/case\n'' > /etc/sudoers.d/student-mount
+
+      chmod 440 /etc/sudoers.d/student-mount
+
+      '
+    followups:
+    - ls /mnt/case
+    - cat /mnt/case/case-notes.txt
+  linux-mount-filter:
+    privileged: true
+    setup: 'install -d /srv/lab/seed /srv/evidence /mnt/case
+
+      printf ''case: 2026-117\nanalyst: training-only\n'' > /srv/lab/seed/case-notes.txt
+
+      truncate -s 16M /srv/lab/case-disk.img
+
+      mkfs.ext4 -q -F -L evidence -U 3f6c2a10-5b7e-4d21-9a0c-117000000001 -d /srv/lab/seed /srv/lab/case-disk.img
+
+      mount -o loop /srv/lab/case-disk.img /srv/evidence
+
+      LOOPDEV=$(findmnt -no SOURCE /srv/evidence)
+
+      read -r MA MI < <(stat -c ''%t %T'' "$LOOPDEV")
+
+      mknod /dev/vdc1 b $((16#$MA)) $((16#$MI))
+
+      mount /dev/vdc1 /mnt/case
+
+      '
+  linux-free-human-memory:
+    volatile: true
+    volatile_fields:
+    - total_memory
+    - available_memory
+  linux-df-human-filesystems:
+    volatile: true
+    volatile_fields:
+    - root_available
+    - root_use_percent

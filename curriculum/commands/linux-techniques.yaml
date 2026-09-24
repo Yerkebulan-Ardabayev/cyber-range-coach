@@ -39,7 +39,7 @@ techniques:
   shell: bash
   purpose: Показать текущий каталог.
   significant_flags: &id001 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `ls` вместо `pwd`, увидите содержимое папки, но не её адрес.
   mnemonic_image: компас отвечает, где вы
   source_refs:
   - source: 01 · Введение в Linux CLI · мнемоника.docx
@@ -50,7 +50,7 @@ techniques:
   shell: bash
   purpose: Показать имена в текущем каталоге.
   significant_flags: &id002 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Добавить `-l`, имена потеряются среди прав, дат и размеров, а нужны только имена.
   mnemonic_image: компас показывает двери
   source_refs:
   - source: 01 · Введение в Linux CLI · мнемоника.docx
@@ -61,7 +61,8 @@ techniques:
   shell: bash
   purpose: Перейти в указанный каталог.
   significant_flags: &id003 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `cd /recon`, косая черта в начале ищет каталог в корне системы, и `cd` ответит
+    No such file or directory.
   mnemonic_image: компас ведёт в выбранную дверь
   source_refs:
   - source: 01 · Введение в Linux CLI · мнемоника.docx
@@ -72,7 +73,8 @@ techniques:
   shell: bash
   purpose: Прочитать короткий текстовый файл целиком.
   significant_flags: &id004 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `cat briefing` без `.txt`, файла с таким именем нет, `cat` ответит No such file
+    or directory.
   mnemonic_image: фонарик-книга освещает записку
   source_refs:
   - source: 01 · Введение в Linux CLI · мнемоника.docx
@@ -83,7 +85,8 @@ techniques:
   shell: bash
   purpose: Оставить строки с заданной текстовой меткой.
   significant_flags: &id005 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать метку строчными буквами, `grep cred`, `grep` различает регистр, и строка `CRED`
+    не найдётся.
   mnemonic_image: сито оставляет строку с меткой
   source_refs:
   - source: 01 · Введение в Linux CLI · мнемоника.docx
@@ -119,7 +122,8 @@ techniques:
   purpose: Попросить локальный инструмент показать версию.
   significant_flags: &id008
   - --version
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Запустить `reconctl --version` без `./`, оболочка ищет программы только в каталогах PATH
+    и ответит command not found.
   mnemonic_image: инструмент представляется по просьбе
   source_refs:
   - source: 01 · Введение в Linux CLI · мнемоника.docx
@@ -132,7 +136,8 @@ techniques:
   significant_flags: &id009
   - -d=
   - -f2
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-d=`, по умолчанию `cut` делит строку по табуляции, её здесь нет, и выведется
+    вся строка `ROLE=analyst`.
   mnemonic_image: ножницы режут конфиг по знаку равно
   source_refs:
   - source: 01 · Введение в Linux CLI · мнемоника.docx
@@ -145,7 +150,7 @@ techniques:
   significant_flags: &id010
   - '-d:'
   - -f2
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `-c2` вместо `-f2`, `cut` вырежет второй символ `n`, а не второе поле `demo`.
   mnemonic_image: ножницы режут паспорт полей по двоеточию
   source_refs:
   - source: 01 · Введение в Linux CLI · мнемоника.docx
@@ -156,7 +161,8 @@ techniques:
   shell: bash
   purpose: Подставить имена файлов с заданным расширением.
   significant_flags: &id011 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Взять маску в кавычки, `cat '*.key'`, оболочка не подставит имена, и `cat` будет искать
+    файл с именем `*.key`.
   mnemonic_image: звезда-магнит притягивает одинаковые хвосты имён
   source_refs:
   - source: 01 · Введение в Linux CLI · мнемоника.docx
@@ -168,7 +174,7 @@ techniques:
   purpose: Искать метку во всём дереве каталогов.
   significant_flags: &id012
   - -r
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: 'Забыть `-r`, `grep` не заходит в каталоги сам и ответит `loot/: Is a directory`.'
   mnemonic_image: метла с буквой r проходит по каждому коридору
   source_refs:
   - source: 01 · Введение в Linux CLI · мнемоника.docx
@@ -179,7 +185,8 @@ techniques:
   shell: bash
   purpose: Прочитать файл, имя которого начинается с дефиса.
   significant_flags: &id013 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `cat -` без `./`, `cat` поймёт дефис как стандартный ввод и будет молча ждать
+    текста с клавиатуры.
   mnemonic_image: дорожка ./ превращает дефис в имя
   source_refs:
   - source: 02 · Файловый варгейм · мнемоника.docx
@@ -202,7 +209,8 @@ techniques:
   purpose: Показать скрытые имена вместе с обычными.
   significant_flags: &id015
   - -a
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `ls -l`, подробности появятся, но имена с точкой в начале, например `.mission_key`,
+    так и останутся скрытыми.
   mnemonic_image: фонарь проявляет дверь с точкой
   source_refs:
   - source: 02 · Файловый варгейм · мнемоника.docx
@@ -214,7 +222,8 @@ techniques:
   purpose: Показать права, размер и другие свойства файлов.
   significant_flags: &id016
   - -l
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `ls -a`, добавятся скрытые имена, но прав, владельца, размера и даты в выводе
+    не будет.
   mnemonic_image: лупа показывает свойства объекта
   source_refs:
   - source: 02 · Файловый варгейм · мнемоника.docx
@@ -227,7 +236,8 @@ techniques:
   significant_flags: &id017
   - -type
   - -perm
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `-perm /111` вместо `-perm -111`, найдутся и файлы, которые может запускать
+    только владелец.
   mnemonic_image: флажок x выделяет исполняемый файл
   source_refs:
   - source: 02 · Файловый варгейм · мнемоника.docx
@@ -240,7 +250,8 @@ techniques:
   significant_flags: &id018
   - -type
   - -size
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть букву `c` в `-size 1272c`, без неё `find` считает размер в блоках по 512 байт
+    и нужный отчёт не найдёт.
   mnemonic_image: гиря задаёт точный вес, c означает байты
   source_refs:
   - source: 02 · Файловый варгейм · мнемоника.docx
@@ -252,7 +263,8 @@ techniques:
   purpose: Оставить строку, которая встречается один раз.
   significant_flags: &id019
   - -u
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `sort -u`, повторы схлопнутся в одну копию, и строки с повторами останутся в
+    выводе рядом с нужной.
   mnemonic_image: сортировщик собирает пары, uniq оставляет одиночку
   source_refs:
   - source: 02 · Файловый варгейм · мнемоника.docx
@@ -264,7 +276,7 @@ techniques:
   purpose: Извлечь печатаемый текст из бинарного файла и найти метку без учёта регистра.
   significant_flags: &id020
   - -i
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-i` у `grep`, метка, записанная как `cred` или `Cred`, пропадёт из результата.
   mnemonic_image: strings вынимает буквы из шума, сито ловит метку
   source_refs:
   - source: 02 · Файловый варгейм · мнемоника.docx
@@ -276,7 +288,8 @@ techniques:
   purpose: Декодировать Base64 в стандартный вывод.
   significant_flags: &id021
   - -d
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-d`, `base64` не раскодирует файл, а закодирует его ещё раз и выдаст новую строку
+    Base64.
   mnemonic_image: декодер раскрывает текстовый код
   source_refs:
   - source: 02 · Файловый варгейм · мнемоника.docx
@@ -288,7 +301,8 @@ techniques:
   purpose: Открыть встроенную справку локального инструмента.
   significant_flags: &id022
   - --help
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `man auditbox`, у учебной программы нет страницы руководства, справка встроена
+    в неё и открывается через `--help`.
   mnemonic_image: мегафон заставляет программу объяснить себя
   source_refs:
   - source: 03 · Допрос системы · мнемоника.docx
@@ -299,7 +313,8 @@ techniques:
   shell: bash
   purpose: Загрузить переменные файла в текущую оболочку.
   significant_flags: &id023 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Запустить файл как `bash profile.env`, переменные зададутся в дочерней оболочке и пропадут,
+    как только она завершится.
   mnemonic_image: профиль кладёт переменные в ваш карман
   source_refs:
   - source: 03 · Допрос системы · мнемоника.docx
@@ -310,7 +325,8 @@ techniques:
   shell: bash
   purpose: Показать значение переменной оболочки.
   significant_flags: &id024 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `echo NEXT_STEP` без `$`, на экран выведется само слово NEXT_STEP, а не значение
+    переменной.
   mnemonic_image: громкоговоритель произносит значение из кармана
   source_refs:
   - source: 03 · Допрос системы · мнемоника.docx
@@ -321,7 +337,7 @@ techniques:
   shell: bash
   purpose: Показать UID, GID и группы текущего пользователя.
   significant_flags: &id025 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `whoami`, получите только имя `student`, без UID, GID и списка групп.
   mnemonic_image: удостоверение показывает личность и группы
   source_refs:
   - source: 03 · Допрос системы · мнемоника.docx
@@ -333,7 +349,7 @@ techniques:
   purpose: Показать сведения о ядре и архитектуре.
   significant_flags: &id026
   - -a
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `uname` без `-a`, выведется только слово `Linux`, без версии ядра и архитектуры.
   mnemonic_image: паспорт ядра имеет железную печать
   source_refs:
   - source: 03 · Допрос системы · мнемоника.docx
@@ -344,7 +360,8 @@ techniques:
   shell: bash
   purpose: Прочитать название и выпуск дистрибутива.
   significant_flags: &id027 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `uname -a` вместо чтения `/etc/os-release`, увидите версию ядра, но не название
+    и выпуск дистрибутива.
   mnemonic_image: паспорт ОС называет дистрибутив
   source_refs:
   - source: 03 · Допрос системы · мнемоника.docx
@@ -355,7 +372,7 @@ techniques:
   shell: bash
   purpose: Показать имя хоста.
   significant_flags: &id028 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `uname` без ключей, выведется имя ядра `Linux`, а не имя компьютера.
   mnemonic_image: табличка на здании называет машину
   source_refs:
   - source: 03 · Допрос системы · мнемоника.docx
@@ -367,7 +384,7 @@ techniques:
   purpose: Показать строки, которые не оканчиваются на .tmp.
   significant_flags: &id029
   - -v
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Убрать `$` из шаблона, отбросятся и имена, где `.tmp` стоит в середине, например `a.tmp.bak`.
   mnemonic_image: метла в режиме просмотра оставляет не tmp
   source_refs:
   - source: 04 · Разбор файловых артефактов · мнемоника.docx
@@ -389,7 +406,7 @@ techniques:
   shell: bash
   purpose: Собрать части по маске в новый файл.
   significant_flags: &id031 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `> joined.txt`, части склеятся только на экране, а файл `joined.txt` не появится.
   mnemonic_image: клей соединяет полоски слева направо
   source_refs:
   - source: 04 · Разбор файловых артефактов · мнемоника.docx
@@ -401,7 +418,8 @@ techniques:
   purpose: Разрешить цепочку символических ссылок до конечного пути.
   significant_flags: &id032
   - -f
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-f`, `readlink` покажет только первый шаг цепочки, то есть следующую ссылку,
+    а не конечный файл.
   mnemonic_image: нить проходит по всем стрелкам
   source_refs:
   - source: 04 · Разбор файловых артефактов · мнемоника.docx
@@ -413,7 +431,8 @@ techniques:
   purpose: Прочитать файл по конечному пути символической ссылки.
   significant_flags: &id033
   - -f
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `cat readlink -f start` без `$(...)`, `cat` примет слова за свои аргументы и
+    выдаст ошибку вместо содержимого.
   mnemonic_image: нить ведёт к листу, фонарь его читает
   source_refs:
   - source: 04 · Разбор файловых артефактов · мнемоника.docx
@@ -426,7 +445,7 @@ techniques:
   significant_flags: &id034
   - '-d:'
   - -f3
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `^` в шаблоне, найдётся и строка `gatekeeper:`, и в выводе окажется лишнее поле.
   mnemonic_image: якорь выбирает строку, нож берёт третий кусок
   source_refs:
   - source: 04 · Разбор файловых артефактов · мнемоника.docx
@@ -438,7 +457,8 @@ techniques:
   purpose: Выбрать CSV-строку по второму полю и вывести третье.
   significant_flags: &id035
   - -F,
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-F,`, `awk` делит строки по пробелам, поля `$2` и `$3` окажутся не теми, и вывод
+    будет пустым.
   mnemonic_image: робот сравнивает вторую колонку и берёт третью
   source_refs:
   - source: 04 · Разбор файловых артефактов · мнемоника.docx
@@ -449,7 +469,8 @@ techniques:
   shell: bash
   purpose: Удалить все синтетические разделители ~~ из строки.
   significant_flags: &id036 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `sed '/~~/d'`, команда `d` удалит всю строку целиком, и вместо `AABB` вывод
+    будет пустым.
   mnemonic_image: растворитель стирает липкую склейку
   source_refs:
   - source: 04 · Разбор файловых артефактов · мнемоника.docx
@@ -460,7 +481,8 @@ techniques:
   shell: bash
   purpose: Показать различия двух текстовых файлов.
   significant_flags: &id037 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `cmp` вместо `diff`, `cmp` сообщит только номер первого отличающегося байта
+    и строки, без самих строк.
   mnemonic_image: два снимка выявляют несовпавшую деталь
   source_refs:
   - source: 04 · Разбор файловых артефактов · мнемоника.docx
@@ -474,7 +496,8 @@ techniques:
   - -type
   - -perm
   - -ls
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `-perm 4000` без минуса, `find` ищет права ровно `4000`, и файл `-rwsr-xr-x`
+    не найдётся.
   mnemonic_image: маска хозяина обозначена числом 4000
   source_refs:
   - source: 05 · Лестница эскалации привилегий · мнемоника.docx
@@ -488,7 +511,8 @@ techniques:
   - -type
   - -perm
   - -ls
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Перепутать биты и написать `-perm -4000`, найдутся файлы с setuid, а файлы с setgid (`2000`)
+    пропадут.
   mnemonic_image: групповая повязка обозначена числом 2000
   source_refs:
   - source: 05 · Лестница эскалации привилегий · мнемоника.docx
@@ -502,7 +526,8 @@ techniques:
   - -type
   - -perm
   - -ls
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `-perm -0200`, это запись для владельца, она есть почти у всех файлов, и отбор
+    ничего не отсеет.
   mnemonic_image: общая доска обозначена правом 0002
   source_refs:
   - source: 05 · Лестница эскалации привилегий · мнемоника.docx
@@ -516,7 +541,8 @@ techniques:
   - -type
   - -perm
   - -ls
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Оставить `-type f`, sticky-бит ищут у каталогов, а с отбором обычных файлов `./dropbox`
+    не найдётся.
   mnemonic_image: липучка на общем баке обозначена 1000
   source_refs:
   - source: 05 · Лестница эскалации привилегий · мнемоника.docx
@@ -528,7 +554,8 @@ techniques:
   purpose: Найти строку UID 0 и исключить штатный root в синтетическом passwd.
   significant_flags: &id042
   - -v
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Искать просто `0` вместо `:0:`, попадут все строки, где ноль стоит где угодно, например
+    UID 1000.
   mnemonic_image: самозванец носит UID 0, но не имя root
   source_refs:
   - source: 05 · Лестница эскалации привилегий · мнемоника.docx
@@ -541,7 +568,7 @@ techniques:
   significant_flags: &id043
   - -r
   - -n
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-n`, строки найдутся, но без номеров, и место правки придётся искать заново.
   mnemonic_image: дверь без пароля подсвечивается во всём дереве
   source_refs:
   - source: 05 · Лестница эскалации привилегий · мнемоника.docx
@@ -556,7 +583,8 @@ techniques:
   - -name
   - -perm
   - -ls
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `-perm -0400`, это чтение для владельца, оно есть почти у каждого ключа, и опасные
+    файлы не отделятся.
   mnemonic_image: ключ под ковриком читают все
   source_refs:
   - source: 05 · Лестница эскалации привилегий · мнемоника.docx
@@ -568,7 +596,8 @@ techniques:
   purpose: Открыть SSH-сеанс к следующей учебной учётке на нестандартном порту.
   significant_flags: &id045
   - -p
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать порт через двоеточие, `ssh student2@localhost:2222`, `ssh` примет `localhost:2222`
+    за имя хоста и не подключится.
   mnemonic_image: SSH-дверь имеет отдельный номер порта
   source_refs:
   - source: 06 · Цепочка SSH · мнемоника.docx
@@ -580,7 +609,7 @@ techniques:
   purpose: Показать совпавшую строку и одну строку после неё.
   significant_flags: &id046
   - -A
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `-B 1` вместо `-A 1`, `grep` покажет строку перед HEADER, а не после неё.
   mnemonic_image: стрелка После указывает на следующую полку
   source_refs:
   - source: 06 · Цепочка SSH · мнемоника.docx
@@ -591,7 +620,7 @@ techniques:
   shell: bash
   purpose: Вывести последнее поле найденной строки.
   significant_flags: &id047 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `print NF` без `$`, `awk` выведет число полей в строке, а не последнее поле.
   mnemonic_image: NF указывает на последний кусок строки
   source_refs:
   - source: 07 · Финал дела, форензика по логам · мнемоника.docx
@@ -605,7 +634,8 @@ techniques:
   - -path
   - -type
   - -executable
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `-name secret` вместо `-path '*/secret/*'`, `-name` проверяет только имя файла,
+    и файлы внутри каталога не найдутся.
   mnemonic_image: пересечение пути и флажка выполнения
   source_refs:
   - source: 07 · Финал дела, форензика по логам · мнемоника.docx
@@ -617,7 +647,8 @@ techniques:
   purpose: Декодировать Base64 в записываемый синтетический файл.
   significant_flags: &id049
   - -d
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Направить вывод в `> encoded.txt`, оболочка сначала очистит исходный файл, и раскодировать
+    будет уже нечего.
   mnemonic_image: декодер складывает результат в безопасный лоток
   source_refs:
   - source: 07 · Финал дела, форензика по логам · мнемоника.docx
@@ -628,7 +659,8 @@ techniques:
   shell: bash
   purpose: Показать имя текущего пользователя.
   significant_flags: &id050 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `who` вместо `whoami`, `who` показывает список открытых сеансов входа, а не
+    одно имя текущего пользователя.
   mnemonic_image: первый вопрос свидетелю, кто я
   source_refs:
   - source: 09 · Машина как свидетель · мнемоника.docx
@@ -639,7 +671,8 @@ techniques:
   shell: bash
   purpose: Получить запись passwd текущего пользователя.
   significant_flags: &id051 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `getent passwd whoami` без `$(...)`, будет искаться пользователь с именем `whoami`,
+    и вывод будет пустым.
   mnemonic_image: база пользователей выдаёт одну точную карточку
   source_refs:
   - source: 09 · Машина как свидетель · мнемоника.docx
@@ -650,7 +683,8 @@ techniques:
   shell: bash
   purpose: Открыть локальное руководство утилиты.
   significant_flags: &id052 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `help xxd`, `help` знает только встроенные команды bash и ответит no help topics
+    match.
   mnemonic_image: справочник заменяет подбор флага наугад
   source_refs:
   - source: 09 · Машина как свидетель · мнемоника.docx
@@ -662,7 +696,7 @@ techniques:
   purpose: Восстановить исходные байты из hex-дампа.
   significant_flags: &id053
   - -r
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-r`, `xxd` не восстановит байты, а сделает hex-дамп от самого дампа.
   mnemonic_image: обратный преобразователь собирает байты
   source_refs:
   - source: 09 · Машина как свидетель · мнемоника.docx
@@ -673,7 +707,8 @@ techniques:
   shell: bash
   purpose: Добавить каталог программ в PATH текущей сессии.
   significant_flags: &id054 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `PATH=/opt/demo/bin` без `$PATH:`, старые каталоги пропадут, и даже `ls` перестанет
+    находиться.
   mnemonic_image: маршрут поиска получает новую остановку
   source_refs:
   - source: 09 · Машина как свидетель · мнемоника.docx
@@ -685,7 +720,8 @@ techniques:
   purpose: Искать системную метку как буквальную строку.
   significant_flags: &id055
   - -F
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `-f` строчной буквой, `grep` станет читать шаблоны из файла `PRETTY_NAME`, которого
+    нет, и выдаст ошибку.
   mnemonic_image: бирка читается буквально, без шаблона
   source_refs:
   - source: 09 · Машина как свидетель · мнемоника.docx
@@ -710,7 +746,8 @@ techniques:
   significant_flags: &id057
   - -a
   - -f
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-f`, `pgrep` сверяет только имя процесса `bash`, и `magpie-demo` в аргументах
+    не найдётся.
   mnemonic_image: жилец в комнате виден вместе с багажом аргументов
   source_refs:
   - source: 10 · Живая система · мнемоника.docx
@@ -722,7 +759,8 @@ techniques:
   purpose: Следить за новыми строками растущего файла.
   significant_flags: &id058
   - -f
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-f`, `tail` покажет последние 10 строк и сразу завершится, новые строки вы не
+    увидите.
   mnemonic_image: капящий кран показывает новые строки
   source_refs:
   - source: 10 · Живая система · мнемоника.docx
@@ -734,7 +772,7 @@ techniques:
   purpose: Определить пакет, которому принадлежит файл.
   significant_flags: &id059
   - -S
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `dpkg -L` вместо `-S`, `-L` ждёт имя пакета, а не путь к файлу, и выдаст ошибку.
   mnemonic_image: штамп изготовителя называет пакет
   source_refs:
   - source: 10 · Живая система · мнемоника.docx
@@ -745,7 +783,8 @@ techniques:
   shell: bash
   purpose: Прочитать системные файлы расписания cron.
   significant_flags: &id060 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `crontab -l`, вы увидите только личное расписание пользователя, а не `/etc/crontab`
+    и `/etc/cron.d`.
   mnemonic_image: будильник хранит строку расписания
   source_refs:
   - source: 10 · Живая система · мнемоника.docx
@@ -756,7 +795,8 @@ techniques:
   shell: bash
   purpose: Показать установленную и кандидатную версии пакета.
   significant_flags: &id061 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `apt-cache show bash`, выведутся описания пакета, но не будет видно, какая версия
+    установлена, а какая кандидат.
   mnemonic_image: ценник различает Installed и Candidate
   source_refs:
   - source: 10 · Живая система · мнемоника.docx
@@ -768,7 +808,8 @@ techniques:
   purpose: Показать разрешённые правила sudo для текущего пользователя.
   significant_flags: &id062
   - -l
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Прочитать `cat /etc/sudoers` без прав root, файл закрыт для обычного пользователя, будет
+    Permission denied.
   mnemonic_image: связка ключей показывает только выданные права
   source_refs:
   - source: 11 · Эскалация привилегий до root · мнемоника.docx
@@ -791,7 +832,8 @@ techniques:
   purpose: Открыть login shell целевой учебной учётной записи.
   significant_flags: &id064
   - '-'
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `su` без `-`, права сменятся, но окружение и текущий каталог останутся от прежнего
+    пользователя.
   mnemonic_image: вход в комнату хозяина создаёт полноценную оболочку
   source_refs:
   - source: 11 · Эскалация привилегий до root · мнемоника.docx
@@ -802,7 +844,8 @@ techniques:
   shell: bash
   purpose: Выйти из текущей дочерней оболочки.
   significant_flags: &id065 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: 'Написать `logout`, в обычной дочерней оболочке bash ответит `not login shell: use exit`
+    и не завершится.'
   mnemonic_image: вернуться из комнаты к предыдущей учётке
   source_refs:
   - source: 11 · Эскалация привилегий до root · мнемоника.docx
@@ -813,7 +856,8 @@ techniques:
   shell: bash
   purpose: Показать дерево дисков и разделов.
   significant_flags: &id066 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `df` вместо `lsblk`, увидите только подключённые файловые системы, без дисков
+    и неподключённых разделов.
   mnemonic_image: шкаф и полки показывают устройство и его части
   source_refs:
   - source: 12 · Диски и память · мнемоника.docx
@@ -825,7 +869,8 @@ techniques:
   purpose: Показать дерево устройств с файловой системой и меткой.
   significant_flags: &id067
   - -f
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-f`, дерево устройств будет, но колонок с типом файловой системы, меткой и UUID
+    не будет.
   mnemonic_image: бирка на полке показывает тип и метку
   source_refs:
   - source: 12 · Диски и память · мнемоника.docx
@@ -836,7 +881,7 @@ techniques:
   shell: bash
   purpose: Показать тип и метку конкретного синтетического раздела.
   significant_flags: &id068 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `blkid vdc1` без `/dev/`, такого пути нет, и `blkid` молча завершится без вывода.
   mnemonic_image: бирка конкретной полки читается отдельно
   source_refs:
   - source: 12 · Диски и память · мнемоника.docx
@@ -848,7 +893,8 @@ techniques:
   purpose: Создать синтетическую точку монтирования вместе с родителями.
   significant_flags: &id069
   - -p
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-p`, если каталог уже есть, `mkdir` ответит File exists, а без родителя ответит
+    No such file or directory.
   mnemonic_image: для выдвинутого ящика готовится место на столе
   source_refs:
   - source: 12 · Диски и память · мнемоника.docx
@@ -859,7 +905,7 @@ techniques:
   shell: bash
   purpose: Подключить учебный раздел к синтетической точке монтирования.
   significant_flags: &id070 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `sudo`, подключать разделы может только root, и `mount` откажет в правах.
   mnemonic_image: ящик выдвигается к обычной папке
   source_refs:
   - source: 12 · Диски и память · мнемоника.docx
@@ -870,7 +916,8 @@ techniques:
   shell: bash
   purpose: Проверить, куда подключён конкретный учебный раздел.
   significant_flags: &id071 []
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `grep vdc1 mount`, `grep` будет искать в файле с именем `mount`, а не в выводе
+    команды.
   mnemonic_image: проверка показывает связь полки и папки
   source_refs:
   - source: 12 · Диски и память · мнемоника.docx
@@ -882,7 +929,7 @@ techniques:
   purpose: Показать объём оперативной памяти в читаемых единицах.
   significant_flags: &id072
   - -h
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Забыть `-h`, `free` покажет объёмы в кибибайтах длинными числами, которые трудно читать.
   mnemonic_image: рабочий стол в памяти измеряется отдельно от диска
   source_refs:
   - source: 12 · Диски и память · мнемоника.docx
@@ -894,7 +941,8 @@ techniques:
   purpose: Показать занятое и свободное место смонтированных файловых систем.
   significant_flags: &id073
   - -h
-  typical_error: Потерять значимый флаг или подставить инструмент для другой задачи.
+  typical_error: Написать `du -h` вместо `df -h`, `du` считает размер файлов в каталоге, а не свободное
+    место на дисках.
   mnemonic_image: место на подключённых полках измеряется отдельно
   source_refs:
   - source: 12 · Диски и память · мнемоника.docx
@@ -903,7 +951,8 @@ techniques:
 challenges:
 - id: linux-pwd-current-directory-recall
   technique_id: linux-pwd-current-directory
-  prompt: Показать текущий каталог. Напишите команду для синтетического учебного примера.
+  prompt: Вы открыли терминал и не знаете, в каком каталоге находитесь. Выведите полный путь к текущему
+    каталогу.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -935,24 +984,26 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать текущий каталог.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой полный путь показала команда?
+    sample_answer: Вывод показывает, что оболочка стоит в /home/student/training. Он не показывает, какие
+      файлы лежат в этом каталоге.
+    example_output: 'student@training-vm:~/training$ pwd
 
-      observed_linux_pwd_current_directory_1=путь'
+      /home/student/training'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_pwd_current_directory_1
-      label: 'Наблюдаемый факт 1: путь / каталог'
+    - id: current_path
+      label: Какой путь вернула команда?
       accepted_values:
-      - путь
-      - каталог
+      - /home/student/training
+      - /home/student/training/
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Показать текущий каталог.
+      task: Узнать полный путь к текущему каталогу.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -962,7 +1013,7 @@ challenges:
     kind: command
 - id: linux-ls-directory-listing-recall
   technique_id: linux-ls-directory-listing
-  prompt: Показать имена в текущем каталоге. Напишите команду для синтетического учебного примера.
+  prompt: Посмотрите, какие файлы и каталоги лежат в текущем каталоге. Нужны только имена.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -994,25 +1045,31 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать имена в текущем каталоге.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой файл с расширением .log есть в каталоге?
+    sample_answer: В каталоге четыре имени, среди них журнал scan.log. По одному списку имён нельзя сказать,
+      что из них каталог, а что файл, и нельзя увидеть скрытые имена.
+    example_output: 'student@training-vm:~/training$ ls
 
-      observed_linux_ls_directory_listing_1=имя'
+      briefing.txt
+
+      recon
+
+      scan.log
+
+      targets.lst'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_ls_directory_listing_1
-      label: 'Наблюдаемый факт 1: имя / файл / каталог'
+    - id: log_file
+      label: Как называется файл журнала?
       accepted_values:
-      - имя
-      - файл
-      - каталог
+      - scan.log
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Показать имена в текущем каталоге.
+      task: Вывести имена файлов и каталогов в текущем каталоге.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1022,7 +1079,7 @@ challenges:
     kind: command
 - id: linux-cd-change-directory-recall
   technique_id: linux-cd-change-directory
-  prompt: Перейти в указанный каталог. Напишите команду для синтетического учебного примера.
+  prompt: В текущем каталоге есть подкаталог recon. Перейдите в него.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1054,24 +1111,29 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: перейти в указанный каталог.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой путь показала проверка после перехода?
+    sample_answer: Сам переход ничего не печатает. Путь /home/student/training/recon после проверки и
+      новое приглашение доказывают, что каталог сменился. Содержимое recon этот вывод не показывает.
+    example_output: 'student@training-vm:~/training$ cd recon
 
-      observed_linux_cd_change_directory_1=каталог'
+      student@training-vm:~/training/recon$ pwd
+
+      /home/student/training/recon'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_cd_change_directory_1
-      label: 'Наблюдаемый факт 1: каталог / путь'
+    - id: new_path
+      label: Где теперь находится оболочка?
       accepted_values:
-      - каталог
-      - путь
+      - /home/student/training/recon
+      - /home/student/training/recon/
+      - ~/training/recon
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      directory_path: recon
+      directory: recon
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1081,7 +1143,7 @@ challenges:
     kind: command
 - id: linux-cat-read-text-file-recall
   technique_id: linux-cat-read-text-file
-  prompt: Прочитать короткий текстовый файл целиком. Напишите команду для синтетического учебного примера.
+  prompt: В текущем каталоге лежит короткий файл briefing.txt. Выведите его содержимое на экран целиком.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1113,25 +1175,29 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать короткий текстовый файл
-      целиком.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какая цель указана в строке TARGET?
+    sample_answer: Файл содержит три строки, цель в нём 10.0.5.11. Вывод показывает только текст файла
+      и ничего не говорит о том, доступен ли этот адрес.
+    example_output: 'student@training-vm:~/training$ cat briefing.txt
 
-      observed_linux_cat_read_text_file_1=текст'
+      MISSION: aurora
+
+      TARGET: 10.0.5.11
+
+      DEADLINE: 18:00'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_cat_read_text_file_1
-      label: 'Наблюдаемый факт 1: текст / содержим'
+    - id: target_address
+      label: Какой адрес записан как цель?
       accepted_values:
-      - текст
-      - содержим
+      - 10.0.5.11
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      file_path: briefing.txt
+      file: briefing.txt
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1141,7 +1207,7 @@ challenges:
     kind: command
 - id: linux-grep-text-pattern-recall
   technique_id: linux-grep-text-pattern
-  prompt: Оставить строки с заданной текстовой меткой. Напишите команду для синтетического учебного примера.
+  prompt: В файле briefing.txt несколько строк. Оставьте только строки, где встречается метка CRED.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1173,18 +1239,19 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: оставить строки с заданной текстовой
-      меткой.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какая учётная запись записана в найденной строке?
+    sample_answer: Метка CRED есть ровно в одной строке, там analyst/training-only. Поиск учитывает регистр,
+      поэтому строки с cred маленькими буквами он бы пропустил.
+    example_output: 'student@training-vm:~/training$ grep CRED briefing.txt
 
-      observed_linux_grep_text_pattern_1=строк'
+      CRED: analyst/training-only'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_grep_text_pattern_1
-      label: 'Наблюдаемый факт 1: строк / совпад'
+    - id: found_account
+      label: Что стоит после метки в найденной строке?
       accepted_values:
-      - строк
-      - совпад
+      - analyst/training-only
+      - 'CRED: analyst/training-only'
       accepted_patterns: []
   version: 2
   context:
@@ -1192,7 +1259,7 @@ challenges:
     working_directory: /home/student/training
     named_inputs:
       search_text: CRED
-      file_path: briefing.txt
+      file: briefing.txt
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1202,8 +1269,8 @@ challenges:
     kind: command
 - id: linux-chmod-add-execute-recall
   technique_id: linux-chmod-add-execute
-  prompt: Добавить владельцу, группе и остальным право выполнения по символической записи. Напишите команду
-    для синтетического учебного примера.
+  prompt: Скрипт reveal.sh в текущем каталоге пока нельзя запустить. Дайте право выполнения владельцу,
+    группе и остальным одной символической записью.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1236,27 +1303,29 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: добавить владельцу, группе и остальным
-      право выполнения по символической записи.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какая строка прав у reveal.sh после изменения?
+    sample_answer: Буква x появилась во всех трёх тройках, значит выполнять файл теперь могут все. Сама
+      смена прав ничего не печатает, это видно только в длинном списке. Работает ли скрипт, этот вывод
+      не доказывает.
+    example_output: 'student@training-vm:~/training$ chmod +x ./reveal.sh
 
-      observed_linux_chmod_add_execute_1=прав'
+      student@training-vm:~/training$ ls -l reveal.sh
+
+      -rwxr-xr-x 1 student student 44 Sep  1 10:00 reveal.sh'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_chmod_add_execute_1
-      label: 'Наблюдаемый факт 1: прав / исполн / execute'
+    - id: new_mode
+      label: Какие права показывает длинный список?
       accepted_values:
-      - прав
-      - исполн
-      - execute
+      - -rwxr-xr-x
+      - rwxr-xr-x
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: +x
-      target_path: ./reveal.sh
+      file: ./reveal.sh
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1266,8 +1335,8 @@ challenges:
     kind: command
 - id: linux-run-current-directory-file-recall
   technique_id: linux-run-current-directory-file
-  prompt: Запустить файл из текущего каталога явным относительным путём. Напишите команду для синтетического
-    учебного примера.
+  prompt: В текущем каталоге лежит исполняемый скрипт reveal.sh. Запустите его, явно указав, что он в
+    текущем каталоге.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1300,25 +1369,27 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: запустить файл из текущего каталога
-      явным относительным путём.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какую контрольную точку назвал скрипт?
+    sample_answer: Скрипт запустился и напечатал контрольную точку relay-7. Вывод не показывает, что ещё
+      делает скрипт, для этого нужно прочитать его текст.
+    example_output: 'student@training-vm:~/training$ ./reveal.sh
 
-      observed_linux_run_current_directory_file_1=вывод'
+      reveal: decoding checkpoint...
+
+      Next checkpoint: relay-7'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_run_current_directory_file_1
-      label: 'Наблюдаемый факт 1: вывод / результат'
+    - id: checkpoint
+      label: Что скрипт напечатал после слов Next checkpoint?
       accepted_values:
-      - вывод
-      - результат
+      - relay-7
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      target_path: ./reveal.sh
+      file: reveal.sh
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1328,8 +1399,8 @@ challenges:
     kind: command
 - id: linux-tool-version-option-recall
   technique_id: linux-tool-version-option
-  prompt: Попросить локальный инструмент показать версию. Напишите команду для синтетического учебного
-    примера.
+  prompt: В текущем каталоге лежит учебная программа reconctl. Попросите её показать свою версию, запустив
+    из текущего каталога.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1361,24 +1432,25 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: попросить локальный инструмент
-      показать версию.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой номер версии сообщила программа?
+    sample_answer: Программа отвечает, что это reconctl версии 2.4.1. Этот ответ ничего не говорит о её
+      командах, их покажет справка.
+    example_output: 'student@training-vm:~/training$ ./reconctl --version
 
-      observed_linux_tool_version_option_1=верси'
+      reconctl 2.4.1 (training build)'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_tool_version_option_1
-      label: 'Наблюдаемый факт 1: верси'
+    - id: version
+      label: Какую версию назвала программа?
       accepted_values:
-      - верси
+      - 2.4.1
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      target_path: ./reconctl
+      program: reconctl
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1388,7 +1460,7 @@ challenges:
     kind: command
 - id: linux-cut-equals-field-recall
   technique_id: linux-cut-equals-field
-  prompt: Взять второе поле из строки KEY=value. Напишите команду для синтетического учебного примера.
+  prompt: Выведите строку ROLE=analyst и оставьте из неё только второе поле. Поля разделены знаком равенства.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1421,26 +1493,26 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: взять второе поле из строки key=value.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Что осталось от строки после выбора поля?
+    sample_answer: Осталось только значение analyst, имя ROLE отрезано. Если бы в значении тоже был знак
+      равенства, второе поле оборвалось бы на нём.
+    example_output: 'student@training-vm:~/training$ printf ''%s\n'' ''ROLE=analyst'' | cut -d= -f2
 
-      observed_linux_cut_equals_field_1=analyst'
+      analyst'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_cut_equals_field_1
-      label: 'Наблюдаемый факт 1: analyst / втор / значен'
+    - id: field_value
+      label: Какое значение получилось?
       accepted_values:
       - analyst
-      - втор
-      - значен
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      target_path: '%s\n'
-      argument: ROLE=analyst
+      line: ROLE=analyst
+      delimiter: '='
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1450,8 +1522,7 @@ challenges:
     kind: command
 - id: linux-cut-colon-field-recall
   technique_id: linux-cut-colon-field
-  prompt: Взять второе поле из строки с разделителем двоеточие. Напишите команду для синтетического учебного
-    примера.
+  prompt: Выведите строку analyst:demo:1000 и оставьте из неё только второе поле. Поля разделены двоеточием.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1485,27 +1556,25 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: взять второе поле из строки с разделителем
-      двоеточие.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какое значение стоит во втором поле?
+    sample_answer: Во втором поле стоит demo. Первое и третье поля отброшены, их вывод не показывает.
+    example_output: 'student@training-vm:~/training$ printf ''%s\n'' ''analyst:demo:1000'' | cut -d: -f2
 
-      observed_linux_cut_colon_field_1=demo'
+      demo'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_cut_colon_field_1
-      label: 'Наблюдаемый факт 1: demo / втор / значен'
+    - id: second_field
+      label: Что вывела команда?
       accepted_values:
       - demo
-      - втор
-      - значен
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      target_path: '%s\n'
-      argument: analyst:demo:1000
+      line: analyst:demo:1000
+      delimiter: ':'
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1515,8 +1584,8 @@ challenges:
     kind: command
 - id: linux-shell-glob-extension-recall
   technique_id: linux-shell-glob-extension
-  prompt: Подставить имена файлов с заданным расширением. Напишите команду для синтетического учебного
-    примера.
+  prompt: В текущем каталоге несколько файлов, часть из них с расширением .key. Выведите содержимое всех
+    файлов с этим расширением одной командой, не перечисляя имена вручную.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1549,25 +1618,28 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: подставить имена файлов с заданным
-      расширением.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какая метка стоит в первой строке вывода?
+    sample_answer: Оболочка подставила alpha.key и beta.key по алфавиту, поэтому первой идёт строка KEY-ALPHA.
+      Файл notes.txt не попал в вывод, так как у него другое расширение. Имён файлов в выводе нет.
+    example_output: 'student@training-vm:~/training$ cat *.key
 
-      observed_linux_shell_glob_extension_1=файл'
+      KEY-ALPHA: training-only-1
+
+      KEY-BETA: training-only-2'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_shell_glob_extension_1
-      label: 'Наблюдаемый факт 1: файл / содержим'
+    - id: first_label
+      label: С какой метки начинается вывод?
       accepted_values:
-      - файл
-      - содержим
+      - KEY-ALPHA
+      - 'KEY-ALPHA: training-only-1'
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      filename_pattern: '*.key'
+      extension: .key
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1577,7 +1649,8 @@ challenges:
     kind: command
 - id: linux-grep-recursive-tree-recall
   technique_id: linux-grep-recursive-tree
-  prompt: Искать метку во всём дереве каталогов. Напишите команду для синтетического учебного примера.
+  prompt: Каталог loot содержит вложенные подкаталоги с файлами. Найдите метку CRED во всех файлах внутри
+    loot, на любой глубине.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1609,18 +1682,18 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: искать метку во всём дереве каталогов.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: В каком файле нашлась метка?
+    sample_answer: Метка нашлась только в loot/hosts/web01/config.txt, в строке с webadmin. Остальные
+      файлы дерева её не содержат. Регистр при поиске учитывается.
+    example_output: 'student@training-vm:~/training$ grep -r CRED loot/
 
-      observed_linux_grep_recursive_tree_1=путь'
+      loot/hosts/web01/config.txt:CRED: webadmin/training-only'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_grep_recursive_tree_1
-      label: 'Наблюдаемый факт 1: путь / строк / совпад'
+    - id: match_file
+      label: Какой путь стоит перед двоеточием в найденной строке?
       accepted_values:
-      - путь
-      - строк
-      - совпад
+      - loot/hosts/web01/config.txt
       accepted_patterns: []
   version: 2
   context:
@@ -1628,7 +1701,7 @@ challenges:
     working_directory: /home/student/training
     named_inputs:
       search_text: CRED
-      file_path: loot/
+      directory: loot/
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1638,8 +1711,8 @@ challenges:
     kind: command
 - id: linux-cat-leading-dash-file-recall
   technique_id: linux-cat-leading-dash-file
-  prompt: Прочитать файл, имя которого начинается с дефиса. Напишите команду для синтетического учебного
-    примера.
+  prompt: В текущем каталоге лежит файл, имя которого состоит из одного дефиса. Выведите его содержимое
+    так, чтобы дефис не приняли за ключ.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1672,25 +1745,26 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать файл, имя которого начинается
-      с дефиса.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой код записан в файле?
+    sample_answer: Файл прочитан, в нём PIN 4711-training. Путь с ./ показывает команде, что дефис это
+      имя файла, а не ключ и не стандартный ввод.
+    example_output: 'student@training-vm:~/training$ cat ./-
 
-      observed_linux_cat_leading_dash_file_1=содержим'
+      PIN: 4711-training'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_cat_leading_dash_file_1
-      label: 'Наблюдаемый факт 1: содержим / текст'
+    - id: pin
+      label: Что стоит после слова PIN?
       accepted_values:
-      - содержим
-      - текст
+      - 4711-training
+      - 'PIN: 4711-training'
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      file_path: ./-
+      file: '-'
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1700,7 +1774,7 @@ challenges:
     kind: command
 - id: linux-cat-quoted-filename-recall
   technique_id: linux-cat-quoted-filename
-  prompt: Прочитать файл, в имени которого есть пробел. Напишите команду для синтетического учебного примера.
+  prompt: В текущем каталоге лежит файл server notes.txt, в его имени есть пробел. Выведите его содержимое.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1732,25 +1806,25 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать файл, в имени которого
-      есть пробел.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой резервный хост указан в файле?
+    sample_answer: Файл прочитан целиком, резервный хост vault-02. Кавычки сохранили имя одним аргументом.
+      Без них команда искала бы два файла, server и notes.txt.
+    example_output: 'student@training-vm:~/training$ cat ''server notes.txt''
 
-      observed_linux_cat_quoted_filename_1=содержим'
+      Backup host: vault-02'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_cat_quoted_filename_1
-      label: 'Наблюдаемый факт 1: содержим / текст'
+    - id: backup_host
+      label: Какое имя хоста записано в файле?
       accepted_values:
-      - содержим
-      - текст
+      - vault-02
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      file_path: server notes.txt
+      file: server notes.txt
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1760,7 +1834,8 @@ challenges:
     kind: command
 - id: linux-ls-show-hidden-recall
   technique_id: linux-ls-show-hidden
-  prompt: Показать скрытые имена вместе с обычными. Напишите команду для синтетического учебного примера.
+  prompt: В текущем каталоге есть скрытый файл. Выведите все имена каталога, включая те, что начинаются
+    с точки.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1792,26 +1867,31 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать скрытые имена вместе с
-      обычными.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какое скрытое имя, кроме . и .., есть в каталоге?
+    sample_answer: Кроме служебных . и .. в каталоге есть скрытый файл .mission_key. Обычный список без
+      скрытых имён показал бы только briefing.txt. Содержимое файла этот вывод не показывает.
+    example_output: 'student@training-vm:~/training$ ls -a
 
-      observed_linux_ls_show_hidden_1=скрыт'
+      .
+
+      ..
+
+      .mission_key
+
+      briefing.txt'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_ls_show_hidden_1
-      label: 'Наблюдаемый факт 1: скрыт / точк / имя'
+    - id: hidden_name
+      label: Как называется скрытый файл?
       accepted_values:
-      - скрыт
-      - точк
-      - имя
+      - .mission_key
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Показать скрытые имена вместе с обычными.
+      task: Показать все имена текущего каталога, включая скрытые.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1821,8 +1901,8 @@ challenges:
     kind: command
 - id: linux-ls-long-details-recall
   technique_id: linux-ls-long-details
-  prompt: Показать права, размер и другие свойства файлов. Напишите команду для синтетического учебного
-    примера.
+  prompt: В текущем каталоге два файла. Выведите их список с подробностями, где видно права, владельца,
+    размер и дату изменения.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1854,26 +1934,34 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать права, размер и другие
-      свойства файлов.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой размер у scan.log и кто его владелец?
+    sample_answer: Файл scan.log весит 2048 байт, владелец student, читать и писать его может только владелец.
+      Строка total 8 это занятые блоки на диске, а не число файлов.
+    example_output: 'student@training-vm:~/training$ ls -l
 
-      observed_linux_ls_long_details_1=прав'
+      total 8
+
+      -rw-r--r-- 1 student student   16 Sep  1 10:00 briefing.txt
+
+      -rw------- 1 student student 2048 Sep  1 10:00 scan.log'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_ls_long_details_1
-      label: 'Наблюдаемый факт 1: прав / размер / владел'
+    - id: scan_log_size
+      label: Сколько байт занимает scan.log?
       accepted_values:
-      - прав
-      - размер
-      - владел
+      - '2048'
+      accepted_patterns: []
+    - id: owner
+      label: Какой пользователь владеет файлами?
+      accepted_values:
+      - student
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Показать права, размер и другие свойства файлов.
+      task: Показать права, владельца, размер и дату файлов текущего каталога.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1883,7 +1971,8 @@ challenges:
     kind: command
 - id: linux-find-executable-files-recall
   technique_id: linux-find-executable-files
-  prompt: Найти обычные файлы с любым битом выполнения. Напишите команду для синтетического учебного примера.
+  prompt: В текущем каталоге и его подкаталогах есть скрипты с разными правами. Найдите обычные файлы,
+    которые могут выполнять и владелец, и группа, и остальные.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1924,26 +2013,27 @@ challenges:
     - powershell
     comparison_mode: exact_or_permuted
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти обычные файлы с любым битом
-      выполнения.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой файл нашёл поиск?
+    sample_answer: Нашёлся только ./tools/probe.sh с правами 755. Файл tools/draft.sh с правами 744 не
+      попал, потому что выполнять его может только владелец. Каталоги тоже исключены, хотя у них есть
+      бит x.
+    example_output: 'student@training-vm:~/training$ find . -type f -perm -111
 
-      observed_linux_find_executable_files_1=путь'
+      ./tools/probe.sh'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_find_executable_files_1
-      label: 'Наблюдаемый факт 1: путь / файл'
+    - id: found_file
+      label: Какой путь напечатан?
       accepted_values:
-      - путь
-      - файл
+      - ./tools/probe.sh
+      - tools/probe.sh
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      search_root: .
-      search_value: f
+      directory: .
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -1953,7 +2043,8 @@ challenges:
     kind: command
 - id: linux-find-size-bytes-recall
   technique_id: linux-find-size-bytes
-  prompt: Найти обычный файл точного размера в байтах. Напишите команду для синтетического учебного примера.
+  prompt: В текущем каталоге и глубже лежат похожие отчёты разного размера. Найдите обычный файл размером
+    ровно 1272 байта.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -1994,27 +2085,27 @@ challenges:
     - powershell
     comparison_mode: exact_or_permuted
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти обычный файл точного размера
-      в байтах.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой файл имеет нужный размер?
+    sample_answer: Ровно 1272 байта только у ./data/report-2.txt. Соседние отчёты на 1271 и 1300 байт
+      не попали. О содержимом файла вывод ничего не говорит.
+    example_output: 'student@training-vm:~/training$ find . -type f -size 1272c
 
-      observed_linux_find_size_bytes_1=путь'
+      ./data/report-2.txt'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_find_size_bytes_1
-      label: 'Наблюдаемый факт 1: путь / файл'
+    - id: found_file
+      label: Какой путь напечатан?
       accepted_values:
-      - путь
-      - файл
+      - ./data/report-2.txt
+      - data/report-2.txt
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      search_root: .
-      search_value: f
-      search_value_2: 1272c
+      directory: .
+      size_bytes: '1272'
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2024,8 +2115,8 @@ challenges:
     kind: command
 - id: linux-sort-unique-line-recall
   technique_id: linux-sort-unique-line
-  prompt: Оставить строку, которая встречается один раз. Напишите команду для синтетического учебного
-    примера.
+  prompt: В файле records.txt одни строки повторяются, одна встречается только один раз. Упорядочите строки
+    и оставьте ту, у которой нет повторов.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2058,26 +2149,25 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: оставить строку, которая встречается
-      один раз.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какая строка встречается в файле только один раз?
+    sample_answer: Без повторов только token-7Q2. Сортировка нужна, потому что повторы в исходном файле
+      идут не подряд. Сколько раз повторяются остальные строки, вывод не показывает.
+    example_output: 'student@training-vm:~/training$ sort records.txt | uniq -u
 
-      observed_linux_sort_unique_line_1=строк'
+      token-7Q2'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_sort_unique_line_1
-      label: 'Наблюдаемый факт 1: строк / уник / одиноч'
+    - id: unique_line
+      label: Какую строку вывела команда?
       accepted_values:
-      - строк
-      - уник
-      - одиноч
+      - token-7Q2
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      target_path: records.txt
+      file: records.txt
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2151,7 +2241,8 @@ challenges:
     kind: command
 - id: linux-base64-decode-recall
   technique_id: linux-base64-decode
-  prompt: Декодировать Base64 в стандартный вывод. Напишите команду для синтетического учебного примера.
+  prompt: В файле encoded.txt лежит текст в кодировке Base64. Раскодируйте его и выведите результат на
+    экран.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2183,26 +2274,25 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: декодировать base64 в стандартный
-      вывод.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какое место встречи указано в раскодированном тексте?
+    sample_answer: Раскодированный текст называет место встречи dock-4. Base64 это кодировка, а не шифр,
+      ключ для неё не нужен.
+    example_output: 'student@training-vm:~/training$ base64 -d encoded.txt
 
-      observed_linux_base64_decode_1=декод'
+      Meeting point: dock-4'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_base64_decode_1
-      label: 'Наблюдаемый факт 1: декод / текст / результат'
+    - id: meeting_point
+      label: Что стоит после слов Meeting point?
       accepted_values:
-      - декод
-      - текст
-      - результат
+      - dock-4
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      target_path: encoded.txt
+      file: encoded.txt
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2212,8 +2302,8 @@ challenges:
     kind: command
 - id: linux-tool-help-recall
   technique_id: linux-tool-help
-  prompt: Открыть встроенную справку локального инструмента. Напишите команду для синтетического учебного
-    примера.
+  prompt: В текущем каталоге лежит учебная программа auditbox. Откройте её встроенную справку, запустив
+    из текущего каталога.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2247,26 +2337,26 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: открыть встроенную справку локального
-      инструмента.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_tool_help_1=справ'
+    prompt: Какая опция в справке выводит список проверок без запуска?
+    sample_answer: Справка перечисляет режимы quick и full и опцию --dry-run для списка проверок без запуска.
+      Справка описывает поведение, но не доказывает, что программа так и работает.
+    example_output: "student@training-vm:~/training$ ./auditbox --help\nUsage: ./auditbox [OPTIONS] MODE\n\
+      Modes:\n  quick      check file permissions only\n  full       check permissions, owners and hidden\
+      \ files\nOptions:\n  -h, --help     show this help and exit\n  --version      print version and\
+      \ exit\n  --dry-run      list checks without running them"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_tool_help_1
-      label: 'Наблюдаемый факт 1: справ / опци / режим'
+    - id: dry_run_option
+      label: Как называется эта опция?
       accepted_values:
-      - справ
-      - опци
-      - режим
+      - --dry-run
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      target_path: ./auditbox
+      program: auditbox
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2276,8 +2366,8 @@ challenges:
     kind: command
 - id: linux-source-environment-file-recall
   technique_id: linux-source-environment-file
-  prompt: Загрузить переменные файла в текущую оболочку. Напишите команду для синтетического учебного
-    примера.
+  prompt: В файле profile.env заданы переменные для миссии. Загрузите их в текущую оболочку, чтобы они
+    стали доступны в ней.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2310,26 +2400,27 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: загрузить переменные файла в текущую
-      оболочку.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какое значение у MISSION_ZONE после загрузки?
+    sample_answer: После загрузки переменная MISSION_ZONE равна blue-sector в этой же оболочке. Сама загрузка
+      ничего не печатает. Запуск файла как отдельной программы оставил бы переменные в дочернем процессе.
+    example_output: 'student@training-vm:~/training$ . profile.env
 
-      observed_linux_source_environment_file_1=переменн'
+      student@training-vm:~/training$ echo "$MISSION_ZONE"
+
+      blue-sector'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_source_environment_file_1
-      label: 'Наблюдаемый факт 1: переменн / окружен'
+    - id: mission_zone
+      label: Что показала проверка переменной?
       accepted_values:
-      - переменн
-      - окружен
+      - blue-sector
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      target_path: .
-      target_path_2: profile.env
+      file: profile.env
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2339,7 +2430,7 @@ challenges:
     kind: command
 - id: linux-echo-variable-recall
   technique_id: linux-echo-variable
-  prompt: Показать значение переменной оболочки. Напишите команду для синтетического учебного примера.
+  prompt: В текущей оболочке уже задана переменная NEXT_STEP. Выведите её значение.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2371,24 +2462,25 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать значение переменной оболочки.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какое значение хранит переменная?
+    sample_answer: Переменная NEXT_STEP хранит scan-ports. Пустая строка в выводе значила бы, что переменная
+      не задана или пуста.
+    example_output: 'student@training-vm:~/training$ echo "$NEXT_STEP"
 
-      observed_linux_echo_variable_1=значен'
+      scan-ports'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_echo_variable_1
-      label: 'Наблюдаемый факт 1: значен / переменн'
+    - id: variable_value
+      label: Что напечатала команда?
       accepted_values:
-      - значен
-      - переменн
+      - scan-ports
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      variable_name: NEXT_STEP
+      variable: NEXT_STEP
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2398,8 +2490,8 @@ challenges:
     kind: command
 - id: linux-id-identity-groups-recall
   technique_id: linux-id-identity-groups
-  prompt: Показать UID, GID и группы текущего пользователя. Напишите команду для синтетического учебного
-    примера.
+  prompt: Узнайте числовые номера текущего пользователя и его основной группы, а также все группы, в которые
+    он входит.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2432,32 +2524,30 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать uid, gid и группы текущего
-      пользователя.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой номер у пользователя и в какую дополнительную группу он входит?
+    sample_answer: Пользователь student имеет номер 1000 и кроме основной группы входит в analysts. Права
+      на конкретные файлы этот вывод не показывает.
+    example_output: 'student@training-vm:~/training$ id
 
-      observed_linux_id_identity_groups_1=uid
-
-      observed_linux_id_identity_groups_2=gid'
+      uid=1000(student) gid=1000(student) groups=1000(student),1500(analysts)'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_id_identity_groups_1
-      label: 'Наблюдаемый факт 1: uid'
+    - id: user_number
+      label: Какое число стоит после uid=?
       accepted_values:
-      - uid
+      - '1000'
       accepted_patterns: []
-    - id: observed_linux_id_identity_groups_2
-      label: 'Наблюдаемый факт 2: gid / групп'
+    - id: extra_group
+      label: Какая группа есть в списке, кроме основной?
       accepted_values:
-      - gid
-      - групп
+      - analysts
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Показать UID, GID и группы текущего пользователя.
+      task: Показать номер пользователя, основную группу и все группы текущего пользователя.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2467,7 +2557,8 @@ challenges:
     kind: command
 - id: linux-uname-kernel-recall
   technique_id: linux-uname-kernel
-  prompt: Показать сведения о ядре и архитектуре. Напишите команду для синтетического учебного примера.
+  prompt: 'Выведите одной строкой все сведения о системе: имя ядра, имя машины, версию ядра и архитектуру
+    процессора.'
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2499,32 +2590,33 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать сведения о ядре и архитектуре.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какое ядро и какая архитектура процессора указаны в выводе?
+    sample_answer: Вывод показывает, что система работает на ядре Linux, и называет архитектуру процессора.
+      Он не говорит, какой дистрибутив установлен и есть ли для этой версии ядра обновления.
+    example_output: 'student@training-vm:~/training$ uname -a
 
-      observed_linux_uname_kernel_1=ядр
-
-      observed_linux_uname_kernel_2=архитект'
+      Linux training-vm 6.8.0-117-generic #117-Ubuntu SMP PREEMPT_DYNAMIC Thu May  7 17:26:37 UTC 2026
+      aarch64 aarch64 aarch64 GNU/Linux'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_uname_kernel_1
-      label: 'Наблюдаемый факт 1: ядр / kernel'
+    - id: kernel_name
+      label: Какое имя ядра стоит первым словом строки?
       accepted_values:
-      - ядр
-      - kernel
+      - Linux
       accepted_patterns: []
-    - id: observed_linux_uname_kernel_2
-      label: 'Наблюдаемый факт 2: архитект / машин'
+    - id: machine_arch
+      label: Какая архитектура процессора указана в конце строки?
       accepted_values:
-      - архитект
-      - машин
+      - aarch64
+      - x86_64
+      - arm64
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Показать сведения о ядре и архитектуре.
+      task: Показать сведения о ядре и архитектуре процессора.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2534,7 +2626,7 @@ challenges:
     kind: command
 - id: linux-os-release-recall
   technique_id: linux-os-release
-  prompt: Прочитать название и выпуск дистрибутива. Напишите команду для синтетического учебного примера.
+  prompt: Прочитайте системный файл /etc/os-release, где записаны название и выпуск дистрибутива.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2566,32 +2658,56 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать название и выпуск дистрибутива.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой дистрибутив и какой номер выпуска записаны в файле?
+    sample_answer: Файл показывает, что это Ubuntu выпуска 24.04. Он не говорит, какая версия ядра запущена
+      и установлены ли последние обновления пакетов.
+    example_output: 'student@training-vm:~/training$ cat /etc/os-release
 
-      observed_linux_os_release_1=дистрибутив
+      PRETTY_NAME="Ubuntu 24.04.5 LTS"
 
-      observed_linux_os_release_2=верси'
+      NAME="Ubuntu"
+
+      VERSION_ID="24.04"
+
+      VERSION="24.04.5 LTS (Noble Numbat)"
+
+      VERSION_CODENAME=noble
+
+      ID=ubuntu
+
+      ID_LIKE=debian
+
+      HOME_URL="https://www.ubuntu.com/"
+
+      SUPPORT_URL="https://help.ubuntu.com/"
+
+      BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+
+      PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+
+      UBUNTU_CODENAME=noble
+
+      LOGO=ubuntu-logo'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_os_release_1
-      label: 'Наблюдаемый факт 1: дистрибутив / систем'
+    - id: distro_name
+      label: Какое значение у параметра NAME?
       accepted_values:
-      - дистрибутив
-      - систем
+      - Ubuntu
+      - '"Ubuntu"'
       accepted_patterns: []
-    - id: observed_linux_os_release_2
-      label: 'Наблюдаемый факт 2: верси / выпуск'
+    - id: version_id
+      label: Какое значение у параметра VERSION_ID?
       accepted_values:
-      - верси
-      - выпуск
+      - '24.04'
+      - '"24.04"'
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Прочитать название и выпуск дистрибутива.
+      file: /etc/os-release
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2601,7 +2717,7 @@ challenges:
     kind: command
 - id: linux-hostname-recall
   technique_id: linux-hostname
-  prompt: Показать имя хоста. Напишите команду для синтетического учебного примера.
+  prompt: Выведите имя этого компьютера в сети.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2633,24 +2749,25 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать имя хоста.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какое имя компьютера вернула команда?
+    sample_answer: Вывод показывает имя, под которым система себя называет. Он не доказывает, что другие
+      машины в сети находят её по этому имени.
+    example_output: 'student@training-vm:~/training$ hostname
 
-      observed_linux_hostname_1=имя'
+      training-vm'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_hostname_1
-      label: 'Наблюдаемый факт 1: имя / хост'
+    - id: host_name
+      label: Какое имя компьютера в выводе?
       accepted_values:
-      - имя
-      - хост
+      - training-vm
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Показать имя хоста.
+      task: Показать имя компьютера.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2660,8 +2777,8 @@ challenges:
     kind: command
 - id: linux-grep-invert-tmp-recall
   technique_id: linux-grep-invert-tmp
-  prompt: Показать строки, которые не оканчиваются на .tmp. Напишите команду для синтетического учебного
-    примера.
+  prompt: Покажите список файлов текущего каталога без файлов, чьё имя оканчивается на .tmp. Отбросьте
+    такие строки фильтром по окончанию строки.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2694,33 +2811,33 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать строки, которые не оканчиваются
-      на .tmp.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какие файлы остались в списке после фильтра?
+    sample_answer: Вывод показывает, что файлы .tmp отброшены и остались только brief.txt и report.log.
+      Сами файлы .tmp при этом никуда не делись, фильтр меняет только то, что показано на экране.
+    example_output: 'student@training-vm:~/training$ ls | grep -v ''.tmp$''
 
-      observed_linux_grep_invert_tmp_1=имя
+      brief.txt
 
-      observed_linux_grep_invert_tmp_2=tmp'
+      report.log'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_grep_invert_tmp_1
-      label: 'Наблюдаемый факт 1: имя / список'
+    - id: first_kept
+      label: Какое имя стоит в выводе первым?
       accepted_values:
-      - имя
-      - список
+      - brief.txt
       accepted_patterns: []
-    - id: observed_linux_grep_invert_tmp_2
-      label: 'Наблюдаемый факт 2: tmp / не tmp'
+    - id: second_kept
+      label: Какое имя стоит в выводе вторым?
       accepted_values:
-      - tmp
-      - не tmp
+      - report.log
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      directory_path: .tmp$
+      directory: /home/student/training
+      excluded_suffix: .tmp
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2730,8 +2847,8 @@ challenges:
     kind: command
 - id: linux-rm-glob-lab-only-recall
   technique_id: linux-rm-glob-lab-only
-  prompt: Удалить синтетические .tmp только внутри учебной песочницы. Напишите команду для синтетического
-    учебного примера.
+  prompt: В учебном каталоге удалите все файлы с расширением .tmp. Имена задайте маской, а не перечислением.
+    Защитите команду от имён, которые начинаются с дефиса.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2764,26 +2881,28 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: удалить синтетические .tmp только
-      внутри учебной песочницы.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой файл остался в каталоге после удаления?
+    sample_answer: Список после удаления показывает, что остался только keep.txt, а файлы .tmp пропали.
+      Он не доказывает, что удалённые данные нельзя восстановить с диска.
+    example_output: 'student@training-vm:~/training$ rm -- *.tmp
 
-      observed_linux_rm_glob_lab_only_1=удален'
+      student@training-vm:~/training$ ls
+
+      keep.txt'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_rm_glob_lab_only_1
-      label: 'Наблюдаемый факт 1: удален / нет файл'
+    - id: remaining_file
+      label: Какое имя показал список файлов после удаления?
       accepted_values:
-      - удален
-      - нет файл
+      - keep.txt
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: rm
-      filename_pattern: '*.tmp'
+      directory: /home/student/training
+      extension: .tmp
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2793,7 +2912,8 @@ challenges:
     kind: command
 - id: linux-cat-concatenate-parts-recall
   technique_id: linux-cat-concatenate-parts
-  prompt: Собрать части по маске в новый файл. Напишите команду для синтетического учебного примера.
+  prompt: В каталоге лежат части текста part_1, part_2 и part_3. Склейте все файлы, чьё имя начинается
+    с part_, в новый файл joined.txt.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2825,34 +2945,37 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: собрать части по маске в новый
-      файл.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Что оказалось в первой и последней строке склеенного файла?
+    sample_answer: Содержимое joined.txt показывает, что части склеены по порядку имён, от part_1 до part_3.
+      Оно не доказывает, что частей было ровно три. Файл, не попавший под маску, в склейку не вошёл бы.
+    example_output: 'student@training-vm:~/training$ cat part_* > joined.txt
 
-      observed_linux_cat_concatenate_parts_1=файл
+      student@training-vm:~/training$ cat joined.txt
 
-      observed_linux_cat_concatenate_parts_2=содержим'
+      MISSION: aurora
+
+      STEP: collect logs
+
+      STATUS: training-only'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_cat_concatenate_parts_1
-      label: 'Наблюдаемый факт 1: файл / joined'
+    - id: first_line
+      label: Какая строка стоит в joined.txt первой?
       accepted_values:
-      - файл
-      - joined
+      - 'MISSION: aurora'
       accepted_patterns: []
-    - id: observed_linux_cat_concatenate_parts_2
-      label: 'Наблюдаемый факт 2: содержим / част'
+    - id: last_line
+      label: Какая строка стоит в joined.txt последней?
       accepted_values:
-      - содержим
-      - част
+      - 'STATUS: training-only'
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      filename_pattern: part_*
-      additional_value: joined.txt
+      pattern: part_*
+      output_file: joined.txt
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2862,8 +2985,8 @@ challenges:
     kind: command
 - id: linux-readlink-final-target-recall
   technique_id: linux-readlink-final-target
-  prompt: Разрешить цепочку символических ссылок до конечного пути. Напишите команду для синтетического
-    учебного примера.
+  prompt: Файл start это символическая ссылка, которая указывает на другую ссылку. Выведите полный конечный
+    путь, к которому ведёт вся цепочка.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2895,25 +3018,25 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: разрешить цепочку символических
-      ссылок до конечного пути.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: К какому файлу в итоге ведёт цепочка ссылок?
+    sample_answer: Вывод показывает, что цепочка ссылок заканчивается на vault/final.txt. Сам по себе
+      вывод не доказывает, что файл по этому пути существует и доступен на чтение.
+    example_output: 'student@training-vm:~/training$ readlink -f start
 
-      observed_linux_readlink_final_target_1=путь'
+      /home/student/training/vault/final.txt'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_readlink_final_target_1
-      label: 'Наблюдаемый факт 1: путь / цель'
+    - id: final_path
+      label: Какой полный путь вернула команда?
       accepted_values:
-      - путь
-      - цель
+      - /home/student/training/vault/final.txt
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Разрешить цепочку символических ссылок до конечного пути.
+      link: start
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2923,8 +3046,8 @@ challenges:
     kind: command
 - id: linux-cat-resolved-link-recall
   technique_id: linux-cat-resolved-link
-  prompt: Прочитать файл по конечному пути символической ссылки. Напишите команду для синтетического учебного
-    примера.
+  prompt: Файл start это цепочка символических ссылок. Одной командой найдите конечный путь цепочки и
+    выведите содержимое файла по этому пути.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -2957,25 +3080,25 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать файл по конечному пути
-      символической ссылки.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Что записано в конечном файле цепочки?
+    sample_answer: Вывод показывает содержимое файла, на котором кончается цепочка ссылок. Он не показывает
+      сам путь к этому файлу и сколько ссылок было в цепочке.
+    example_output: 'student@training-vm:~/training$ cat "$(readlink -f start)"
 
-      observed_linux_cat_resolved_link_1=содержим'
+      token: training-only'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_cat_resolved_link_1
-      label: 'Наблюдаемый факт 1: содержим / текст'
+    - id: file_content
+      label: Какую строку вывела команда?
       accepted_values:
-      - содержим
-      - текст
+      - 'token: training-only'
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      file_path: (readlink -f start)
+      link: start
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2985,8 +3108,8 @@ challenges:
     kind: command
 - id: linux-grep-anchor-cut-field-recall
   technique_id: linux-grep-anchor-cut-field
-  prompt: Выбрать строку по началу и взять третье поле через двоеточие. Напишите команду для синтетического
-    учебного примера.
+  prompt: В файле accounts.txt поля разделены двоеточием. Найдите строку, которая начинается ровно с keeper:,
+    и выведите из неё только третье поле. Строка gatekeeper подходить не должна.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3020,27 +3143,29 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: выбрать строку по началу и взять
-      третье поле через двоеточие.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какое значение стоит в третьем поле строки keeper?
+    sample_answer: Вывод показывает третье поле строки keeper, то есть UID 1042. Строка gatekeeper не
+      попала, потому что поиск привязан к началу строки. Вывод не говорит, есть ли такой пользователь
+      в настоящей системе.
+    example_output: 'student@training-vm:~/training$ grep ''^keeper:'' accounts.txt | cut -d: -f3
 
-      observed_linux_grep_anchor_cut_field_1=трет'
+      1042'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_grep_anchor_cut_field_1
-      label: 'Наблюдаемый факт 1: трет / значен / поле'
+    - id: uid_value
+      label: Какое число вернула команда?
       accepted_values:
-      - трет
-      - значен
-      - поле
+      - '1042'
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      search_text: '^keeper:'
-      file_path: accounts.txt
+      file: accounts.txt
+      line_start: 'keeper:'
+      delimiter: ':'
+      field_number: '3'
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3050,8 +3175,8 @@ challenges:
     kind: command
 - id: linux-awk-field-condition-recall
   technique_id: linux-awk-field-condition
-  prompt: Выбрать CSV-строку по второму полю и вывести третье. Напишите команду для синтетического учебного
-    примера.
+  prompt: В файле inventory.csv поля разделены запятой. Для строк, у которых второе поле равно VAULT,
+    выведите только третье поле.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3085,27 +3210,36 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: выбрать csv-строку по второму полю
-      и вывести третье.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какие предметы записаны в зоне VAULT?
+    sample_answer: Вывод показывает третье поле только тех строк, где зона VAULT. Строки других зон и
+      заголовок отброшены условием. Вывод не показывает номера строк, откуда взяты значения.
+    example_output: 'student@training-vm:~/training$ awk -F, ''$2=="VAULT"{print $3}'' inventory.csv
 
-      observed_linux_awk_field_condition_1=трет'
+      drive-07
+
+      badge-12'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_awk_field_condition_1
-      label: 'Наблюдаемый факт 1: трет / поле / значен'
+    - id: first_item
+      label: Какое значение стоит в выводе первым?
       accepted_values:
-      - трет
-      - поле
-      - значен
+      - drive-07
+      accepted_patterns: []
+    - id: second_item
+      label: Какое значение стоит в выводе вторым?
+      accepted_values:
+      - badge-12
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: 2=="VAULT"{print $3}
-      target_path: inventory.csv
+      file: inventory.csv
+      delimiter: ','
+      match_column: '2'
+      value: VAULT
+      output_column: '3'
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3115,8 +3249,8 @@ challenges:
     kind: command
 - id: linux-sed-remove-marker-recall
   technique_id: linux-sed-remove-marker
-  prompt: Удалить все синтетические разделители ~~ из строки. Напишите команду для синтетического учебного
-    примера.
+  prompt: Возьмите строку AA~~BB, передайте её дальше по конвейеру и удалите из неё все вхождения разделителя
+    ~~.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3148,29 +3282,26 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: удалить все синтетические разделители
-      ~~ из строки.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какая строка получилась после удаления разделителя?
+    sample_answer: Вывод показывает строку без разделителей ~~. Он не меняет ни одного файла, замена работает
+      только над потоком текста.
+    example_output: 'student@training-vm:~/training$ printf ''%s\n'' ''AA~~BB'' | sed ''s/~~//g''
 
-      observed_linux_sed_remove_marker_1=aabb'
+      AABB'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_sed_remove_marker_1
-      label: 'Наблюдаемый факт 1: aabb / очищ / строк'
+    - id: clean_text
+      label: Какую строку вывела команда?
       accepted_values:
-      - aabb
-      - очищ
-      - строк
+      - AABB
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      target_path: '%s\n'
-      argument: AA~~BB
-      argument_2: sed
-      target_path_2: s/~~//g
+      text: AA~~BB
+      marker: ~~
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3180,7 +3311,7 @@ challenges:
     kind: command
 - id: linux-diff-files-recall
   technique_id: linux-diff-files
-  prompt: Показать различия двух текстовых файлов. Напишите команду для синтетического учебного примера.
+  prompt: Сравните построчно файлы before.txt и after.txt и покажите, чем они отличаются.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3212,27 +3343,37 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать различия двух текстовых
-      файлов.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какая строка изменилась и как она выглядит в каждом файле?
+    sample_answer: Вывод 2c2 говорит, что вторая строка заменена, port=22 стал port=2222. Остальные строки
+      совпадают. Вывод не говорит, какой из файлов новее и кто сделал изменение.
+    example_output: 'student@training-vm:~/training$ diff before.txt after.txt
 
-      observed_linux_diff_files_1=различ'
+      2c2
+
+      < port=22
+
+      ---
+
+      > port=2222'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_diff_files_1
-      label: 'Наблюдаемый факт 1: различ / строк'
+    - id: old_line
+      label: Какая строка отмечена знаком < (из первого файла)?
       accepted_values:
-      - различ
-      - строк
+      - port=22
+      accepted_patterns: []
+    - id: new_line
+      label: Какая строка отмечена знаком > (из второго файла)?
+      accepted_values:
+      - port=2222
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: diff
-      target_path: before.txt
-      target_path_2: after.txt
+      file: before.txt
+      second_file: after.txt
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3242,7 +3383,8 @@ challenges:
     kind: command
 - id: linux-find-setuid-recall
   technique_id: linux-find-setuid
-  prompt: Найти обычные файлы с установленным setuid. Напишите команду для синтетического учебного примера.
+  prompt: В учебном дереве найдите обычные файлы со специальным битом setuid и покажите о каждом подробную
+    строку со свойствами.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3284,27 +3426,23 @@ challenges:
     - powershell
     comparison_mode: exact_or_permuted
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти обычные файлы с установленным
-      setuid.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_find_setuid_1=путь
-
-      observed_linux_find_setuid_2=прав'
+    prompt: Какой файл нашёлся и по какому символу в строке прав видно setuid?
+    sample_answer: Найден только ./bin/report-tool. Буква s на месте x у владельца означает setuid, файл
+      запускается с правами владельца. Вывод не говорит, опасна ли сама программа, это проверяют отдельно.
+    example_output: "student@training-vm:~/training$ find . -type f -perm -4000 -ls\n  1194879      4\
+      \ -rwsr-xr-x   1 student  student        22 Sep  1 10:00 ./bin/report-tool"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_find_setuid_1
-      label: 'Наблюдаемый факт 1: путь / файл'
+    - id: found_path
+      label: Путь найденного файла
       accepted_values:
-      - путь
-      - файл
+      - ./bin/report-tool
+      - bin/report-tool
       accepted_patterns: []
-    - id: observed_linux_find_setuid_2
-      label: 'Наблюдаемый факт 2: прав / 4000 / setuid'
+    - id: permission_string
+      label: Строка прав этого файла
       accepted_values:
-      - прав
-      - '4000'
-      - setuid
+      - -rwsr-xr-x
       accepted_patterns: []
   version: 2
   context:
@@ -3312,7 +3450,8 @@ challenges:
     working_directory: /home/student/training
     named_inputs:
       search_root: .
-      search_value: f
+      object_type: обычные файлы
+      special_bit: setuid
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3322,7 +3461,8 @@ challenges:
     kind: command
 - id: linux-find-setgid-recall
   technique_id: linux-find-setgid
-  prompt: Найти обычные файлы с установленным setgid. Напишите команду для синтетического учебного примера.
+  prompt: В учебном дереве найдите обычные файлы со специальным битом setgid и покажите о каждом подробную
+    строку со свойствами.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3364,27 +3504,23 @@ challenges:
     - powershell
     comparison_mode: exact_or_permuted
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти обычные файлы с установленным
-      setgid.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_find_setgid_1=путь
-
-      observed_linux_find_setgid_2=прав'
+    prompt: Какой файл нашёлся и где в строке прав видно setgid?
+    sample_answer: Найден ./bin/mail-queue. Буква s стоит в тройке группы, значит программа работает с
+      правами группы файла. Соседний list-tool без бита в вывод не попал.
+    example_output: "student@training-vm:~/training$ find . -type f -perm -2000 -ls\n  1194879      4\
+      \ -rwxr-sr-x   1 student  student        20 Sep  1 10:00 ./bin/mail-queue"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_find_setgid_1
-      label: 'Наблюдаемый факт 1: путь / файл'
+    - id: found_path
+      label: Путь найденного файла
       accepted_values:
-      - путь
-      - файл
+      - ./bin/mail-queue
+      - bin/mail-queue
       accepted_patterns: []
-    - id: observed_linux_find_setgid_2
-      label: 'Наблюдаемый факт 2: прав / 2000 / setgid'
+    - id: permission_string
+      label: Строка прав этого файла
       accepted_values:
-      - прав
-      - '2000'
-      - setgid
+      - -rwxr-sr-x
       accepted_patterns: []
   version: 2
   context:
@@ -3392,7 +3528,8 @@ challenges:
     working_directory: /home/student/training
     named_inputs:
       search_root: .
-      search_value: f
+      object_type: обычные файлы
+      special_bit: setgid
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3402,8 +3539,8 @@ challenges:
     kind: command
 - id: linux-find-world-writable-recall
   technique_id: linux-find-world-writable
-  prompt: Найти обычные файлы, доступные остальным на запись. Напишите команду для синтетического учебного
-    примера.
+  prompt: В учебном дереве найдите обычные файлы, которые может изменить любой пользователь системы, и
+    покажите о каждом подробную строку.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3445,27 +3582,23 @@ challenges:
     - powershell
     comparison_mode: exact_or_permuted
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти обычные файлы, доступные
-      остальным на запись.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_find_world_writable_1=путь
-
-      observed_linux_find_world_writable_2=прав'
+    prompt: Какой файл доступен на запись всем и какая у него строка прав?
+    sample_answer: Найден ./shared/upload.log. Последняя тройка rw- даёт запись всем остальным. Файл team.txt
+      рядом доступен на запись только группе, поэтому его нет.
+    example_output: "student@training-vm:~/training$ find . -type f -perm -0002 -ls\n  1194879      4\
+      \ -rw-rw-rw-   1 student  student        10 Sep  1 10:00 ./shared/upload.log"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_find_world_writable_1
-      label: 'Наблюдаемый факт 1: путь / файл'
+    - id: found_path
+      label: Путь найденного файла
       accepted_values:
-      - путь
-      - файл
+      - ./shared/upload.log
+      - shared/upload.log
       accepted_patterns: []
-    - id: observed_linux_find_world_writable_2
-      label: 'Наблюдаемый факт 2: прав / 0002 / запис'
+    - id: permission_string
+      label: Строка прав этого файла
       accepted_values:
-      - прав
-      - '0002'
-      - запис
+      - -rw-rw-rw-
       accepted_patterns: []
   version: 2
   context:
@@ -3473,7 +3606,8 @@ challenges:
     working_directory: /home/student/training
     named_inputs:
       search_root: .
-      search_value: f
+      object_type: обычные файлы
+      who_can_write: остальные пользователи
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3483,7 +3617,8 @@ challenges:
     kind: command
 - id: linux-find-sticky-directories-recall
   technique_id: linux-find-sticky-directories
-  prompt: Найти каталоги со sticky-битом. Напишите команду для синтетического учебного примера.
+  prompt: В учебном дереве найдите каталоги со специальным битом sticky и покажите о каждом подробную
+    строку.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3525,26 +3660,23 @@ challenges:
     - powershell
     comparison_mode: exact_or_permuted
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти каталоги со sticky-битом.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_find_sticky_directories_1=путь
-
-      observed_linux_find_sticky_directories_2=прав'
+    prompt: Какой каталог нашёлся и какой символ в конце строки прав показывает sticky?
+    sample_answer: Найден ./dropbox. Буква t в конце значит, что удалить чужой файл в этом каталоге нельзя,
+      хотя писать могут все. Каталог open-share тоже открыт всем, но без t, поэтому его нет.
+    example_output: "student@training-vm:~/training$ find . -type d -perm -1000 -ls\n  1194877      4\
+      \ drwxrwxrwt   2 student  student      4096 Sep  1 10:00 ./dropbox"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_find_sticky_directories_1
-      label: 'Наблюдаемый факт 1: путь / каталог'
+    - id: found_path
+      label: Путь найденного каталога
       accepted_values:
-      - путь
-      - каталог
+      - ./dropbox
+      - dropbox
       accepted_patterns: []
-    - id: observed_linux_find_sticky_directories_2
-      label: 'Наблюдаемый факт 2: прав / 1000 / sticky'
+    - id: permission_string
+      label: Строка прав этого каталога
       accepted_values:
-      - прав
-      - '1000'
-      - sticky
+      - drwxrwxrwt
       accepted_patterns: []
   version: 2
   context:
@@ -3552,7 +3684,8 @@ challenges:
     working_directory: /home/student/training
     named_inputs:
       search_root: .
-      search_value: d
+      object_type: каталоги
+      special_bit: sticky
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3562,8 +3695,8 @@ challenges:
     kind: command
 - id: linux-grep-uid0-nonroot-recall
   technique_id: linux-grep-uid0-nonroot
-  prompt: Найти строку UID 0 и исключить штатный root в синтетическом passwd. Напишите команду для синтетического
-    учебного примера.
+  prompt: В учебной копии файла учётных записей найдите строки с идентификатором пользователя 0 и уберите
+    из результата штатную запись root.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3597,35 +3730,27 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти строку uid 0 и исключить
-      штатный root в синтетическом passwd.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какая учётная запись, кроме root, имеет UID 0?
+    sample_answer: Осталась строка backupsvc с UID 0, то есть у неё права суперпользователя. Вывод показывает
+      запись в учебном файле, но не говорит, кто и зачем её создал.
+    example_output: 'student@training-vm:~/training$ grep '':0:'' passwd.demo | grep -v ''^root:''
 
-      observed_linux_grep_uid0_nonroot_1=строк
-
-      observed_linux_grep_uid0_nonroot_2=не root'
+      backupsvc:x:0:0:Backup:/srv/backup:/bin/bash'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_grep_uid0_nonroot_1
-      label: 'Наблюдаемый факт 1: строк / учёт'
+    - id: account_name
+      label: Имя учётной записи
       accepted_values:
-      - строк
-      - учёт
-      accepted_patterns: []
-    - id: observed_linux_grep_uid0_nonroot_2
-      label: 'Наблюдаемый факт 2: не root / исключ'
-      accepted_values:
-      - не root
-      - исключ
+      - backupsvc
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      search_text: ':0:'
-      file_path: passwd.demo
-      file_path_2: '^root:'
+      file: passwd.demo
+      uid_field: ':0:'
+      excluded_account: root
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3635,8 +3760,8 @@ challenges:
     kind: command
 - id: linux-grep-recursive-line-numbers-recall
   technique_id: linux-grep-recursive-line-numbers
-  prompt: Рекурсивно найти NOPASSWD и показать номера строк. Напишите команду для синтетического учебного
-    примера.
+  prompt: Во всём учебном каталоге с настройками sudo найдите строки со словом NOPASSWD и покажите номер
+    каждой строки.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3669,34 +3794,31 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: рекурсивно найти nopasswd и показать
-      номера строк.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: В каком файле и в какой строке найдено NOPASSWD?
+    sample_answer: Строка 2 файла etc-demo/sudoers.d/deploy разрешает deploy запускать demo-report без
+      пароля. Другие файлы слово не содержат. Вывод не проверяет, действует ли правило на настоящей системе.
+    example_output: 'student@training-vm:~/training$ grep -rn NOPASSWD etc-demo/
 
-      observed_linux_grep_recursive_line_numbers_1=путь
-
-      observed_linux_grep_recursive_line_numbers_2=строк'
+      etc-demo/sudoers.d/deploy:2:deploy ALL=(root) NOPASSWD: /usr/local/bin/demo-report'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_grep_recursive_line_numbers_1
-      label: 'Наблюдаемый факт 1: путь / файл'
+    - id: found_file
+      label: Файл с найденной строкой
       accepted_values:
-      - путь
-      - файл
+      - etc-demo/sudoers.d/deploy
       accepted_patterns: []
-    - id: observed_linux_grep_recursive_line_numbers_2
-      label: 'Наблюдаемый факт 2: строк / номер'
+    - id: line_number
+      label: Номер строки
       accepted_values:
-      - строк
-      - номер
+      - '2'
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
+      directory: etc-demo/
       search_text: NOPASSWD
-      file_path: etc-demo/
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3706,8 +3828,8 @@ challenges:
     kind: command
 - id: linux-find-readable-private-key-recall
   technique_id: linux-find-readable-private-key
-  prompt: Найти синтетический id_rsa с чтением для остальных. Напишите команду для синтетического учебного
-    примера.
+  prompt: В учебном дереве найдите файлы с именем id_rsa, которые может прочитать любой пользователь,
+    и покажите о каждом подробную строку.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3752,26 +3874,23 @@ challenges:
     - powershell
     comparison_mode: exact_or_permuted
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти синтетический id_rsa с чтением
-      для остальных.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_find_readable_private_key_1=путь
-
-      observed_linux_find_readable_private_key_2=прав'
+    prompt: Какая копия ключа читается всеми и какая у неё строка прав?
+    sample_answer: Найден ./keys-a/id_rsa, последняя тройка r-- даёт чтение всем. Копия в keys-b закрыта
+      правами 600 и в вывод не попала. Здесь это учебная заглушка, а не настоящий ключ.
+    example_output: "student@training-vm:~/training$ find . -type f -name 'id_rsa' -perm -0004 -ls\n \
+      \ 1194879      4 -rw-r--r--   1 student  student        37 Sep  1 10:00 ./keys-a/id_rsa"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_find_readable_private_key_1
-      label: 'Наблюдаемый факт 1: путь / id_rsa'
+    - id: found_path
+      label: Путь найденного файла
       accepted_values:
-      - путь
-      - id_rsa
+      - ./keys-a/id_rsa
+      - keys-a/id_rsa
       accepted_patterns: []
-    - id: observed_linux_find_readable_private_key_2
-      label: 'Наблюдаемый факт 2: прав / 0004'
+    - id: permission_string
+      label: Строка прав этого файла
       accepted_values:
-      - прав
-      - '0004'
+      - -rw-r--r--
       accepted_patterns: []
   version: 2
   context:
@@ -3779,8 +3898,9 @@ challenges:
     working_directory: /home/student/training
     named_inputs:
       search_root: .
-      search_value: f
-      search_value_2: id_rsa
+      object_type: обычные файлы
+      file_name: id_rsa
+      who_can_read: остальные пользователи
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3855,8 +3975,8 @@ challenges:
     kind: command
 - id: linux-grep-context-after-recall
   technique_id: linux-grep-context-after
-  prompt: Показать совпавшую строку и одну строку после неё. Напишите команду для синтетического учебного
-    примера.
+  prompt: В файле data.txt найдите строку со словом HEADER и покажите её вместе с одной строкой, которая
+    идёт сразу после неё.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3889,35 +4009,29 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать совпавшую строку и одну
-      строку после неё.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какая строка идёт сразу после строки HEADER?
+    sample_answer: Вывод показывает найденную строку и одну следующую, record=alpha-17. Строки до совпадения
+      и остаток файла не показаны.
+    example_output: 'student@training-vm:~/training$ grep -A 1 ''HEADER'' data.txt
 
-      observed_linux_grep_context_after_1=совпад
+      HEADER
 
-      observed_linux_grep_context_after_2=следующ'
+      record=alpha-17'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_grep_context_after_1
-      label: 'Наблюдаемый факт 1: совпад / header'
+    - id: next_line
+      label: Какая строка выведена после HEADER?
       accepted_values:
-      - совпад
-      - header
-      accepted_patterns: []
-    - id: observed_linux_grep_context_after_2
-      label: 'Наблюдаемый факт 2: следующ / после'
-      accepted_values:
-      - следующ
-      - после
+      - record=alpha-17
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      search_text: '1'
-      search_text_2: HEADER
-      file_path: data.txt
+      file: data.txt
+      search_text: HEADER
+      lines_after: '1'
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3927,7 +4041,8 @@ challenges:
     kind: command
 - id: linux-awk-last-field-recall
   technique_id: linux-awk-last-field
-  prompt: Вывести последнее поле найденной строки. Напишите команду для синтетического учебного примера.
+  prompt: В журнале auth.log найдите строки с именем analyst и выведите из каждой только последнее поле,
+    разделители полей это пробелы.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -3960,28 +4075,26 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: вывести последнее поле найденной
-      строки.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Что стоит в последнем поле строки analyst?
+    sample_answer: Вывод показывает, что вход analyst был с адреса 10.10.5.23. Он не показывает время
+      события и не говорит, успешен ли был вход, эти поля отброшены.
+    example_output: 'student@training-vm:~/training$ grep analyst auth.log | awk ''{print $NF}''
 
-      observed_linux_awk_last_field_1=послед'
+      src=10.10.5.23'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_awk_last_field_1
-      label: 'Наблюдаемый факт 1: послед / поле / значен'
+    - id: last_field
+      label: Какое значение вернула команда?
       accepted_values:
-      - послед
-      - поле
-      - значен
+      - src=10.10.5.23
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
+      file: auth.log
       search_text: analyst
-      file_path: auth.log
-      file_path_2: '{print $NF}'
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -3991,8 +4104,8 @@ challenges:
     kind: command
 - id: linux-find-path-executable-recall
   technique_id: linux-find-path-executable
-  prompt: Найти исполняемые файлы только внутри пути secret. Напишите команду для синтетического учебного
-    примера.
+  prompt: В каталоге ./evidence найдите обычные файлы, которые можно запускать, но только те, в пути которых
+    есть каталог secret.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4025,34 +4138,27 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти исполняемые файлы только
-      внутри пути secret.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой исполняемый файл найден внутри secret?
+    sample_answer: Вывод показывает единственный исполняемый файл внутри secret. Исполняемый файл из public
+      и неисполняемый readme.txt не попали. Вывод не говорит, что делает найденный скрипт.
+    example_output: 'student@training-vm:~/training$ find ./evidence -path ''*/secret/*'' -type f -executable
 
-      observed_linux_find_path_executable_1=путь
-
-      observed_linux_find_path_executable_2=secret'
+      ./evidence/secret/unlock.sh'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_find_path_executable_1
-      label: 'Наблюдаемый факт 1: путь / файл'
+    - id: found_file
+      label: Какой путь вернула команда?
       accepted_values:
-      - путь
-      - файл
-      accepted_patterns: []
-    - id: observed_linux_find_path_executable_2
-      label: 'Наблюдаемый факт 2: secret'
-      accepted_values:
-      - secret
+      - ./evidence/secret/unlock.sh
+      - evidence/secret/unlock.sh
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      search_root: ./evidence
-      filename_pattern: '*/secret/*'
-      search_value: f
+      directory: ./evidence
+      path_part: secret
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4062,8 +4168,8 @@ challenges:
     kind: command
 - id: linux-base64-decode-to-file-recall
   technique_id: linux-base64-decode-to-file
-  prompt: Декодировать Base64 в записываемый синтетический файл. Напишите команду для синтетического учебного
-    примера.
+  prompt: В файле encoded.txt лежит текст в кодировке Base64. Раскодируйте его и запишите результат в
+    новый файл decoded.txt.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4096,34 +4202,28 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: декодировать base64 в записываемый
-      синтетический файл.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой текст оказался в decoded.txt после декодирования?
+    sample_answer: Содержимое decoded.txt показывает раскодированный текст. Base64 это кодировка, а не
+      шифр, поэтому ключ не нужен. Вывод не говорит, откуда взялся исходный текст.
+    example_output: 'student@training-vm:~/training$ base64 -d encoded.txt > decoded.txt
 
-      observed_linux_base64_decode_to_file_1=файл
+      student@training-vm:~/training$ cat decoded.txt
 
-      observed_linux_base64_decode_to_file_2=декод'
+      note: training-only'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_base64_decode_to_file_1
-      label: 'Наблюдаемый факт 1: файл / decoded'
+    - id: decoded_text
+      label: Какую строку показал файл decoded.txt?
       accepted_values:
-      - файл
-      - decoded
-      accepted_patterns: []
-    - id: observed_linux_base64_decode_to_file_2
-      label: 'Наблюдаемый факт 2: декод / содержим'
-      accepted_values:
-      - декод
-      - содержим
+      - 'note: training-only'
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      target_path: encoded.txt
-      target_path_2: decoded.txt
+      file: encoded.txt
+      output_file: decoded.txt
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4133,7 +4233,7 @@ challenges:
     kind: command
 - id: linux-whoami-current-user-recall
   technique_id: linux-whoami-current-user
-  prompt: Показать имя текущего пользователя. Напишите команду для синтетического учебного примера.
+  prompt: Выведите имя пользователя, от которого вы сейчас работаете в терминале.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4165,24 +4265,25 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать имя текущего пользователя.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Под каким пользователем работает терминал?
+    sample_answer: Вывод показывает текущего пользователя. Он не показывает, в каких группах он состоит
+      и есть ли у него права администратора.
+    example_output: 'student@training-vm:~/training$ whoami
 
-      observed_linux_whoami_current_user_1=имя'
+      student'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_whoami_current_user_1
-      label: 'Наблюдаемый факт 1: имя / пользоват'
+    - id: current_user
+      label: Какое имя пользователя вернула команда?
       accepted_values:
-      - имя
-      - пользоват
+      - student
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Показать имя текущего пользователя.
+      task: Показать имя текущего пользователя.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4192,7 +4293,8 @@ challenges:
     kind: command
 - id: linux-getent-current-user-recall
   technique_id: linux-getent-current-user
-  prompt: Получить запись passwd текущего пользователя. Напишите команду для синтетического учебного примера.
+  prompt: Выведите строку учётной записи текущего пользователя из системной базы passwd. Имя пользователя
+    не вписывайте руками, пусть его подставит сама команда.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4225,35 +4327,31 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: получить запись passwd текущего
-      пользователя.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой UID и какой домашний каталог у текущего пользователя по этой записи?
+    sample_answer: Запись показывает, что у student UID 1000 и домашний каталог /home/student. Пароля
+      в ней нет, буква x значит, что хеш хранится в /etc/shadow.
+    example_output: 'student@training-vm:~/training$ getent passwd "$(whoami)"
 
-      observed_linux_getent_current_user_1=строк
-
-      observed_linux_getent_current_user_2=пользоват'
+      student:x:1000:1000::/home/student:/bin/bash'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_getent_current_user_1
-      label: 'Наблюдаемый факт 1: строк / запис'
+    - id: uid
+      label: Какой UID указан в записи?
       accepted_values:
-      - строк
-      - запис
+      - '1000'
       accepted_patterns: []
-    - id: observed_linux_getent_current_user_2
-      label: 'Наблюдаемый факт 2: пользоват / uid'
+    - id: home_directory
+      label: Какой домашний каталог указан в записи?
       accepted_values:
-      - пользоват
-      - uid
+      - /home/student
+      - /home/student/
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: getent
-      argument_2: passwd
-      argument_3: (whoami)
+      database: passwd
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4386,8 +4484,8 @@ challenges:
     kind: command
 - id: linux-export-path-recall
   technique_id: linux-export-path
-  prompt: Добавить каталог программ в PATH текущей сессии. Напишите команду для синтетического учебного
-    примера.
+  prompt: Добавьте каталог /opt/demo/bin в конец списка каталогов, где оболочка ищет программы (переменная
+    PATH). Прежние каталоги должны остаться, изменение нужно только для текущей сессии.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4419,33 +4517,32 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: добавить каталог программ в path
-      текущей сессии.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Где оболочка нашла программу demo-tool после изменения?
+    sample_answer: Оболочка нашла demo-tool в /opt/demo/bin, значит каталог попал в PATH. Это действует
+      только до выхода из оболочки, в новой сессии изменения не будет.
+    example_output: 'student@training-vm:~/training$ export PATH="$PATH:/opt/demo/bin"
 
-      observed_linux_export_path_1=path
+      student@training-vm:~/training$ command -v demo-tool
 
-      observed_linux_export_path_2=каталог'
+      /opt/demo/bin/demo-tool
+
+      student@training-vm:~/training$ demo-tool
+
+      demo-tool: ready'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_export_path_1
-      label: 'Наблюдаемый факт 1: path / маршрут'
+    - id: found_path
+      label: Какой полный путь к demo-tool показала проверка?
       accepted_values:
-      - path
-      - маршрут
-      accepted_patterns: []
-    - id: observed_linux_export_path_2
-      label: 'Наблюдаемый факт 2: каталог / demo'
-      accepted_values:
-      - каталог
-      - demo
+      - /opt/demo/bin/demo-tool
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      target_path: PATH="$PATH:/opt/demo/bin
+      variable: PATH
+      directory: /opt/demo/bin
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4455,7 +4552,8 @@ challenges:
     kind: command
 - id: linux-grep-fixed-string-recall
   technique_id: linux-grep-fixed-string
-  prompt: Искать системную метку как буквальную строку. Напишите команду для синтетического учебного примера.
+  prompt: В файле /etc/os-release найдите строку с меткой PRETTY_NAME. Ищите метку как обычный текст,
+    чтобы символы в ней не считались шаблоном.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4487,26 +4585,20 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: искать системную метку как буквальную
-      строку.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какое название системы записано в найденной строке?
+    sample_answer: Строка показывает, что система называет себя Ubuntu 24.04.5 LTS. Это запись в файле,
+      а не проверка ядра, версию ядра она не показывает.
+    example_output: 'student@training-vm:~/training$ grep -F PRETTY_NAME /etc/os-release
 
-      observed_linux_grep_fixed_string_1=pretty_name
-
-      observed_linux_grep_fixed_string_2=дистрибутив'
+      PRETTY_NAME="Ubuntu 24.04.5 LTS"'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_grep_fixed_string_1
-      label: 'Наблюдаемый факт 1: pretty_name / строк'
+    - id: os_name
+      label: Какое значение стоит у PRETTY_NAME?
       accepted_values:
-      - pretty_name
-      - строк
-      accepted_patterns: []
-    - id: observed_linux_grep_fixed_string_2
-      label: 'Наблюдаемый факт 2: дистрибутив / назван'
-      accepted_values:
-      - дистрибутив
-      - назван
+      - Ubuntu 24.04.5 LTS
+      - '"Ubuntu 24.04.5 LTS"'
+      - PRETTY_NAME="Ubuntu 24.04.5 LTS"
       accepted_patterns: []
   version: 2
   context:
@@ -4514,6 +4606,7 @@ challenges:
     working_directory: /home/student/training
     named_inputs:
       search_text: PRETTY_NAME
+      file: /etc/os-release
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4587,8 +4680,8 @@ challenges:
     kind: command
 - id: linux-pgrep-full-command-recall
   technique_id: linux-pgrep-full-command
-  prompt: Найти процесс по полной строке запуска и показать аргументы. Напишите команду для синтетического
-    учебного примера.
+  prompt: Найдите процесс, в строке запуска которого есть magpie-demo, и выведите его номер вместе с полной
+    строкой запуска.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4621,34 +4714,30 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: найти процесс по полной строке
-      запуска и показать аргументы.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой номер у найденного процесса и с какими аргументами он запущен?
+    sample_answer: Процесс magpie-demo работает, и видно, что его запустили с аргументами --watch nest.log.
+      Номер процесса меняется при каждом запуске, а что процесс делает внутри, вывод не показывает.
+    example_output: 'student@training-vm:~/training$ pgrep -af magpie-demo
 
-      observed_linux_pgrep_full_command_1=pid
-
-      observed_linux_pgrep_full_command_2=аргумент'
+      37 /bin/bash /usr/local/bin/magpie-demo --watch nest.log'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_pgrep_full_command_1
-      label: 'Наблюдаемый факт 1: pid / процесс'
+    - id: pid
+      label: Какой номер процесса (PID) в первом столбце?
       accepted_values:
-      - pid
-      - процесс
+      - '37'
       accepted_patterns: []
-    - id: observed_linux_pgrep_full_command_2
-      label: 'Наблюдаемый факт 2: аргумент / команд'
+    - id: arguments
+      label: Какие аргументы стоят после имени скрипта?
       accepted_values:
-      - аргумент
-      - команд
+      - --watch nest.log
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: pgrep
-      argument_2: magpie-demo
+      search_text: magpie-demo
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4658,7 +4747,8 @@ challenges:
     kind: command
 - id: linux-tail-follow-recall
   technique_id: linux-tail-follow
-  prompt: Следить за новыми строками растущего файла. Напишите команду для синтетического учебного примера.
+  prompt: Покажите последние строки файла feed.demo.log и продолжайте выводить новые строки, пока в файл
+    пишут. Остановить просмотр можно через Ctrl+C.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4690,33 +4780,31 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: следить за новыми строками растущего
-      файла.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какая строка появилась уже после запуска команды?
+    sample_answer: Первые три строки были в файле заранее, четвёртая пришла во время слежения. Кто дописал
+      строку, вывод не показывает.
+    example_output: 'student@training-vm:~/training$ tail -f feed.demo.log
 
-      observed_linux_tail_follow_1=нов
+      10:00:01 feed started
 
-      observed_linux_tail_follow_2=поток'
+      10:00:02 item 1 received
+
+      10:00:03 item 2 received
+
+      10:00:04 item 3 received'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_tail_follow_1
-      label: 'Наблюдаемый факт 1: нов / строк'
+    - id: new_line
+      label: Какая строка пришла последней?
       accepted_values:
-      - нов
-      - строк
-      accepted_patterns: []
-    - id: observed_linux_tail_follow_2
-      label: 'Наблюдаемый факт 2: поток / растущ'
-      accepted_values:
-      - поток
-      - растущ
+      - 10:00:04 item 3 received
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      file_path: feed.demo.log
+      file: feed.demo.log
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4726,7 +4814,7 @@ challenges:
     kind: command
 - id: linux-dpkg-file-owner-recall
   technique_id: linux-dpkg-file-owner
-  prompt: Определить пакет, которому принадлежит файл. Напишите команду для синтетического учебного примера.
+  prompt: Узнайте, какой установленный пакет принёс в систему файл /usr/bin/printf.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4758,32 +4846,25 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: определить пакет, которому принадлежит
-      файл.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какому пакету принадлежит файл?
+    sample_answer: Файл /usr/bin/printf установлен пакетом coreutils. Вывод не проверяет, менялся ли файл
+      после установки.
+    example_output: 'student@training-vm:~/training$ dpkg -S /usr/bin/printf
 
-      observed_linux_dpkg_file_owner_1=пакет
-
-      observed_linux_dpkg_file_owner_2=путь'
+      coreutils: /usr/bin/printf'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_dpkg_file_owner_1
-      label: 'Наблюдаемый факт 1: пакет'
+    - id: package
+      label: Какое имя пакета стоит перед двоеточием?
       accepted_values:
-      - пакет
-      accepted_patterns: []
-    - id: observed_linux_dpkg_file_owner_2
-      label: 'Наблюдаемый факт 2: путь / файл'
-      accepted_values:
-      - путь
-      - файл
+      - coreutils
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: dpkg
+      file: /usr/bin/printf
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4793,7 +4874,7 @@ challenges:
     kind: command
 - id: linux-read-system-cron-recall
   technique_id: linux-read-system-cron
-  prompt: Прочитать системные файлы расписания cron. Напишите команду для синтетического учебного примера.
+  prompt: Выведите подряд главный системный файл расписания /etc/crontab и все файлы из каталога /etc/cron.d.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4825,33 +4906,43 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: прочитать системные файлы расписания
-      cron.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_read_system_cron_1=расписан
-
-      observed_linux_read_system_cron_2=команд'
+    prompt: Когда и от имени какого пользователя запускается учебное задание /usr/local/bin/demo-backup.sh?
+    sample_answer: Задание запускается каждый день в 02:30 от имени root. Это только расписание, выполнялось
+      ли задание на самом деле, видно в журнале, а не здесь.
+    example_output: "student@training-vm:~/training$ cat /etc/crontab /etc/cron.d/*\n# /etc/crontab: system-wide\
+      \ crontab\n# Unlike any other crontab you don't have to run the `crontab'\n# command to install\
+      \ the new version when you edit this file\n# and files in /etc/cron.d. These files also have username\
+      \ fields,\n# that none of the other crontabs do.\n\nSHELL=/bin/sh\n# You can also override PATH,\
+      \ but by default, newer versions inherit it from the environment\n#PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n\
+      \n# Example of job definition:\n# .---------------- minute (0 - 59)\n# |  .------------- hour (0\
+      \ - 23)\n# |  |  .---------- day of month (1 - 31)\n# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr\
+      \ ...\n# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat\n\
+      # |  |  |  |  |\n# *  *  *  *  * user-name command to be executed\n17 *\t* * *\troot\tcd / && run-parts\
+      \ --report /etc/cron.hourly\n25 6\t* * *\troot\ttest -x /usr/sbin/anacron || { cd / && run-parts\
+      \ --report /etc/cron.daily; }\n47 6\t* * 7\troot\ttest -x /usr/sbin/anacron || { cd / && run-parts\
+      \ --report /etc/cron.weekly; }\n52 6\t1 * *\troot\ttest -x /usr/sbin/anacron || { cd / && run-parts\
+      \ --report /etc/cron.monthly; }\n#\n# synthetic training job\n30 2 * * * root /usr/local/bin/demo-backup.sh"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_read_system_cron_1
-      label: 'Наблюдаемый факт 1: расписан / cron'
+    - id: schedule
+      label: Какие пять полей времени стоят у задания?
       accepted_values:
-      - расписан
-      - cron
+      - 30 2 * * *
+      - 02:30
+      - '2:30'
       accepted_patterns: []
-    - id: observed_linux_read_system_cron_2
-      label: 'Наблюдаемый факт 2: команд / пользоват'
+    - id: run_as_user
+      label: Какой пользователь указан в строке задания?
       accepted_values:
-      - команд
-      - пользоват
+      - root
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Прочитать системные файлы расписания cron.
+      file: /etc/crontab
+      directory: /etc/cron.d
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4861,8 +4952,7 @@ challenges:
     kind: command
 - id: linux-apt-installed-version-recall
   technique_id: linux-apt-installed-version
-  prompt: Показать установленную и кандидатную версии пакета. Напишите команду для синтетического учебного
-    примера.
+  prompt: Узнайте, какая версия пакета bash установлена и какая версия доступна для установки.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4894,35 +4984,24 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать установленную и кандидатную
-      версии пакета.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_apt_installed_version_1=installed
-
-      observed_linux_apt_installed_version_2=candidate'
+    prompt: Какая версия bash установлена сейчас?
+    sample_answer: Установлена версия 5.2.21-2ubuntu4, и кандидат совпадает с ней. Вывод опирается на
+      локальный список пакетов, новые версии в интернете он не проверяет.
+    example_output: "student@training-vm:~/training$ apt-cache policy bash\nbash:\n  Installed: 5.2.21-2ubuntu4\n\
+      \  Candidate: 5.2.21-2ubuntu4\n  Version table:\n *** 5.2.21-2ubuntu4 100\n        100 /var/lib/dpkg/status"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_apt_installed_version_1
-      label: 'Наблюдаемый факт 1: installed / установ'
+    - id: installed_version
+      label: Какая версия стоит в строке Installed?
       accepted_values:
-      - installed
-      - установ
-      accepted_patterns: []
-    - id: observed_linux_apt_installed_version_2
-      label: 'Наблюдаемый факт 2: candidate / кандидат'
-      accepted_values:
-      - candidate
-      - кандидат
+      - 5.2.21-2ubuntu4
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: apt-cache
-      argument_2: policy
-      argument_3: bash
+      package: bash
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -4932,8 +5011,7 @@ challenges:
     kind: command
 - id: linux-sudo-list-rules-recall
   technique_id: linux-sudo-list-rules
-  prompt: Показать разрешённые правила sudo для текущего пользователя. Напишите команду для синтетического
-    учебного примера.
+  prompt: Выведите, какие команды текущему пользователю разрешено запускать с правами другого пользователя.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -4966,33 +5044,35 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать разрешённые правила sudo
-      для текущего пользователя.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_sudo_list_rules_1=разреш
-
-      observed_linux_sudo_list_rules_2=nopasswd'
+    prompt: Какую программу student может запускать от root и нужен ли для неё пароль?
+    sample_answer: Пользователь student может запускать от root только /usr/local/bin/demo-report, пароль
+      не спрашивается. Другие команды через sudo ему не разрешены, а что делает сама программа, вывод
+      не показывает.
+    example_output: "student@training-vm:~/training$ sudo -l\nMatching Defaults entries for student on\
+      \ training-vm:\n    env_reset, mail_badpass, secure_path=/usr/local/sbin\\:/usr/local/bin\\:/usr/sbin\\\
+      :/usr/bin\\:/sbin\\:/bin\\:/snap/bin, use_pty\n\nUser student may run the following commands on\
+      \ training-vm:\n    (root) NOPASSWD: /usr/local/bin/demo-report"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_sudo_list_rules_1
-      label: 'Наблюдаемый факт 1: разреш / прав'
+    - id: allowed_command
+      label: Какая программа указана в разрешённых правилах?
       accepted_values:
-      - разреш
-      - прав
+      - /usr/local/bin/demo-report
       accepted_patterns: []
-    - id: observed_linux_sudo_list_rules_2
-      label: 'Наблюдаемый факт 2: nopasswd / команд'
+    - id: password_mode
+      label: Какая пометка про пароль стоит перед программой?
       accepted_values:
-      - nopasswd
-      - команд
+      - NOPASSWD
+      - 'NOPASSWD:'
+      - без пароля
+      - не нужен
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Показать разрешённые правила sudo для текущего пользователя.
+      task: Показать разрешённые правила повышения прав для текущего пользователя.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -5002,8 +5082,8 @@ challenges:
     kind: command
 - id: linux-sudo-exact-allowed-command-recall
   technique_id: linux-sudo-exact-allowed-command
-  prompt: Запустить через sudo только синтетическую явно разрешённую программу. Напишите команду для синтетического
-    учебного примера.
+  prompt: Запустите с правами root учебную программу /usr/local/bin/demo-report. Правила разрешают вам
+    запускать с повышенными правами только её.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -5036,25 +5116,27 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: запустить через sudo только синтетическую
-      явно разрешённую программу.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: От имени какого пользователя отработала программа?
+    sample_answer: Программа сама сообщила, что работает от root, значит повышение прав сработало. Это
+      не значит, что student может запускать от root что-то ещё.
+    example_output: 'student@training-vm:~/training$ sudo /usr/local/bin/demo-report
 
-      observed_linux_sudo_exact_allowed_command_1=вывод'
+      demo-report: user=root
+
+      demo-report: 3 synthetic events'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_sudo_exact_allowed_command_1
-      label: 'Наблюдаемый факт 1: вывод / результат'
+    - id: run_as_user
+      label: Какое имя пользователя программа вывела после user=?
       accepted_values:
-      - вывод
-      - результат
+      - root
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Запустить через sudo только синтетическую явно разрешённую программу.
+      program: /usr/local/bin/demo-report
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -5064,8 +5146,9 @@ challenges:
     kind: command
 - id: linux-su-login-shell-recall
   technique_id: linux-su-login-shell
-  prompt: Открыть login shell целевой учебной учётной записи. Напишите команду для синтетического учебного
-    примера.
+  prompt: Откройте полноценную оболочку входа администратора со всем его окружением и домашним каталогом.
+    Имя учётной записи не указывайте, пусть выберется учётная запись по умолчанию. Учебный пароль этой
+    записи training-only.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -5098,26 +5181,43 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: открыть login shell целевой учебной
-      учётной записи.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Кем вы стали в новой оболочке и в каком каталоге она началась?
+    sample_answer: Новая оболочка работает от root и начинается в его домашнем каталоге /root, так ведёт
+      себя оболочка входа. После exit вы вернулись к student.
+    example_output: 'student@training-vm:~/training$ su -
 
-      observed_linux_su_login_shell_1=приглашен'
+      Password:
+
+      root@training-vm:~# id -un
+
+      root
+
+      root@training-vm:~# pwd
+
+      /root
+
+      root@training-vm:~# exit
+
+      logout'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_su_login_shell_1
-      label: 'Наблюдаемый факт 1: приглашен / пользоват / shell'
+    - id: user
+      label: Какое имя вернула проверка id -un?
       accepted_values:
-      - приглашен
-      - пользоват
-      - shell
+      - root
+      accepted_patterns: []
+    - id: start_directory
+      label: Какой каталог вернула проверка pwd?
+      accepted_values:
+      - /root
+      - /root/
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: su
+      password: training-only
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -5127,7 +5227,8 @@ challenges:
     kind: command
 - id: linux-exit-shell-recall
   technique_id: linux-exit-shell
-  prompt: Выйти из текущей дочерней оболочки. Напишите команду для синтетического учебного примера.
+  prompt: Вы работаете в дочерней оболочке, открытой поверх основной. Завершите её, чтобы вернуться в
+    родительскую оболочку.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -5159,25 +5260,34 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: выйти из текущей дочерней оболочки.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Что напечатала оболочка при выходе и какое значение ROLE показала проверка после выхода?
+    sample_answer: Слово exit печатает сама завершающаяся оболочка. Переменная ROLE задана только в родительской
+      оболочке, поэтому её значение parent-shell показывает, что вы вернулись туда.
+    example_output: 'student@training-vm:~/training$ exit
 
-      observed_linux_exit_shell_1=приглашен'
+      exit
+
+      student@training-vm:~/training$ echo "$ROLE"
+
+      parent-shell'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_exit_shell_1
-      label: 'Наблюдаемый факт 1: приглашен / пользоват / оболоч'
+    - id: exit_message
+      label: Какое слово напечатала оболочка при завершении?
       accepted_values:
-      - приглашен
-      - пользоват
-      - оболоч
+      - exit
+      accepted_patterns: []
+    - id: role_value
+      label: Какое значение ROLE вывела проверка после выхода?
+      accepted_values:
+      - parent-shell
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: exit
+      task: Завершить текущую дочернюю оболочку и вернуться в родительскую.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -5187,7 +5297,7 @@ challenges:
     kind: command
 - id: linux-lsblk-devices-recall
   technique_id: linux-lsblk-devices
-  prompt: Показать дерево дисков и разделов. Напишите команду для синтетического учебного примера.
+  prompt: Выведите дерево блочных устройств системы, то есть диски, их разделы и точки подключения.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -5219,31 +5329,34 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать дерево дисков и разделов.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_lsblk_devices_1=диск
-
-      observed_linux_lsblk_devices_2=раздел'
+    prompt: Какой тип у устройства размером 16M и куда оно подключено?
+    sample_answer: Тип loop значит, что это не физический диск, а файл-образ, подключённый как диск. Строки
+      vda и vdb зависят от машины, у вас они будут другими.
+    example_output: "student@training-vm:~/training$ lsblk\nNAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS\n\
+      loop0     7:0    0   16M  0 loop /srv/evidence\nvda     253:0    0   20G  0 disk\n├─vda1  253:1\
+      \    0   19G  0 part\n├─vda15 253:15   0   99M  0 part\n└─vda16 259:0    0  923M  0 part\nvdb  \
+      \   253:16   0   40G  0 disk\n└─vdb1  253:17   0   40G  0 part /etc/hosts\n                    \
+      \             /etc/hostname\n                                 /etc/resolv.conf\nvdc     253:32 \
+      \  0   19M  1 disk"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_lsblk_devices_1
-      label: 'Наблюдаемый факт 1: диск / устройств'
+    - id: device_type
+      label: Какое значение в столбце TYPE у устройства размером 16M?
       accepted_values:
-      - диск
-      - устройств
+      - loop
       accepted_patterns: []
-    - id: observed_linux_lsblk_devices_2
-      label: 'Наблюдаемый факт 2: раздел'
+    - id: mountpoint
+      label: Какой путь в столбце MOUNTPOINTS у этого устройства?
       accepted_values:
-      - раздел
+      - /srv/evidence
+      - /srv/evidence/
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: lsblk
+      task: Показать дерево дисков и разделов.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -5253,8 +5366,7 @@ challenges:
     kind: command
 - id: linux-lsblk-filesystems-recall
   technique_id: linux-lsblk-filesystems
-  prompt: Показать дерево устройств с файловой системой и меткой. Напишите команду для синтетического
-    учебного примера.
+  prompt: Выведите дерево блочных устройств вместе с типом файловой системы, меткой и UUID каждого устройства.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -5287,33 +5399,33 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать дерево устройств с файловой
-      системой и меткой.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_lsblk_filesystems_1=fstype
-
-      observed_linux_lsblk_filesystems_2=label'
+    prompt: Какая файловая система и какая метка у устройства, подключённого в /srv/evidence?
+    sample_answer: На устройстве файловая система ext4 с меткой evidence. Пустые столбцы у других дисков
+      значат только, что система не знает их файловую систему, а не что диск пуст.
+    example_output: "student@training-vm:~/training$ lsblk -f\nNAME    FSTYPE FSVER LABEL    UUID    \
+      \                             FSAVAIL FSUSE% MOUNTPOINTS\nloop0   ext4   1.0   evidence 3f6c2a10-5b7e-4d21-9a0c-117000000001\
+      \    9.8M     0% /srv/evidence\nvda\n├─vda1\n├─vda15\n└─vda16\nvdb\n└─vdb1                     \
+      \                                            25G    31% /etc/hosts\n                           \
+      \                                                       /etc/hostname\n                        \
+      \                                                          /etc/resolv.conf\nvdc"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_lsblk_filesystems_1
-      label: 'Наблюдаемый факт 1: fstype / файлов'
+    - id: fstype
+      label: Какое значение в столбце FSTYPE у этого устройства?
       accepted_values:
-      - fstype
-      - файлов
+      - ext4
       accepted_patterns: []
-    - id: observed_linux_lsblk_filesystems_2
-      label: 'Наблюдаемый факт 2: label / метк'
+    - id: label
+      label: Какое значение в столбце LABEL у этого устройства?
       accepted_values:
-      - label
-      - метк
+      - evidence
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: lsblk
+      task: Показать дерево устройств с файловой системой и меткой.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -5323,8 +5435,7 @@ challenges:
     kind: command
 - id: linux-blkid-partition-recall
   technique_id: linux-blkid-partition
-  prompt: Показать тип и метку конкретного синтетического раздела. Напишите команду для синтетического
-    учебного примера.
+  prompt: Узнайте тип файловой системы, метку и UUID раздела /dev/vdc1.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -5357,33 +5468,30 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать тип и метку конкретного
-      синтетического раздела.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой тип файловой системы и какая метка у раздела?
+    sample_answer: Раздел /dev/vdc1 отформатирован в ext4 и имеет метку evidence. Подключён ли он куда-то,
+      вывод не показывает.
+    example_output: 'student@training-vm:~/training$ blkid /dev/vdc1
 
-      observed_linux_blkid_partition_1=type
-
-      observed_linux_blkid_partition_2=label'
+      /dev/vdc1: LABEL="evidence" UUID="3f6c2a10-5b7e-4d21-9a0c-117000000001" BLOCK_SIZE="4096" TYPE="ext4"'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_blkid_partition_1
-      label: 'Наблюдаемый факт 1: type / файлов'
+    - id: fstype
+      label: Какое значение стоит в TYPE?
       accepted_values:
-      - type
-      - файлов
+      - ext4
       accepted_patterns: []
-    - id: observed_linux_blkid_partition_2
-      label: 'Наблюдаемый факт 2: label / метк'
+    - id: label
+      label: Какое значение стоит в LABEL?
       accepted_values:
-      - label
-      - метк
+      - evidence
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: blkid
+      device: /dev/vdc1
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -5393,8 +5501,8 @@ challenges:
     kind: command
 - id: linux-mkdir-parents-recall
   technique_id: linux-mkdir-parents
-  prompt: Создать синтетическую точку монтирования вместе с родителями. Напишите команду для синтетического
-    учебного примера.
+  prompt: Создайте каталог /tmp/demo-mount для будущей точки подключения. Команда должна сама создать
+    недостающие родительские каталоги и не выдавать ошибку, если каталог уже есть.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -5427,25 +5535,34 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: создать синтетическую точку монтирования
-      вместе с родителями.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Что за объект получился по этому пути и кто его владелец?
+    sample_answer: По пути /tmp/demo-mount теперь каталог, владелец student. Сама команда ничего не печатает,
+      поэтому результат виден только по проверке.
+    example_output: 'student@training-vm:~/training$ mkdir -p /tmp/demo-mount
 
-      observed_linux_mkdir_parents_1=каталог'
+      student@training-vm:~/training$ stat -c ''%F %U %n'' /tmp/demo-mount
+
+      directory student /tmp/demo-mount'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_mkdir_parents_1
-      label: 'Наблюдаемый факт 1: каталог / папк'
+    - id: object_type
+      label: Какой тип объекта показала проверка?
       accepted_values:
+      - directory
       - каталог
-      - папк
+      - папка
+      accepted_patterns: []
+    - id: owner
+      label: Кто владелец объекта?
+      accepted_values:
+      - student
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Создать синтетическую точку монтирования вместе с родителями.
+      directory: /tmp/demo-mount
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -5455,8 +5572,8 @@ challenges:
     kind: command
 - id: linux-mount-partition-recall
   technique_id: linux-mount-partition
-  prompt: Подключить учебный раздел к синтетической точке монтирования. Напишите команду для синтетического
-    учебного примера.
+  prompt: Подключите раздел /dev/vdc1 к каталогу /mnt/case. Для этого нужны права root, правила разрешают
+    вам поднять права ровно для этой команды.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -5489,33 +5606,36 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: подключить учебный раздел к синтетической
-      точке монтирования.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Какой номер дела записан в файле case-notes.txt на подключённом разделе?
+    sample_answer: Файлы раздела стали видны в /mnt/case, значит подключение сработало. Параметры подключения
+      этот вывод не показывает, их проверяют отдельно.
+    example_output: 'student@training-vm:~/training$ sudo mount /dev/vdc1 /mnt/case
 
-      observed_linux_mount_partition_1=раздел
+      student@training-vm:~/training$ ls /mnt/case
 
-      observed_linux_mount_partition_2=точк'
+      case-notes.txt
+
+      lost+found
+
+      student@training-vm:~/training$ cat /mnt/case/case-notes.txt
+
+      case: 2026-117
+
+      analyst: training-only'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_mount_partition_1
-      label: 'Наблюдаемый факт 1: раздел / vdc1'
+    - id: case_number
+      label: Какой номер стоит после case в файле case-notes.txt?
       accepted_values:
-      - раздел
-      - vdc1
-      accepted_patterns: []
-    - id: observed_linux_mount_partition_2
-      label: 'Наблюдаемый факт 2: точк / mnt'
-      accepted_values:
-      - точк
-      - mnt
+      - 2026-117
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Подключить учебный раздел к синтетической точке монтирования.
+      device: /dev/vdc1
+      mount_point: /mnt/case
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -5525,8 +5645,8 @@ challenges:
     kind: command
 - id: linux-mount-filter-recall
   technique_id: linux-mount-filter
-  prompt: Проверить, куда подключён конкретный учебный раздел. Напишите команду для синтетического учебного
-    примера.
+  prompt: Выведите список всех подключённых файловых систем и оставьте в нём только строки про раздел
+    vdc1.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -5559,33 +5679,32 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: проверить, куда подключён конкретный
-      учебный раздел.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Куда подключён раздел и в каком режиме доступа?
+    sample_answer: Раздел /dev/vdc1 подключён в /mnt/case с файловой системой ext4, rw значит запись разрешена.
+      Сколько места на нём свободно, этот вывод не показывает.
+    example_output: 'student@training-vm:~/training$ mount | grep vdc1
 
-      observed_linux_mount_filter_1=vdc1
-
-      observed_linux_mount_filter_2=/mnt'
+      /dev/vdc1 on /mnt/case type ext4 (rw,relatime)'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_mount_filter_1
-      label: 'Наблюдаемый факт 1: vdc1 / раздел'
+    - id: mount_point
+      label: Какой путь стоит после слова on?
       accepted_values:
-      - vdc1
-      - раздел
+      - /mnt/case
+      - /mnt/case/
       accepted_patterns: []
-    - id: observed_linux_mount_filter_2
-      label: 'Наблюдаемый факт 2: /mnt / точк'
+    - id: options
+      label: Какие параметры указаны в скобках?
       accepted_values:
-      - /mnt
-      - точк
+      - rw,relatime
+      - (rw,relatime)
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: vdc1
+      device_name: vdc1
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -5595,8 +5714,8 @@ challenges:
     kind: command
 - id: linux-free-human-memory-recall
   technique_id: linux-free-human-memory
-  prompt: Показать объём оперативной памяти в читаемых единицах. Напишите команду для синтетического учебного
-    примера.
+  prompt: Покажите, сколько оперативной памяти всего, сколько занято и сколько доступно, в единицах, удобных
+    для чтения.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -5629,33 +5748,30 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать объём оперативной памяти
-      в читаемых единицах.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_linux_free_human_memory_1=total
-
-      observed_linux_free_human_memory_2=памят'
+    prompt: Сколько оперативной памяти всего и сколько доступно для новых программ?
+    sample_answer: Столбец available показывает, сколько памяти можно отдать новым программам с учётом
+      кеша. Числа меняются от машины к машине и от минуты к минуте.
+    example_output: "student@training-vm:~/training$ free -h\n               total        used       \
+      \ free      shared  buff/cache   available\nMem:           1.9Gi       1.3Gi        48Mi       \
+      \ 63Mi       781Mi       678Mi\nSwap:             0B          0B          0B"
+    output_source: reference_linux
     fields:
-    - id: observed_linux_free_human_memory_1
-      label: 'Наблюдаемый факт 1: total / всего'
+    - id: total_memory
+      label: Какое значение в столбце total строки Mem?
       accepted_values:
-      - total
-      - всего
+      - 1.9Gi
       accepted_patterns: []
-    - id: observed_linux_free_human_memory_2
-      label: 'Наблюдаемый факт 2: памят / mem'
+    - id: available_memory
+      label: Какое значение в столбце available строки Mem?
       accepted_values:
-      - памят
-      - mem
+      - 678Mi
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      argument: free
+      task: Показать объём оперативной памяти в читаемых единицах.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -5665,8 +5781,8 @@ challenges:
     kind: command
 - id: linux-df-human-filesystems-recall
   technique_id: linux-df-human-filesystems
-  prompt: Показать занятое и свободное место смонтированных файловых систем. Напишите команду для синтетического
-    учебного примера.
+  prompt: Покажите размер, занятое и свободное место у всех подключённых файловых систем в единицах, удобных
+    для чтения.
   estimated_minutes: 5
   hints:
   - level: 1
@@ -5699,41 +5815,44 @@ challenges:
     - powershell
     comparison_mode: exact
   observation:
-    prompt: 'Что в результате нужно увидеть, чтобы подтвердить задачу: показать занятое и свободное место
-      смонтированных файловых систем.?'
-    sample_answer: Результат содержит ожидаемый признак и не доказывает ничего за пределами этого вывода.
-    example_output: 'SYNTHETIC RESULT
+    prompt: Сколько места свободно на файловой системе, подключённой в корень /, и сколько процентов занято?
+    sample_answer: Строка с точкой / показывает свободное место корневой файловой системы. Числа зависят
+      от машины, и df не показывает, какие файлы занимают место.
+    example_output: 'student@training-vm:~/training$ df -h
 
-      observed_linux_df_human_filesystems_1=size
+      Filesystem      Size  Used Avail Use% Mounted on
 
-      observed_linux_df_human_filesystems_2=used
+      overlay          40G   13G   26G  33% /
 
-      observed_linux_df_human_filesystems_3=avail'
+      tmpfs            64M     0   64M   0% /dev
+
+      shm              64M     0   64M   0% /dev/shm
+
+      /dev/vdb1        40G   13G   26G  33% /etc/hosts
+
+      tmpfs           980M     0  980M   0% /proc/acpi
+
+      tmpfs           980M     0  980M   0% /proc/scsi
+
+      tmpfs           980M     0  980M   0% /sys/firmware'
+    output_source: reference_linux
     fields:
-    - id: observed_linux_df_human_filesystems_1
-      label: 'Наблюдаемый факт 1: size / размер'
+    - id: root_available
+      label: Какое значение в столбце Avail у строки с точкой /?
       accepted_values:
-      - size
-      - размер
+      - 26G
       accepted_patterns: []
-    - id: observed_linux_df_human_filesystems_2
-      label: 'Наблюдаемый факт 2: used / занят'
+    - id: root_use_percent
+      label: Какое значение в столбце Use% у строки с точкой /?
       accepted_values:
-      - used
-      - занят
-      accepted_patterns: []
-    - id: observed_linux_df_human_filesystems_3
-      label: 'Наблюдаемый факт 3: avail / свобод'
-      accepted_values:
-      - avail
-      - свобод
+      - 33%
       accepted_patterns: []
   version: 2
   context:
     shell: bash
     working_directory: /home/student/training
     named_inputs:
-      task_goal: Показать занятое и свободное место смонтированных файловых систем.
+      task: Показать занятое и свободное место смонтированных файловых систем.
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.

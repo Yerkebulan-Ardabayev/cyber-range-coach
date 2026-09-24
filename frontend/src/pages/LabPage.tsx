@@ -6,6 +6,7 @@ import { api, jsonBody } from '../api'
 import { ArrowIcon, CheckIcon, CloseIcon, EvidenceIcon, TerminalIcon } from '../icons'
 import type { GradeResult, LabRun, Principal, RunLesson, TutorFeedback } from '../types'
 import { ErrorNotice, Eyebrow, LoadingBlock, StatusPill } from '../components/Common'
+import { InlineCode } from '../components/SimpleTheoryCard'
 import { TerminalPanel } from '../components/TerminalPanel'
 
 const runStatusLabels: Record<string, string> = { active: 'активна', completed: 'завершена', stopped: 'остановлена', abandoned: 'сброшена' }
@@ -74,7 +75,7 @@ export function LabPage({ principal }: { principal: Principal }) {
       </header>
       <div className="lab-grid">
         <aside className="lab-guide">
-          <section><Eyebrow>01 / ОПОРА</Eyebrow><h2>{lesson.data.term.name}</h2><p>{lesson.data.term.definition}</p></section>
+          <section><Eyebrow>01 / ОПОРА</Eyebrow><h2>{lesson.data.term.name}</h2>{lesson.data.simple_theory ? <p><InlineCode text={lesson.data.simple_theory.analogy} /></p> : null}<p>{lesson.data.term.definition}</p></section>
           <section><Eyebrow>02 / ВАШ ПРОГНОЗ</Eyebrow><blockquote>{run.data.prediction}</blockquote></section>
           <section><Eyebrow>03 / КОМАНДА</Eyebrow><div className="command-slip"><code>{lesson.data.rendered_command}</code><button onClick={() => { void navigator.clipboard.writeText(lesson.data.rendered_command); setCopied(true); window.setTimeout(() => setCopied(false), 1200) }}>{copied ? 'скопировано' : 'копировать'}</button></div><ol>{lesson.data.command_explanation.map((line) => <li key={line}>{line}</li>)}</ol></section>
           <Link className="quiet-link" to={`/lesson/${lesson.data.id}`}>Вернуться к примеру</Link>

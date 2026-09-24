@@ -2,15 +2,18 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Path, Request
 
+from ..errors import AppError
 from ..schemas import MissionCompleteRequest, MissionDraftRequest
 from ..security import Principal, require_role
 from ..services.missions import (
     MissionCompletionResult,
     MissionPlan,
     complete_mission_run,
+    mission_seed_archive,
     plan_missions,
     save_mission_draft,
 )
+from ..services.ssh import seed_student_missions
 
 router = APIRouter(prefix="/api/v2", tags=["missions"])
 
@@ -68,3 +71,20 @@ def mission_complete(
             explanation=payload.explanation,
             structured_facts=payload.structured_facts,
         )
+
+
+@router.post("/missions/{mission_id}/variants/{variant_id}/seed")
+async def mission_seed(
+    request: Request,
+    mission_id: str = Path(pattern=r"^[a-z0-9][a-z0-9-]+$"),
+    variant_id: str = Path(pattern=r"^[a-z0-9][a-z0-9-]+$"),
+    _principal: Principal = Depends(require_role("operator")),
+) -> dict[str, object]:
+    mission = request.app.state.mission_catalog.missions.get(mission_id)
+    variant = next((item for item in mission.variants if item.id == variant_id), None) if mission else None
+    if mission is None or variant is None:
+        raise AppError(404, "mission_not_found", "Миссия или вариант не найдены.")
+    archive = mission_seed_archive(mission, variant)
+    await seed_student_missions(request.app.state.range_runner, variant.id, archive)
+    files = sum(1 for entry in variant.prepared_data if entry.kind != "directory")
+    return {"directory": f"~/missions/{variant.id}", "files": files}

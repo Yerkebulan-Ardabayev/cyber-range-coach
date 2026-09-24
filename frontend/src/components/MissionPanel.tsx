@@ -79,6 +79,12 @@ export function MissionPanel({ principal }: { principal: Principal }) {
     canSave: dirty && principal.role !== 'viewer' && !result,
   } : null
 
+  const seed = useMutation({
+    mutationFn: () => api<{ directory: string; files: number }>(
+      `/api/v2/missions/${item?.mission_id}/variants/${item?.variant_id}/seed`,
+      { method: 'POST' },
+    ),
+  })
   const saveDraft = useMutation({
     mutationFn: (value: { artifact: string; explanation: string; structuredFacts: Record<string, string> }) => api<{ saved: boolean }>(
       `/api/v2/missions/attempts/${attemptKey}/draft`,
@@ -202,14 +208,28 @@ export function MissionPanel({ principal }: { principal: Principal }) {
           <div className="mission-panel__environment"><strong>Разрешённая среда:</strong> {item.allowed_environment}</div>
           <h4 id="mission-source-title">{sourceTitle}</h4>
           <p className="field-help">{item.prepared_data_description}</p>
-          <div className="mission-snapshot" aria-labelledby="mission-source-title">
-            {item.prepared_data.map((entry) => (
-              <article key={entry.path}>
-                <code>{entry.path}</code><span>{entry.kind}</span>
-                {entry.content ? <pre>{readableSnapshot(entry.content)}</pre> : null}
-              </article>
-            ))}
-          </div>
+          {item.delivery === 'terminal' ? (
+            <div className="mission-seed" aria-labelledby="mission-source-title">
+              <p>Папка миссии в вашем Linux: <code>{item.mission_directory}</code></p>
+              <p className="field-help">Откройте терминал Ubuntu (Пуск, затем Ubuntu), перейдите в эту папку и ищите ответ командами. На экране файлов нет.</p>
+              {principal.role !== 'viewer' ? (
+                <button className="button" onClick={() => seed.mutate()} disabled={seed.isPending}>
+                  {seed.isPending ? 'Раскладываем файлы…' : seed.data?.directory === item.mission_directory ? 'Разложить заново' : 'Подготовить файлы'}
+                </button>
+              ) : null}
+              {seed.data && seed.data.directory === item.mission_directory ? <p role="status">Готово: {seed.data.files} файлов в <code>{seed.data.directory}</code>.</p> : null}
+              {seed.error ? <ErrorNotice error={seed.error} /> : null}
+            </div>
+          ) : (
+            <div className="mission-snapshot" aria-labelledby="mission-source-title">
+              {item.prepared_data.map((entry) => (
+                <article key={entry.path}>
+                  <code>{entry.path}</code><span>{entry.kind}</span>
+                  {entry.content ? <pre>{readableSnapshot(entry.content)}</pre> : null}
+                </article>
+              ))}
+            </div>
+          )}
           <h4>Что сделать</h4>
           <ol className="mission-actions">{item.required_actions.map((action) => <li key={action}>{action}</li>)}</ol>
           <label>

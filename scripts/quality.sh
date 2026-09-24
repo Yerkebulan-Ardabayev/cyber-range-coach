@@ -4,11 +4,12 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
-uv run ruff check backend scripts/secret_scan.py
+uv run ruff check backend scripts/secret_scan.py tools/capture_linux_outputs.py tools/validate_simple_theory.py tools/validate_command_techniques.py
 uv run mypy backend/src
 uv run pytest
 uv run python tools/validate_command_techniques.py
 uv run python tools/validate_missions.py
+uv run python tools/validate_simple_theory.py
 uv run python scripts/secret_scan.py
 /bin/bash -n \
   installer/linux/bootstrap-linux.sh \

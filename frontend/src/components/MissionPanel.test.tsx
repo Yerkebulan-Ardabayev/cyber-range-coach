@@ -74,4 +74,33 @@ describe('MissionPanel', () => {
     })
     expect(screen.getByText('Разбор открыт после ответа.')).toBeInTheDocument()
   })
+
+  it('keeps terminal mission files off screen and asks the server to seed them', async () => {
+    const terminalPlan = { items: [{ ...missionPlan.items[0], prepared_data: [], delivery: 'terminal', mission_directory: '~/missions/magpie-aurora' }] }
+    const paths: string[] = []
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => {
+      const path = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+      paths.push(path)
+      if (path.endsWith('/missions/plan')) {
+        return Promise.resolve(new Response(JSON.stringify(terminalPlan), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      }
+      if (path.endsWith('/seed')) {
+        return Promise.resolve(new Response(JSON.stringify({ directory: '~/missions/magpie-aurora', files: 4 }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      }
+      return Promise.resolve(new Response(JSON.stringify({ run_id: 1, saved: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+    })
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MissionPanel principal={{ role: 'owner', device_id: null, local_owner: true }} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByRole('heading', { name: 'Сорока: пропавшая улика' })
+    expect(screen.queryByText('casefiles/trace.txt')).not.toBeInTheDocument()
+    expect(screen.queryByText(/ORBIT-41/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Подготовить файлы' }))
+    await screen.findByRole('status')
+    expect(paths.some((path) => path.endsWith('/missions/magpie-missing-clue/variants/magpie-aurora/seed'))).toBe(true)
+  })
 })

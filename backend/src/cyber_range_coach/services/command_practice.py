@@ -92,11 +92,25 @@ class PublicObservationField(BaseModel):
     required: bool = True
 
 
+OutputSource = Literal["reference_linux", "windows_stand", "pending"]
+PENDING_OUTPUT_TEXT = "Пример вывода появится после снимка со стенда."
+
+
 class ObservationContract(BaseModel):
     prompt: str = Field(min_length=1)
     example_output: str = Field(min_length=1)
-    fields: list[ObservationField] = Field(min_length=1)
+    output_source: OutputSource = "reference_linux"
+    fields: list[ObservationField] = Field(default_factory=list)
     sample_answer: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def real_output_has_facts(self) -> ObservationContract:
+        if self.output_source == "pending":
+            if self.fields or self.example_output != PENDING_OUTPUT_TEXT:
+                raise ValueError("pending output has no facts and uses the standard notice")
+        elif not self.fields:
+            raise ValueError("real output needs at least one structured fact")
+        return self
 
 
 class PracticeChallenge(BaseModel):
@@ -216,6 +230,14 @@ class CommandPracticePlan(BaseModel):
     session_limit: int
 
 
+class RecallCorrection(BaseModel):
+    """Shown only after a verified wrong answer closed the assessment window."""
+
+    answer: str
+    purpose: str
+    typical_error: str
+
+
 class CompletionResult(BaseModel):
     attempt_id: int
     technique_id: str
@@ -233,6 +255,7 @@ class CompletionResult(BaseModel):
     completed: bool
     observation_example: str | None = None
     observation_fields: list[PublicObservationField] = Field(default_factory=list)
+    correction: RecallCorrection | None = None
 
 
 class ObservationCompletionResult(BaseModel):
@@ -864,6 +887,20 @@ def _completion_from_attempt(
     )
 
 
+def _with_correction(
+    result: CompletionResult, catalog: CommandCatalog, technique_id: str
+) -> CompletionResult:
+    if result.correct or result.verification_status != "verified" or not result.completed:
+        return result
+    technique = catalog.techniques[technique_id]
+    result.correction = RecallCorrection(
+        answer=catalog.challenge(technique_id).recall.accepted_answers[0],
+        purpose=technique.purpose,
+        typical_error=technique.typical_error,
+    )
+    return result
+
+
 def complete_command_attempt(
     session: Session,
     catalog: CommandCatalog,
@@ -893,9 +930,11 @@ def complete_command_attempt(
                 PublicObservationField(id=field.id, label=field.label)
                 for field in challenge.observation.fields
             ]
-        return result
+        return _with_correction(result, catalog, technique_id)
     if attempt.completed_at is not None:
-        return _completion_from_attempt(attempt, state, duplicate=True)
+        return _with_correction(
+            _completion_from_attempt(attempt, state, duplicate=True), catalog, technique_id
+        )
     challenge = catalog.challenge(technique_id)
     grade = grade_recall(
         answer,
@@ -977,13 +1016,14 @@ def complete_command_attempt(
     if grade.correct and window is not None:
         window.closed_at = now
         window.result = grade.reason.value
-    if not grade.correct:
+    output_pending = challenge.observation.output_source == "pending"
+    if not grade.correct or output_pending:
         attempt.completed_at = now
     attempt.next_due_at = state.next_due_at
     attempt.interval_days = interval_days
     session.commit()
     session.refresh(attempt)
-    return CompletionResult(
+    result = CompletionResult(
         attempt_id=attempt.id,
         technique_id=technique_id,
         reason=grade.reason,
@@ -996,17 +1036,20 @@ def complete_command_attempt(
         verification_status="verified",
         detail=grade.detail,
         attempt_type="assessment" if attempt.attempt_type == "assessment" else "rehearsal",
-        completed=not grade.correct,
-        observation_example=challenge.observation.example_output if grade.correct else None,
+        completed=not grade.correct or output_pending,
+        observation_example=(
+            challenge.observation.example_output if grade.correct and not output_pending else None
+        ),
         observation_fields=(
             [
                 PublicObservationField(id=field.id, label=field.label)
                 for field in challenge.observation.fields
             ]
-            if grade.correct
+            if grade.correct and not output_pending
             else []
         ),
     )
+    return _with_correction(result, catalog, technique_id)
 
 
 def _grade_structured_observation(

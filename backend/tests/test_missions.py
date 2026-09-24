@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import io
+import tarfile
 from datetime import UTC, datetime
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 
+from cyber_range_coach.errors import AppError
 from cyber_range_coach.models import MissionRun
 from cyber_range_coach.services.mission_grader import (
     MissionGradeStatus,
@@ -13,8 +17,12 @@ from cyber_range_coach.services.mission_grader import (
 )
 from cyber_range_coach.services.missions import (
     complete_mission_run,
+    mission_seed_archive,
     plan_missions,
 )
+from cyber_range_coach.services.ssh import RangeRunner
+
+from .conftest import csrf_headers
 
 
 def _mission_item(plan: object, mission_id: str):
@@ -179,3 +187,83 @@ def test_unknown_mission_variant_needs_review_without_becoming_a_success(client:
     )
     assert response.status_code == 200
     assert response.json()["status"] == "needs_review"
+
+
+def test_terminal_mission_plan_hides_files_and_answers(client) -> None:
+    with client.app.state.db.session_factory() as session:
+        plan = plan_missions(session, client.app.state.mission_catalog)
+    magpie = _mission_item(plan, "magpie-missing-clue")
+    assert magpie.delivery == "terminal"
+    assert magpie.prepared_data == []
+    assert magpie.mission_directory == f"~/missions/{magpie.variant_id}"
+    public = magpie.model_dump_json()
+    variant = client.app.state.mission_catalog.variant("magpie-missing-clue", magpie.variant_id)
+    for fact in variant.grading.facts:
+        for value in fact.accepted_values:
+            assert value not in public, value
+    screen = _mission_item(plan, "why-command-failed")
+    assert screen.delivery == "screen"
+    assert screen.prepared_data
+
+
+def test_seed_archive_holds_variant_files_with_real_newlines(client) -> None:
+    catalog = client.app.state.mission_catalog
+    mission = catalog.missions["magpie-missing-clue"]
+    variant = mission.variants[0]
+    archive = mission_seed_archive(mission, variant)
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:gz") as tar:
+        names = tar.getnames()
+        for entry in variant.prepared_data:
+            assert entry.path in names
+            member = tar.getmember(entry.path)
+            assert not member.name.startswith("/") and ".." not in member.name.split("/")
+            if entry.kind == "text":
+                data = tar.extractfile(member).read().decode()  # type: ignore[union-attr]
+                assert "\\n" not in data
+                assert data.endswith("\n")
+    with pytest.raises(AppError):
+        mission_seed_archive(catalog.missions["why-command-failed"], catalog.missions["why-command-failed"].variants[0])
+
+
+def test_seed_endpoint_writes_only_the_variant_directory(client, monkeypatch) -> None:
+    calls: list[tuple[str, bytes]] = []
+
+    async def fake_seed(runner: object, variant_id: str, archive: bytes) -> None:
+        assert isinstance(runner, RangeRunner)
+        calls.append((variant_id, archive))
+
+    monkeypatch.setattr("cyber_range_coach.routers.missions.seed_student_missions", fake_seed)
+    client.cookies.set("crc_csrf", "test-csrf")
+    variant_id = client.app.state.mission_catalog.missions["magpie-missing-clue"].variants[0].id
+    response = client.post(
+        f"/api/v2/missions/magpie-missing-clue/variants/{variant_id}/seed",
+        headers=csrf_headers("operator"),
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["directory"] == f"~/missions/{variant_id}"
+    assert calls and calls[0][0] == variant_id
+    refused = client.post(
+        "/api/v2/missions/why-command-failed/variants/"
+        + client.app.state.mission_catalog.missions["why-command-failed"].variants[0].id
+        + "/seed",
+        headers=csrf_headers("operator"),
+    )
+    assert refused.status_code == 409
+    viewer = client.post(
+        f"/api/v2/missions/magpie-missing-clue/variants/{variant_id}/seed",
+        headers=csrf_headers("viewer"),
+    )
+    assert viewer.status_code == 403
+    assert len(calls) == 1
+
+
+def test_seed_without_linux_host_is_a_clear_conflict(client) -> None:
+    client.cookies.set("crc_csrf", "test-csrf")
+    variant_id = client.app.state.mission_catalog.missions["magpie-missing-clue"].variants[0].id
+    response = client.post(
+        f"/api/v2/missions/magpie-missing-clue/variants/{variant_id}/seed",
+        headers=csrf_headers("operator"),
+    )
+    assert response.status_code == 409
+    assert response.json()["code"] == "linux_host_unconfirmed"
+

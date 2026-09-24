@@ -1693,26 +1693,9 @@ challenges:
     sample_answer: Вывод даёт весь протокол о машине. OS Name это название продукта, OS Version это номер
       сборки. Это соседние строки одного источника, и они отвечают на разные вопросы, поэтому подставлять
       одно вместо другого нельзя.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_systeminfo_full_configuration_1=os name
-
-      observed_win_systeminfo_full_configuration_2=os version'
-    fields:
-    - id: observed_win_systeminfo_full_configuration_1
-      label: 'Наблюдаемый факт 1: os name / название / имя системы'
-      accepted_values:
-      - os name
-      - название
-      - имя системы
-      accepted_patterns: []
-    - id: observed_win_systeminfo_full_configuration_2
-      label: 'Наблюдаемый факт 2: os version / версия / сборк'
-      accepted_values:
-      - os version
-      - версия
-      - сборк
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -1760,26 +1743,9 @@ challenges:
     sample_answer: 'Без /b совпадение ищется в любом месте строки, поэтому вместе с OS Name придёт и OS
       Version. Без /c: пробел разбивает фразу на два независимых образца, и findstr начинает искать слово
       OS отдельно от слова Name.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_systeminfo_field_line_start_1=/b
-
-      observed_win_systeminfo_field_line_start_2=/c'
-    fields:
-    - id: observed_win_systeminfo_field_line_start_1
-      label: 'Наблюдаемый факт 1: /b / начал'
-      accepted_values:
-      - /b
-      - начал
-      accepted_patterns: []
-    - id: observed_win_systeminfo_field_line_start_2
-      label: 'Наблюдаемый факт 2: /c / кавыч / один образец / пробел'
-      accepted_values:
-      - /c
-      - кавыч
-      - один образец
-      - пробел
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -1825,26 +1791,9 @@ challenges:
     prompt: 'Что именно вы получили в ответ: список или число, и что из этого просят чаще?'
     sample_answer: На экране список строк, по одной на исправление. Если задание просит количество, эти
       строки надо ещё посчитать отдельным звеном конвейера, а не пересчитывать глазами.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_systeminfo_hotfix_lines_1=строк
-
-      observed_win_systeminfo_hotfix_lines_2=число'
-    fields:
-    - id: observed_win_systeminfo_hotfix_lines_1
-      label: 'Наблюдаемый факт 1: строк / список / перечень'
-      accepted_values:
-      - строк
-      - список
-      - перечень
-      accepted_patterns: []
-    - id: observed_win_systeminfo_hotfix_lines_2
-      label: 'Наблюдаемый факт 2: число / количеств / посчит'
-      accepted_values:
-      - число
-      - количеств
-      - посчит
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -1891,27 +1840,9 @@ challenges:
       может не совпасть с OS Name?
     sample_answer: 'Отвечает графа данных, третья в строке. ProductName и OS Name это разные поля разных
       источников: они описывают одну систему по-своему, и требовать дословного совпадения нельзя.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_query_product_name_1=данн
-
-      observed_win_reg_query_product_name_2=разные поля'
-    fields:
-    - id: observed_win_reg_query_product_name_1
-      label: 'Наблюдаемый факт 1: данн / треть / значени'
-      accepted_values:
-      - данн
-      - треть
-      - значени
-      accepted_patterns: []
-    - id: observed_win_reg_query_product_name_2
-      label: 'Наблюдаемый факт 2: разные поля / разных источник / не обязан / по-разному'
-      accepted_values:
-      - разные поля
-      - разных источник
-      - не обязан
-      - по-разному
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -1958,26 +1889,9 @@ challenges:
     prompt: В каком виде реестр напечатал это значение и что из этого идёт в ответ?
     sample_answer: Тип REG_DWORD печатается шестнадцатеричным, с префиксом 0x. В ответ идёт только десятичное
       число, без 0x, поэтому значение надо перевести.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_query_ubr_1=0x
-
-      observed_win_reg_query_ubr_2=десятичн'
-    fields:
-    - id: observed_win_reg_query_ubr_1
-      label: 'Наблюдаемый факт 1: 0x / шестнадцат / hex'
-      accepted_values:
-      - 0x
-      - шестнадцат
-      - hex
-      accepted_patterns: []
-    - id: observed_win_reg_query_ubr_2
-      label: 'Наблюдаемый факт 2: десятичн / без префикса / число'
-      accepted_values:
-      - десятичн
-      - без префикса
-      - число
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2023,28 +1937,9 @@ challenges:
     prompt: Что в этой строке является номером, а что служебным текстом?
     sample_answer: Номер это четыре числа через точку. Слово Version и квадратные скобки это оформление
       строки, в ответ они не идут.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_ver_short_version_1=номер
-
-      observed_win_ver_short_version_2=скобк'
-    fields:
-    - id: observed_win_ver_short_version_1
-      label: 'Наблюдаемый факт 1: номер / версия / четыре части / точк'
-      accepted_values:
-      - номер
-      - версия
-      - четыре части
-      - точк
-      accepted_patterns: []
-    - id: observed_win_ver_short_version_2
-      label: 'Наблюдаемый факт 2: скобк / слово version / служебн / текст'
-      accepted_values:
-      - скобк
-      - слово version
-      - служебн
-      - текст
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2091,27 +1986,9 @@ challenges:
     prompt: Почему связка /c /v "" считает именно ВСЕ строки, а не ни одной?
     sample_answer: Пустой образец не совпадает ни с одной строкой. Ключ /v оставляет строки, которые образцу
       НЕ соответствуют, то есть все. Отсюда и универсальный счётчик.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_find_count_all_lines_1=пуст
-
-      observed_win_find_count_all_lines_2=/v'
-    fields:
-    - id: observed_win_find_count_all_lines_1
-      label: 'Наблюдаемый факт 1: пуст / образец / кавычк'
-      accepted_values:
-      - пуст
-      - образец
-      - кавычк
-      accepted_patterns: []
-    - id: observed_win_find_count_all_lines_2
-      label: 'Наблюдаемый факт 2: /v / инверт / не содерж / наоборот'
-      accepted_values:
-      - /v
-      - инверт
-      - не содерж
-      - наоборот
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2158,27 +2035,9 @@ challenges:
     prompt: Стали ли вы после этой команды работать внутри нового каталога?
     sample_answer: Нет. Каталог появился на диске, но текущим остался прежний. Чтобы работать внутри,
       нужна отдельная команда перехода.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_mkdir_create_directory_1=нет
-
-      observed_win_mkdir_create_directory_2=перейти'
-    fields:
-    - id: observed_win_mkdir_create_directory_1
-      label: 'Наблюдаемый факт 1: нет / не стал / прежн / отдельн'
-      accepted_values:
-      - нет
-      - не стал
-      - прежн
-      - отдельн
-      accepted_patterns: []
-    - id: observed_win_mkdir_create_directory_2
-      label: 'Наблюдаемый факт 2: перейти / cd / смена каталога'
-      accepted_values:
-      - перейти
-      - cd
-      - смена каталога
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2224,25 +2083,9 @@ challenges:
     prompt: Как проверить, что вы действительно оказались там, где думаете?
     sample_answer: 'По приглашению командной строки: оно печатает текущий путь. Это проверка фактом, а
       не предположение, что команда сработала.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_cd_change_drive_and_directory_1=приглашен
-
-      observed_win_cd_change_drive_and_directory_2=путь'
-    fields:
-    - id: observed_win_cd_change_drive_and_directory_1
-      label: 'Наблюдаемый факт 1: приглашен / prompt / строк'
-      accepted_values:
-      - приглашен
-      - prompt
-      - строк
-      accepted_patterns: []
-    - id: observed_win_cd_change_drive_and_directory_2
-      label: 'Наблюдаемый факт 2: путь / каталог'
-      accepted_values:
-      - путь
-      - каталог
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2288,27 +2131,9 @@ challenges:
     prompt: Что означает точка в конце команды и что стало с исходными файлами?
     sample_answer: 'Точка это текущий каталог, то есть место назначения. Исходные файлы остались на месте
       нетронутыми: copy читает источник, а не переносит его.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_copy_wildcard_to_current_1=текущ
-
-      observed_win_copy_wildcard_to_current_2=не изменил'
-    fields:
-    - id: observed_win_copy_wildcard_to_current_1
-      label: 'Наблюдаемый факт 1: текущ / каталог / назначен'
-      accepted_values:
-      - текущ
-      - каталог
-      - назначен
-      accepted_patterns: []
-    - id: observed_win_copy_wildcard_to_current_2
-      label: 'Наблюдаемый факт 2: не изменил / остал / оригинал / нетронут'
-      accepted_values:
-      - не изменил
-      - остал
-      - оригинал
-      - нетронут
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2354,26 +2179,9 @@ challenges:
     prompt: Первая строка вывода это уже ответ? Что в этом листинге размера не имеет?
     sample_answer: Не обязательно. Строки с пометкой <DIR> это каталоги, их размер не считается, поэтому
       первым файлом надо брать первую строку без этой пометки.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_dir_sort_by_size_desc_1=dir
-
-      observed_win_dir_sort_by_size_desc_2=размер'
-    fields:
-    - id: observed_win_dir_sort_by_size_desc_1
-      label: 'Наблюдаемый факт 1: dir / каталог / папк'
-      accepted_values:
-      - dir
-      - каталог
-      - папк
-      accepted_patterns: []
-    - id: observed_win_dir_sort_by_size_desc_2
-      label: 'Наблюдаемый факт 2: размер / не счита / не имеет'
-      accepted_values:
-      - размер
-      - не счита
-      - не имеет
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2418,27 +2226,9 @@ challenges:
     prompt: В каком режиме сработала эта команда и как это отразится на числе строк результата?
     sample_answer: Без ключа /b copy работает в текстовом режиме и по-своему трактует символ конца файла.
       Поэтому число строк в результате может отличаться от простой суммы строк двух источников.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_copy_concatenate_files_1=текстов
-
-      observed_win_copy_concatenate_files_2=конец файла'
-    fields:
-    - id: observed_win_copy_concatenate_files_1
-      label: 'Наблюдаемый факт 1: текстов / без /b / обычн'
-      accepted_values:
-      - текстов
-      - без /b
-      - обычн
-      accepted_patterns: []
-    - id: observed_win_copy_concatenate_files_2
-      label: 'Наблюдаемый факт 2: конец файла / eof / символ / строк'
-      accepted_values:
-      - конец файла
-      - eof
-      - символ
-      - строк
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2484,27 +2274,9 @@ challenges:
     prompt: Число строк отличается от результата обычного copy. Это ошибка?
     sample_answer: Нет. Двоичный режим не интерпретирует символ конца файла, поэтому данные склеиваются
       как есть, и число строк закономерно отличается от текстового режима.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_copy_binary_concatenate_1=нет
-
-      observed_win_copy_binary_concatenate_2=двоичн'
-    fields:
-    - id: observed_win_copy_binary_concatenate_1
-      label: 'Наблюдаемый факт 1: нет / не ошибк / норм'
-      accepted_values:
-      - нет
-      - не ошибк
-      - норм
-      accepted_patterns: []
-    - id: observed_win_copy_binary_concatenate_2
-      label: 'Наблюдаемый факт 2: двоичн / /b / конец файла / не интерпрет'
-      accepted_values:
-      - двоичн
-      - /b
-      - конец файла
-      - не интерпрет
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2549,27 +2321,9 @@ challenges:
     prompt: Подойдёт ли эта команда, чтобы перенести файл в другой каталог?
     sample_answer: Нет. Она меняет только имя, каталог остаётся прежним. Для смены каталога нужна отдельная
       операция переноса.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_ren_rename_file_1=нет
-
-      observed_win_ren_rename_file_2=перенос'
-    fields:
-    - id: observed_win_ren_rename_file_1
-      label: 'Наблюдаемый факт 1: нет / не подойд / только имя'
-      accepted_values:
-      - нет
-      - не подойд
-      - только имя
-      accepted_patterns: []
-    - id: observed_win_ren_rename_file_2
-      label: 'Наблюдаемый факт 2: перенос / перемещ / каталог / другая команда'
-      accepted_values:
-      - перенос
-      - перемещ
-      - каталог
-      - другая команда
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2614,36 +2368,16 @@ challenges:
     prompt: Файл после этой команды удалён или он существует?
     sample_answer: Он существует. Изменилось только то, что обычный листинг его не показывает. Разница
       между «файла нет» и «файл не показывается текущим инструментом» здесь и есть главное.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_attrib_set_hidden_1=существ
-
-      observed_win_attrib_set_hidden_2=не показ'
-    fields:
-    - id: observed_win_attrib_set_hidden_1
-      label: 'Наблюдаемый факт 1: существ / остал / есть / не удал'
-      accepted_values:
-      - существ
-      - остал
-      - есть
-      - не удал
-      accepted_patterns: []
-    - id: observed_win_attrib_set_hidden_2
-      label: 'Наблюдаемый факт 2: не показ / скрыт / листинг / обычн'
-      accepted_values:
-      - не показ
-      - скрыт
-      - листинг
-      - обычн
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
     working_directory: C:\Training
     named_inputs:
-      argument: attrib
-      argument_2: +h
-      target_path: report.txt
+      file: report.txt
+      attribute: скрытый
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2681,36 +2415,15 @@ challenges:
     prompt: Какие буквы вы увидели и что означает каждая из встреченных?
     sample_answer: Буква H это hidden, скрытый. Рядом встречаются R только чтение, S системный, A архивный.
       Команда без ключей ничего не меняет, она только печатает.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_attrib_read_attributes_1=h
-
-      observed_win_attrib_read_attributes_2=r'
-    fields:
-    - id: observed_win_attrib_read_attributes_1
-      label: 'Наблюдаемый факт 1: h / hidden / скрыт'
-      accepted_values:
-      - h
-      - hidden
-      - скрыт
-      accepted_patterns: []
-    - id: observed_win_attrib_read_attributes_2
-      label: 'Наблюдаемый факт 2: r / s / a / чтение / систем / архив'
-      accepted_values:
-      - r
-      - s
-      - a
-      - чтение
-      - систем
-      - архив
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
     working_directory: C:\Training
     named_inputs:
-      argument: attrib
-      target_path: report.txt
+      file: report.txt
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -2748,27 +2461,9 @@ challenges:
     prompt: Если имени в этом выводе нет, доказывает ли это, что файла нет?
     sample_answer: Не доказывает. Файл может существовать и просто не показываться обычным листингом.
       Проверять надо тем же листингом с ключом атрибутов.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_dir_bare_names_1=нет
-
-      observed_win_dir_bare_names_2=скрыт'
-    fields:
-    - id: observed_win_dir_bare_names_1
-      label: 'Наблюдаемый факт 1: нет / не доказ / не обязательно'
-      accepted_values:
-      - нет
-      - не доказ
-      - не обязательно
-      accepted_patterns: []
-    - id: observed_win_dir_bare_names_2
-      label: 'Наблюдаемый факт 2: скрыт / /a / атрибут / не показ'
-      accepted_values:
-      - скрыт
-      - /a
-      - атрибут
-      - не показ
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2812,26 +2507,9 @@ challenges:
     prompt: Файл виден здесь и не виден без ключа атрибутов. Какой вывод вы делаете?
     sample_answer: Файл существует, он просто скрыт атрибутом и не показывается обычным листингом. Это
       и есть разница между «нет файла» и «инструмент его не показывает».
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_dir_bare_with_hidden_1=существ
-
-      observed_win_dir_bare_with_hidden_2=скрыт'
-    fields:
-    - id: observed_win_dir_bare_with_hidden_1
-      label: 'Наблюдаемый факт 1: существ / есть / не удал'
-      accepted_values:
-      - существ
-      - есть
-      - не удал
-      accepted_patterns: []
-    - id: observed_win_dir_bare_with_hidden_2
-      label: 'Наблюдаемый факт 2: скрыт / атрибут / не показ'
-      accepted_values:
-      - скрыт
-      - атрибут
-      - не показ
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2875,28 +2553,9 @@ challenges:
     prompt: Зачем смотреть маску до удаления, если удаление и так сработает?
     sample_answer: Чтобы увидеть точный список того, что попадёт под команду. Удаление необратимо, и маска
       легко захватывает лишнее, поэтому осмотр той же маски идёт первым.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_dir_mask_preview_1=попад
-
-      observed_win_dir_mask_preview_2=удал'
-    fields:
-    - id: observed_win_dir_mask_preview_1
-      label: 'Наблюдаемый факт 1: попад / какие / что именно / список'
-      accepted_values:
-      - попад
-      - какие
-      - что именно
-      - список
-      accepted_patterns: []
-    - id: observed_win_dir_mask_preview_2
-      label: 'Наблюдаемый факт 2: удал / необратим / лишн / ошибк'
-      accepted_values:
-      - удал
-      - необратим
-      - лишн
-      - ошибк
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -2940,26 +2599,9 @@ challenges:
     prompt: Как проверить, что удаление действительно произошло, а файлы не просто перестали показываться?
     sample_answer: 'Повторным листингом, причём обоими: обычным и с ключом атрибутов. Иначе скрытый файл
       легко принять за удалённый.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_del_by_mask_1=dir
-
-      observed_win_del_by_mask_2=/a'
-    fields:
-    - id: observed_win_del_by_mask_1
-      label: 'Наблюдаемый факт 1: dir / листинг / снова'
-      accepted_values:
-      - dir
-      - листинг
-      - снова
-      accepted_patterns: []
-    - id: observed_win_del_by_mask_2
-      label: 'Наблюдаемый факт 2: /a / скрыт / атрибут'
-      accepted_values:
-      - /a
-      - скрыт
-      - атрибут
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3006,28 +2648,9 @@ challenges:
     prompt: На экране появились сами проценты вместе с именем. Что это значит?
     sample_answer: 'Подстановка не сработала: интерпретатор напечатал строку как обычный текст. Проверять
       надо сами символы процента и раскладку, а не переменную.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_echo_variable_value_1=не сработ
-
-      observed_win_echo_variable_value_2=процент'
-    fields:
-    - id: observed_win_echo_variable_value_1
-      label: 'Наблюдаемый факт 1: не сработ / не подстав / не интерпрет / текст'
-      accepted_values:
-      - не сработ
-      - не подстав
-      - не интерпрет
-      - текст
-      accepted_patterns: []
-    - id: observed_win_echo_variable_value_2
-      label: 'Наблюдаемый факт 2: процент / % / символ / раскладк'
-      accepted_values:
-      - процент
-      - '%'
-      - символ
-      - раскладк
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3071,27 +2694,9 @@ challenges:
     prompt: Это окружение какого именно процесса и переживёт ли оно закрытие окна?
     sample_answer: 'Это окружение текущего окна. Закроется окно, и эти значения исчезнут: они не записаны
       никуда за его пределами.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_set_list_environment_1=текущ
-
-      observed_win_set_list_environment_2=не пережив'
-    fields:
-    - id: observed_win_set_list_environment_1
-      label: 'Наблюдаемый факт 1: текущ / этого окна / окна'
-      accepted_values:
-      - текущ
-      - этого окна
-      - окна
-      accepted_patterns: []
-    - id: observed_win_set_list_environment_2
-      label: 'Наблюдаемый факт 2: не пережив / исчез / выброс / закро'
-      accepted_values:
-      - не пережив
-      - исчез
-      - выброс
-      - закро
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3135,28 +2740,9 @@ challenges:
     prompt: Сразу после этой команды echo в том же окне показывает старое значение. Это сбой?
     sample_answer: Нет, это правильное поведение. Запись сделана для будущих процессов, а окружение уже
       открытого окна не меняется. Проверять надо в новом окне или прямо в месте хранения.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_setx_persistent_variable_1=нет
-
-      observed_win_setx_persistent_variable_2=будущ'
-    fields:
-    - id: observed_win_setx_persistent_variable_1
-      label: 'Наблюдаемый факт 1: нет / не сбой / не ошибк / правильн'
-      accepted_values:
-      - нет
-      - не сбой
-      - не ошибк
-      - правильн
-      accepted_patterns: []
-    - id: observed_win_setx_persistent_variable_2
-      label: 'Наблюдаемый факт 2: будущ / новое окно / не трогает / уже открыт'
-      accepted_values:
-      - будущ
-      - новое окно
-      - не трогает
-      - уже открыт
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3202,28 +2788,9 @@ challenges:
     prompt: Почему это надёжнее, чем echo в текущем окне?
     sample_answer: Потому что реестр показывает записанное значение, а старое окно показывает своё окружение,
       снятое при запуске. Это два разных вопроса, и отвечать на второй вместо первого нельзя.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_query_user_environment_1=хранен
-
-      observed_win_reg_query_user_environment_2=окно'
-    fields:
-    - id: observed_win_reg_query_user_environment_1
-      label: 'Наблюдаемый факт 1: хранен / реестр / место / на диске'
-      accepted_values:
-      - хранен
-      - реестр
-      - место
-      - на диске
-      accepted_patterns: []
-    - id: observed_win_reg_query_user_environment_2
-      label: 'Наблюдаемый факт 2: окно / старое / не обнов / текущ'
-      accepted_values:
-      - окно
-      - старое
-      - не обнов
-      - текущ
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3271,29 +2838,9 @@ challenges:
     sample_answer: '%PATH% текущего процесса объединяет системный и пользовательский уровни, поэтому он
       длиннее и отвечает на другой вопрос. Каталоги считают по строке данных, разделяя её точкой с запятой
       и не включая сами разделители.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_query_system_path_1=объедин
-
-      observed_win_reg_query_system_path_2=точк'
-    fields:
-    - id: observed_win_reg_query_system_path_1
-      label: 'Наблюдаемый факт 1: объедин / польз / оба / длинн / другой вопрос'
-      accepted_values:
-      - объедин
-      - польз
-      - оба
-      - длинн
-      - другой вопрос
-      accepted_patterns: []
-    - id: observed_win_reg_query_system_path_2
-      label: 'Наблюдаемый факт 2: точк / ; / раздел / фрагмент'
-      accepted_values:
-      - точк
-      - ;
-      - раздел
-      - фрагмент
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3341,26 +2888,9 @@ challenges:
     prompt: Размер файла оказался на единицу больше ожидаемого. Что случилось?
     sample_answer: Пробел перед знаком перенаправления попал в данные, которые печатает echo, и стал частью
       файла. Поэтому команду вводят ровно в предложенном виде.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_echo_redirect_overwrite_1=пробел
-
-      observed_win_echo_redirect_overwrite_2=попал'
-    fields:
-    - id: observed_win_echo_redirect_overwrite_1
-      label: 'Наблюдаемый факт 1: пробел /  '
-      accepted_values:
-      - пробел
-      - ' '
-      accepted_patterns: []
-    - id: observed_win_echo_redirect_overwrite_2
-      label: 'Наблюдаемый факт 2: попал / данн / размер / часть'
-      accepted_values:
-      - попал
-      - данн
-      - размер
-      - часть
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3404,28 +2934,9 @@ challenges:
     prompt: Чем результат отличается от записи одной стрелкой?
     sample_answer: Прежнее содержимое сохранилось, новая строка добавилась в конец. Одна стрелка на этом
       же месте оставила бы в файле только последнюю запись.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_echo_redirect_append_1=сохран
-
-      observed_win_echo_redirect_append_2=конец'
-    fields:
-    - id: observed_win_echo_redirect_append_1
-      label: 'Наблюдаемый факт 1: сохран / не стёр / остал / прежн'
-      accepted_values:
-      - сохран
-      - не стёр
-      - остал
-      - прежн
-      accepted_patterns: []
-    - id: observed_win_echo_redirect_append_2
-      label: 'Наблюдаемый факт 2: конец / добав / допис / снизу'
-      accepted_values:
-      - конец
-      - добав
-      - допис
-      - снизу
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3469,28 +2980,9 @@ challenges:
     prompt: Что этот вывод доказывает, а что доказывает листинг того же файла?
     sample_answer: Чтение доказывает содержимое, листинг доказывает имя, дату и размер. Это разные факты,
       и запись стоит проверять обоими.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_type_read_file_1=содерж
-
-      observed_win_type_read_file_2=размер'
-    fields:
-    - id: observed_win_type_read_file_1
-      label: 'Наблюдаемый факт 1: содерж / что внутри / текст / данн'
-      accepted_values:
-      - содерж
-      - что внутри
-      - текст
-      - данн
-      accepted_patterns: []
-    - id: observed_win_type_read_file_2
-      label: 'Наблюдаемый факт 2: размер / дата / имя / листинг'
-      accepted_values:
-      - размер
-      - дата
-      - имя
-      - листинг
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3535,28 +3027,9 @@ challenges:
     prompt: Что произойдёт со ссылкой, если удалить её цель?
     sample_answer: 'Ссылка останется на месте, но перестанет вести к данным: внутри неё лежит путь, а
       не сами данные. Удалили цель, и табличка указывает в пустоту.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_mklink_directory_symlink_1=остан
-
-      observed_win_mklink_directory_symlink_2=не ведёт'
-    fields:
-    - id: observed_win_mklink_directory_symlink_1
-      label: 'Наблюдаемый факт 1: остан / сохран / не исчез / есть'
-      accepted_values:
-      - остан
-      - сохран
-      - не исчез
-      - есть
-      accepted_patterns: []
-    - id: observed_win_mklink_directory_symlink_2
-      label: 'Наблюдаемый факт 2: не ведёт / не работ / бесполезн / никуда'
-      accepted_values:
-      - не ведёт
-      - не работ
-      - бесполезн
-      - никуда
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3601,27 +3074,9 @@ challenges:
     prompt: Покажет ли этот фильтр жёсткие ссылки, и почему?
     sample_answer: Нет. Жёсткая ссылка это не точка повторного разбора, а второе имя тех же данных, и
       для системы она выглядит обычным файлом. Её этот фильтр не покажет.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_dir_links_only_1=нет
-
-      observed_win_dir_links_only_2=обычн'
-    fields:
-    - id: observed_win_dir_links_only_1
-      label: 'Наблюдаемый факт 1: нет / не покаж / не увид'
-      accepted_values:
-      - нет
-      - не покаж
-      - не увид
-      accepted_patterns: []
-    - id: observed_win_dir_links_only_2
-      label: 'Наблюдаемый факт 2: обычн / второе имя / не reparse / не точк'
-      accepted_values:
-      - обычн
-      - второе имя
-      - не reparse
-      - не точк
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3667,28 +3122,9 @@ challenges:
     prompt: Листинг показывает два обычных файла одинакового размера. Это ошибка?
     sample_answer: 'Нет. Обычный листинг жёсткую ссылку от файла не отличает принципиально: это два имени
       одних данных. Все имена перечисляет только специализированный запрос.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_mklink_hard_link_1=нет
-
-      observed_win_mklink_hard_link_2=не различ'
-    fields:
-    - id: observed_win_mklink_hard_link_1
-      label: 'Наблюдаемый факт 1: нет / не ошибк / не сбой'
-      accepted_values:
-      - нет
-      - не ошибк
-      - не сбой
-      accepted_patterns: []
-    - id: observed_win_mklink_hard_link_2
-      label: 'Наблюдаемый факт 2: не различ / одинаков / одни данн / fsutil / специализ'
-      accepted_values:
-      - не различ
-      - одинаков
-      - одни данн
-      - fsutil
-      - специализ
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3733,28 +3169,9 @@ challenges:
     prompt: Какой практический вывод для расследования даёт этот список?
     sample_answer: Содержимое может быть доступно по неожиданному пути, и увиденный путь не обязательно
       исходный объект. Одни и те же данные живут сразу под несколькими именами.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_fsutil_hardlink_list_1=неожиданн
-
-      observed_win_fsutil_hardlink_list_2=не исходн'
-    fields:
-    - id: observed_win_fsutil_hardlink_list_1
-      label: 'Наблюдаемый факт 1: неожиданн / другой путь / несколько / разных мест'
-      accepted_values:
-      - неожиданн
-      - другой путь
-      - несколько
-      - разных мест
-      accepted_patterns: []
-    - id: observed_win_fsutil_hardlink_list_2
-      label: 'Наблюдаемый факт 2: не исходн / не оригинал / то же / одни данн'
-      accepted_values:
-      - не исходн
-      - не оригинал
-      - то же
-      - одни данн
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3801,28 +3218,9 @@ challenges:
     prompt: В каком виде ключ из справки идёт в ответ?
     sample_answer: Вместе с косой чертой, ровно так, как он напечатан в синтаксисе команды. Буква без
       черты это не ключ.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_mklink_builtin_help_1=косой
-
-      observed_win_mklink_builtin_help_2=как в синтаксис'
-    fields:
-    - id: observed_win_mklink_builtin_help_1
-      label: 'Наблюдаемый факт 1: косой / черт / слеш / /'
-      accepted_values:
-      - косой
-      - черт
-      - слеш
-      - /
-      accepted_patterns: []
-    - id: observed_win_mklink_builtin_help_2
-      label: 'Наблюдаемый факт 2: как в синтаксис / вместе / ровно / так же'
-      accepted_values:
-      - как в синтаксис
-      - вместе
-      - ровно
-      - так же
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3867,28 +3265,9 @@ challenges:
     prompt: Читает ли эта команда содержимое найденных файлов?
     sample_answer: Нет. Она отвечает только на вопрос, какие файлы с таким именем или расширением есть
       в дереве. Признак внутри текста ей недоступен.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_dir_recursive_bare_mask_1=нет
-
-      observed_win_dir_recursive_bare_mask_2=имя'
-    fields:
-    - id: observed_win_dir_recursive_bare_mask_1
-      label: 'Наблюдаемый факт 1: нет / не читает / не смотрит'
-      accepted_values:
-      - нет
-      - не читает
-      - не смотрит
-      accepted_patterns: []
-    - id: observed_win_dir_recursive_bare_mask_2
-      label: 'Наблюдаемый факт 2: имя / обложк / расширен / маск / путь'
-      accepted_values:
-      - имя
-      - обложк
-      - расширен
-      - маск
-      - путь
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -3934,27 +3313,9 @@ challenges:
     prompt: Что печатает ключ /m и что было бы в выводе без него?
     sample_answer: Ключ /m печатает имя файла. Без него в вывод пошли бы сами совпавшие строки, а вопрос
       был про файл, а не про строку.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_findstr_recursive_filename_only_1=имя файла
-
-      observed_win_findstr_recursive_filename_only_2=строк'
-    fields:
-    - id: observed_win_findstr_recursive_filename_only_1
-      label: 'Наблюдаемый факт 1: имя файла / файл / путь'
-      accepted_values:
-      - имя файла
-      - файл
-      - путь
-      accepted_patterns: []
-    - id: observed_win_findstr_recursive_filename_only_2
-      label: 'Наблюдаемый факт 2: строк / совпавш / содерж / текст'
-      accepted_values:
-      - строк
-      - совпавш
-      - содерж
-      - текст
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4001,28 +3362,9 @@ challenges:
     prompt: Что просят в ответ, если вопрос был про номер порта, и что в ответ не идёт?
     sample_answer: 'В ответ идут только цифры порта. Протокол /tcp, имя службы и комментарий в ответ не
       идут: формат ответа задаёт задание, а не команда.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_findstr_line_start_match_1=цифр
-
-      observed_win_findstr_line_start_match_2=tcp'
-    fields:
-    - id: observed_win_findstr_line_start_match_1
-      label: 'Наблюдаемый факт 1: цифр / номер / порт / число'
-      accepted_values:
-      - цифр
-      - номер
-      - порт
-      - число
-      accepted_patterns: []
-    - id: observed_win_findstr_line_start_match_2
-      label: 'Наблюдаемый факт 2: tcp / имя служб / комментар / протокол'
-      accepted_values:
-      - tcp
-      - имя служб
-      - комментар
-      - протокол
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4068,27 +3410,9 @@ challenges:
     prompt: Чем это отличается от счётчика с ключом инверсии и пустым образцом?
     sample_answer: Эта форма считает только строки с признаком, а форма с пустым образцом и инверсией
       считает все строки без исключения. Первое это поиск с подсчётом, второе это счётчик строк.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_type_pipe_count_matching_1=только
-
-      observed_win_type_pipe_count_matching_2=все'
-    fields:
-    - id: observed_win_type_pipe_count_matching_1
-      label: 'Наблюдаемый факт 1: только / подходящ / с признак / совпад'
-      accepted_values:
-      - только
-      - подходящ
-      - с признак
-      - совпад
-      accepted_patterns: []
-    - id: observed_win_type_pipe_count_matching_2
-      label: 'Наблюдаемый факт 2: все / всех строк / универсал'
-      accepted_values:
-      - все
-      - всех строк
-      - универсал
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4133,28 +3457,9 @@ challenges:
     prompt: Какое звено конвейера отвечает за вопрос «где признак», а какое за вопрос «что просят в ответ»?
     sample_answer: 'Первое звено выбирают по тому, где лежит признак: на обложке или в тексте. Второе
       звено выбирают по тому, что просят в ответ: список или число.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_dir_pipe_count_lines_1=перв
-
-      observed_win_dir_pipe_count_lines_2=втор'
-    fields:
-    - id: observed_win_dir_pipe_count_lines_1
-      label: 'Наблюдаемый факт 1: перв / источник / листинг / dir'
-      accepted_values:
-      - перв
-      - источник
-      - листинг
-      - dir
-      accepted_patterns: []
-    - id: observed_win_dir_pipe_count_lines_2
-      label: 'Наблюдаемый факт 2: втор / счет / find / число'
-      accepted_values:
-      - втор
-      - счет
-      - find
-      - число
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4198,28 +3503,9 @@ challenges:
     prompt: Зачем исключать каталоги, если дальше идёт подсчёт строк?
     sample_answer: Потому что счётчик считает строки, а не файлы. Строка каталога попадёт в счёт наравне
       с файлом и исказит ответ.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_dir_exclude_directories_1=каталог
-
-      observed_win_dir_exclude_directories_2=счёт'
-    fields:
-    - id: observed_win_dir_exclude_directories_1
-      label: 'Наблюдаемый факт 1: каталог / папк / не файл'
-      accepted_values:
-      - каталог
-      - папк
-      - не файл
-      accepted_patterns: []
-    - id: observed_win_dir_exclude_directories_2
-      label: 'Наблюдаемый факт 2: счёт / посчит / число / исказ / лишн'
-      accepted_values:
-      - счёт
-      - посчит
-      - число
-      - исказ
-      - лишн
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4263,28 +3549,9 @@ challenges:
     prompt: Считаются ли отключённые и встроенные записи, когда спрашивают их число?
     sample_answer: 'Считаются. В выводе присутствуют Administrator, Guest, DefaultAccount и WDAGUtilityAccount,
       и при подсчёте их не выбрасывают: отключённая запись это закрытая, но не заложенная дверь.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_user_list_1=да
-
-      observed_win_net_user_list_2=отключ'
-    fields:
-    - id: observed_win_net_user_list_1
-      label: 'Наблюдаемый факт 1: да / счита / включ / наравне'
-      accepted_values:
-      - да
-      - счита
-      - включ
-      - наравне
-      accepted_patterns: []
-    - id: observed_win_net_user_list_2
-      label: 'Наблюдаемый факт 2: отключ / встроен / administrator / guest'
-      accepted_values:
-      - отключ
-      - встроен
-      - administrator
-      - guest
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4331,27 +3598,9 @@ challenges:
     sample_answer: 'Смотрят вторую строку блока Members: это та запись, под которой реально работают.
       Встроенная Administrator присутствует почти всегда, даже когда отключена, поэтому сама по себе она
       ничего не доказывает.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_localgroup_administrators_1=втор
-
-      observed_win_net_localgroup_administrators_2=встроен'
-    fields:
-    - id: observed_win_net_localgroup_administrators_1
-      label: 'Наблюдаемый факт 1: втор / следующ / не первую'
-      accepted_values:
-      - втор
-      - следующ
-      - не первую
-      accepted_patterns: []
-    - id: observed_win_net_localgroup_administrators_2
-      label: 'Наблюдаемый факт 2: встроен / отключ / почти всегда / даже когда'
-      accepted_values:
-      - встроен
-      - отключ
-      - почти всегда
-      - даже когда
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4397,29 +3646,9 @@ challenges:
     sample_answer: 'Длинная середина одинакова для всех записей этой машины, это её отпечаток. Последнее
       число это RID, личный номер записи: 500 у встроенного администратора, 501 у гостя, обычные записи
       получают номера с 1000.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_whoami_own_sid_1=середин
-
-      observed_win_whoami_own_sid_2=последн'
-    fields:
-    - id: observed_win_whoami_own_sid_1
-      label: 'Наблюдаемый факт 1: середин / средн / общ / одинаков / отпечаток'
-      accepted_values:
-      - середин
-      - средн
-      - общ
-      - одинаков
-      - отпечаток
-      accepted_patterns: []
-    - id: observed_win_whoami_own_sid_2
-      label: 'Наблюдаемый факт 2: последн / rid / личн / после дефис'
-      accepted_values:
-      - последн
-      - rid
-      - личн
-      - после дефис
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4466,29 +3695,9 @@ challenges:
     sample_answer: Без cmd /c знак перенаправления обработает ваш собственный интерпретатор, файл будет
       создан от вашего имени, и в нём окажется ваше имя, а не чужое. Пароль спрашивается интерактивно
       и в аргументе не передаётся никогда, чтобы не попасть в историю команд.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_runas_other_account_to_file_1=перенаправлен
-
-      observed_win_runas_other_account_to_file_2=интерактив'
-    fields:
-    - id: observed_win_runas_other_account_to_file_1
-      label: 'Наблюдаемый факт 1: перенаправлен / знак / интерпретатор / своим / твой'
-      accepted_values:
-      - перенаправлен
-      - знак
-      - интерпретатор
-      - своим
-      - твой
-      accepted_patterns: []
-    - id: observed_win_runas_other_account_to_file_2
-      label: 'Наблюдаемый факт 2: интерактив / спрашива / истори / не переда'
-      accepted_values:
-      - интерактив
-      - спрашива
-      - истори
-      - не переда
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4534,28 +3743,9 @@ challenges:
     prompt: Почему записку кладут именно в общедоступный каталог, а не в домашний каталог записи?
     sample_answer: Потому что писать в Public разрешено любому вошедшему пользователю. В чужой домашний
       каталог запущенная запись писать не сможет, и файла просто не появится.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_type_read_public_result_1=public
-
-      observed_win_type_read_public_result_2=разреш'
-    fields:
-    - id: observed_win_type_read_public_result_1
-      label: 'Наблюдаемый факт 1: public / общедоступ / общ'
-      accepted_values:
-      - public
-      - общедоступ
-      - общ
-      accepted_patterns: []
-    - id: observed_win_type_read_public_result_2
-      label: 'Наблюдаемый факт 2: разреш / любому / не сможет / прав / чужой'
-      accepted_values:
-      - разреш
-      - любому
-      - не сможет
-      - прав
-      - чужой
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4600,28 +3790,9 @@ challenges:
     prompt: Что случится с выводом, если убрать ключ начала строки?
     sample_answer: 'В вывод попадёт ещё и строка User''s comment: без требования совпадения в начале строки
       образец находится в любом её месте.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_user_comment_field_1=user''s comment
-
-      observed_win_net_user_comment_field_2=попад'
-    fields:
-    - id: observed_win_net_user_comment_field_1
-      label: 'Наблюдаемый факт 1: user''s comment / лишн / соседн / втор'
-      accepted_values:
-      - user's comment
-      - лишн
-      - соседн
-      - втор
-      accepted_patterns: []
-    - id: observed_win_net_user_comment_field_2
-      label: 'Наблюдаемый факт 2: попад / добав / тоже / вместе'
-      accepted_values:
-      - попад
-      - добав
-      - тоже
-      - вместе
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4670,30 +3841,9 @@ challenges:
     sample_answer: 'Выполнено только чтение, то есть Displays. Признак в самой команде: нет ни одного
       изменяющего ключа, поэтому список доступа остался прежним. Право на изменение проверяется отдельной
       командой и отдельно.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_icacls_read_acl_1=чтен
-
-      observed_win_icacls_read_acl_2=без ключ'
-    fields:
-    - id: observed_win_icacls_read_acl_1
-      label: 'Наблюдаемый факт 1: чтен / displays / показ / печат / просмотр'
-      accepted_values:
-      - чтен
-      - displays
-      - показ
-      - печат
-      - просмотр
-      accepted_patterns: []
-    - id: observed_win_icacls_read_acl_2
-      label: 'Наблюдаемый факт 2: без ключ / не измен / ничего не / нет /grant / нет ключ'
-      accepted_values:
-      - без ключ
-      - не измен
-      - ничего не
-      - нет /grant
-      - нет ключ
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4739,28 +3889,9 @@ challenges:
     prompt: Чем :d отличается от :r и почему для правки обычно берут первое?
     sample_answer: Ключ :d копирует унаследованные записи в собственные, поэтому ничего не теряется. Ключ
       :r отвязывает и удаляет унаследованное, и доступ можно потерять целиком.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_icacls_disable_inheritance_1=:d
-
-      observed_win_icacls_disable_inheritance_2=:r'
-    fields:
-    - id: observed_win_icacls_disable_inheritance_1
-      label: 'Наблюдаемый факт 1: :d / копиру / сохран / перенос'
-      accepted_values:
-      - :d
-      - копиру
-      - сохран
-      - перенос
-      accepted_patterns: []
-    - id: observed_win_icacls_disable_inheritance_2
-      label: 'Наблюдаемый факт 2: :r / удал / снос / теря'
-      accepted_values:
-      - :r
-      - удал
-      - снос
-      - теря
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4807,29 +3938,9 @@ challenges:
     prompt: Эта команда прочитала список или изменила его, и что теперь докажет результат?
     sample_answer: 'Она изменила список: это уже Modifies, а не Displays. Доказательством служит число
       строк списка до и после, оно должно вырасти на одну.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_icacls_grant_right_1=измен
-
-      observed_win_icacls_grant_right_2=посчит'
-    fields:
-    - id: observed_win_icacls_grant_right_1
-      label: 'Наблюдаемый факт 1: измен / modifies / добав / запис'
-      accepted_values:
-      - измен
-      - modifies
-      - добав
-      - запис
-      accepted_patterns: []
-    - id: observed_win_icacls_grant_right_2
-      label: 'Наблюдаемый факт 2: посчит / строк / find / больше / на одну'
-      accepted_values:
-      - посчит
-      - строк
-      - find
-      - больше
-      - на одну
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4875,28 +3986,9 @@ challenges:
     prompt: Как доказать, что запись действительно исчезла из списка?
     sample_answer: 'Пересчитать строки списка до и после: после отзыва их становится на одну меньше. Это
       доказательство фактом, а не впечатление от вывода команды.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_icacls_remove_grant_1=посчит
-
-      observed_win_icacls_remove_grant_2=меньше'
-    fields:
-    - id: observed_win_icacls_remove_grant_1
-      label: 'Наблюдаемый факт 1: посчит / число / строк / find'
-      accepted_values:
-      - посчит
-      - число
-      - строк
-      - find
-      accepted_patterns: []
-    - id: observed_win_icacls_remove_grant_2
-      label: 'Наблюдаемый факт 2: меньше / на одну / до и после / уменьш'
-      accepted_values:
-      - меньше
-      - на одну
-      - до и после
-      - уменьш
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -4944,28 +4036,9 @@ challenges:
     prompt: Почему образцом взяли именно двоеточие со скобкой, а не имя субъекта?
     sample_answer: Потому что этот образец есть в каждой строке списка и его нет в итоговой строке Successfully
       processed. Она в счёт не попадает, и число получается честным.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_icacls_count_ace_lines_1=итогов
-
-      observed_win_icacls_count_ace_lines_2=не попад'
-    fields:
-    - id: observed_win_icacls_count_ace_lines_1
-      label: 'Наблюдаемый факт 1: итогов / successfully / заголов / служебн'
-      accepted_values:
-      - итогов
-      - successfully
-      - заголов
-      - служебн
-      accepted_patterns: []
-    - id: observed_win_icacls_count_ace_lines_2
-      label: 'Наблюдаемый факт 2: не попад / не содерж / не счита / исключ'
-      accepted_values:
-      - не попад
-      - не содерж
-      - не счита
-      - исключ
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5012,29 +4085,9 @@ challenges:
     sample_answer: Номер 0 и номер 4 не меняются никогда. Нулевой это System Idle Process, псевдопроцесс,
       показывающий простой системы, а не работу. Четвёртый это само ядро. Остальные номера раздаются заново
       при каждой перезагрузке.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_tasklist_filter_imagename_1=0
-
-      observed_win_tasklist_filter_imagename_2=простой'
-    fields:
-    - id: observed_win_tasklist_filter_imagename_1
-      label: 'Наблюдаемый факт 1: 0 / 4 / ноль / четыре'
-      accepted_values:
-      - '0'
-      - '4'
-      - ноль
-      - четыре
-      accepted_patterns: []
-    - id: observed_win_tasklist_filter_imagename_2
-      label: 'Наблюдаемый факт 2: простой / idle / псевдопроцесс / ядро / system'
-      accepted_values:
-      - простой
-      - idle
-      - псевдопроцесс
-      - ядро
-      - system
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5078,26 +4131,9 @@ challenges:
     prompt: Чем System32 отличается от SysWOW64, если судить по разрядности библиотек?
     sample_answer: В System32 лежат 64-битные библиотеки, а в SysWOW64 32-битные. Названия устроены обратно
       интуиции, имя System32 осталось историческим, и это надо просто запомнить.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_dir_count_dlls_1=system32
-
-      observed_win_dir_count_dlls_2=syswow64'
-    fields:
-    - id: observed_win_dir_count_dlls_1
-      label: 'Наблюдаемый факт 1: system32 / 64 / 64-битн'
-      accepted_values:
-      - system32
-      - '64'
-      - 64-битн
-      accepted_patterns: []
-    - id: observed_win_dir_count_dlls_2
-      label: 'Наблюдаемый факт 2: syswow64 / 32 / 32-битн'
-      accepted_values:
-      - syswow64
-      - '32'
-      - 32-битн
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5143,28 +4179,9 @@ challenges:
       диске?
     sample_answer: 'Команда ответит, что ничего не нашла. Это не означает отсутствия файла на диске: она
       смотрит только каталоги маршрута поиска, а не весь том.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_where_locate_file_in_path_1=не найд
-
-      observed_win_where_locate_file_in_path_2=не означ'
-    fields:
-    - id: observed_win_where_locate_file_in_path_1
-      label: 'Наблюдаемый факт 1: не найд / ничего / пуст / not found'
-      accepted_values:
-      - не найд
-      - ничего
-      - пуст
-      - not found
-      accepted_patterns: []
-    - id: observed_win_where_locate_file_in_path_2
-      label: 'Наблюдаемый факт 2: не означ / может быть / вне маршрут / не весь диск'
-      accepted_values:
-      - не означ
-      - может быть
-      - вне маршрут
-      - не весь диск
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5210,27 +4227,9 @@ challenges:
     prompt: Три графы карточки это имя, тип и данные. Почему тип это часть ответа, а не украшение?
     sample_answer: Потому что скрипт, читающий значение не того типа, просто ничего не найдёт и решит,
       что настройки нет. Значение AutoAdminLogon хранит единицу, но объявлено строкой REG_SZ, а не числом.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_query_computer_name_1=тип
-
-      observed_win_reg_query_computer_name_2=скрипт'
-    fields:
-    - id: observed_win_reg_query_computer_name_1
-      label: 'Наблюдаемый факт 1: тип / reg_'
-      accepted_values:
-      - тип
-      - reg_
-      accepted_patterns: []
-    - id: observed_win_reg_query_computer_name_2
-      label: 'Наблюдаемый факт 2: скрипт / сравн / не найд / прочит / не то'
-      accepted_values:
-      - скрипт
-      - сравн
-      - не найд
-      - прочит
-      - не то
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5279,28 +4278,9 @@ challenges:
     sample_answer: Рядом стоят DefaultUserName, AutoAdminLogon, AutoLogonSID и DefaultDomainName. Пароль
       автовхода, если он задан, лежит здесь же в значении DefaultPassword открытым текстом, поэтому связку
       смотрят первой.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_query_whole_key_1=defaultusername
-
-      observed_win_reg_query_whole_key_2=открыт'
-    fields:
-    - id: observed_win_reg_query_whole_key_1
-      label: 'Наблюдаемый факт 1: defaultusername / autoadminlogon / defaultpassword / связк'
-      accepted_values:
-      - defaultusername
-      - autoadminlogon
-      - defaultpassword
-      - связк
-      accepted_patterns: []
-    - id: observed_win_reg_query_whole_key_2
-      label: 'Наблюдаемый факт 2: открыт / текст / пароль / в реестре'
-      accepted_values:
-      - открыт
-      - текст
-      - пароль
-      - в реестре
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5347,29 +4327,9 @@ challenges:
     sample_answer: 'Первым проверяют регистр: без ключа /i find ищет строчное hkey, а в выводе стоит HKEY,
       и ответ становится нулевым. Ключ /s у чтения реестра спускается по всему дереву вглубь и возвращает
       совсем другое число, а нужны только разделы первого уровня.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_count_subkeys_1=регистр
-
-      observed_win_reg_count_subkeys_2=/s'
-    fields:
-    - id: observed_win_reg_count_subkeys_1
-      label: 'Наблюдаемый факт 1: регистр / /i / hkey / заглавн'
-      accepted_values:
-      - регистр
-      - /i
-      - hkey
-      - заглавн
-      accepted_patterns: []
-    - id: observed_win_reg_count_subkeys_2
-      label: 'Наблюдаемый факт 2: /s / вглубь / всё дерево / другое число / не первого уровня'
-      accepted_values:
-      - /s
-      - вглубь
-      - всё дерево
-      - другое число
-      - не первого уровня
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5417,29 +4377,9 @@ challenges:
     prompt: Что лежит в ветке \Microsoft\Windows\ и что означает задание, лежащее в корне?
     sample_answer: В ветке \Microsoft\Windows\ лежит то, что поставила система при установке. Задание
       в корне поставил кто-то ещё, и именно оно интересно при разведке.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_schtasks_query_one_task_1=систем
-
-      observed_win_schtasks_query_one_task_2=корн'
-    fields:
-    - id: observed_win_schtasks_query_one_task_1
-      label: 'Наблюдаемый факт 1: систем / заводск / при установк / microsoft'
-      accepted_values:
-      - систем
-      - заводск
-      - при установк
-      - microsoft
-      accepted_patterns: []
-    - id: observed_win_schtasks_query_one_task_2
-      label: 'Наблюдаемый факт 2: корн / кто-то / человек / программ / интересн'
-      accepted_values:
-      - корн
-      - кто-то
-      - человек
-      - программ
-      - интересн
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5491,28 +4431,9 @@ challenges:
     prompt: Почему кавычки двойные и почему после двоеточия не ставят пробел?
     sample_answer: 'Одинарные кавычки findstr не понимает и попробует открыть файл с таким именем. Пробел
       после двоеточия ломает команду: ключ и текст пишутся слитно.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_schtasks_field_by_filter_1=двойн
-
-      observed_win_schtasks_field_by_filter_2=пробел'
-    fields:
-    - id: observed_win_schtasks_field_by_filter_1
-      label: 'Наблюдаемый факт 1: двойн / одинарн / не понима / файл'
-      accepted_values:
-      - двойн
-      - одинарн
-      - не понима
-      - файл
-      accepted_patterns: []
-    - id: observed_win_schtasks_field_by_filter_2
-      label: 'Наблюдаемый факт 2: пробел / слитно / ломает / без пробела'
-      accepted_values:
-      - пробел
-      - слитно
-      - ломает
-      - без пробела
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5561,28 +4482,9 @@ challenges:
     prompt: Вы создали LabTask, а система в ответе показывает \LabTask. Это ошибка?
     sample_answer: Нет. Полное имя задания это путь в дереве папок, и корень обозначается обратным слэшем.
       При создании имя пишут как есть, при запросе без начального слэша.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_schtasks_create_daily_task_1=нет
-
-      observed_win_schtasks_create_daily_task_2=путь'
-    fields:
-    - id: observed_win_schtasks_create_daily_task_1
-      label: 'Наблюдаемый факт 1: нет / не ошибк / не сбой'
-      accepted_values:
-      - нет
-      - не ошибк
-      - не сбой
-      accepted_patterns: []
-    - id: observed_win_schtasks_create_daily_task_2
-      label: 'Наблюдаемый факт 2: путь / корн / слеш / полное имя / дерев'
-      accepted_values:
-      - путь
-      - корн
-      - слеш
-      - полное имя
-      - дерев
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5630,26 +4532,9 @@ challenges:
     sample_answer: 'Поле состояния принимает значения Ready, Running и Disabled. Отдельно встречается
       тип расписания On demand only: по календарю задание не запускается, его вызывает система по своему
       решению.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_schtasks_query_short_1=ready
-
-      observed_win_schtasks_query_short_2=running'
-    fields:
-    - id: observed_win_schtasks_query_short_1
-      label: 'Наблюдаемый факт 1: ready / готов'
-      accepted_values:
-      - ready
-      - готов
-      accepted_patterns: []
-    - id: observed_win_schtasks_query_short_2
-      label: 'Наблюдаемый факт 2: running / disabled / работ / отключ'
-      accepted_values:
-      - running
-      - disabled
-      - работ
-      - отключ
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5694,29 +4579,9 @@ challenges:
     prompt: Почему ключ /f здесь не работает, а у удаления работает?
     sample_answer: Ключ /f означает не переспрашивать при удалении. Запуск ничего не переспрашивает, поэтому
       такого ключа у него нет и команда ответит Invalid argument.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_schtasks_run_now_1=удален
-
-      observed_win_schtasks_run_now_2=запуск'
-    fields:
-    - id: observed_win_schtasks_run_now_1
-      label: 'Наблюдаемый факт 1: удален / delete / переспраш / вопрос'
-      accepted_values:
-      - удален
-      - delete
-      - переспраш
-      - вопрос
-      accepted_patterns: []
-    - id: observed_win_schtasks_run_now_2
-      label: 'Наблюдаемый факт 2: запуск / run / нет / не переспраш / invalid'
-      accepted_values:
-      - запуск
-      - run
-      - нет
-      - не переспраш
-      - invalid
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5760,28 +4625,9 @@ challenges:
     prompt: Как убедиться, что задание действительно исчезло?
     sample_answer: 'Повторным чтением по тому же имени: если задание исчезло, чтение ответит ошибкой,
       а не карточкой. Это проверка фактом, а не доверие сообщению об успехе.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_schtasks_delete_force_1=запрос
-
-      observed_win_schtasks_delete_force_2=не найд'
-    fields:
-    - id: observed_win_schtasks_delete_force_1
-      label: 'Наблюдаемый факт 1: запрос / query / прочит / повтор'
-      accepted_values:
-      - запрос
-      - query
-      - прочит
-      - повтор
-      accepted_patterns: []
-    - id: observed_win_schtasks_delete_force_2
-      label: 'Наблюдаемый факт 2: не найд / ошибк / нет / not found'
-      accepted_values:
-      - не найд
-      - ошибк
-      - нет
-      - not found
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5825,26 +4671,9 @@ challenges:
     prompt: Сколько строк напечатала команда и какая из них отвечает на вопрос о метке?
     sample_answer: 'Две строки: метка тома и серийный номер. На вопрос о метке отвечает первая, серийный
       номер в ответ не входит.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_vol_volume_label_1=две
-
-      observed_win_vol_volume_label_2=метк'
-    fields:
-    - id: observed_win_vol_volume_label_1
-      label: 'Наблюдаемый факт 1: две / 2 / дв'
-      accepted_values:
-      - две
-      - '2'
-      - дв
-      accepted_patterns: []
-    - id: observed_win_vol_volume_label_2
-      label: 'Наблюдаемый факт 2: метк / перв / не серийн'
-      accepted_values:
-      - метк
-      - перв
-      - не серийн
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5891,28 +4720,9 @@ challenges:
     sample_answer: 'Потому что место выделяется целыми кластерами: файл в один байт займёт весь кластер.
       В скобках система дублирует то же значение в килобайтах, и в ответ, где просят байты, скобки не
       входят.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_fsutil_bytes_per_cluster_1=кластер
-
-      observed_win_fsutil_bytes_per_cluster_2=килобайт'
-    fields:
-    - id: observed_win_fsutil_bytes_per_cluster_1
-      label: 'Наблюдаемый факт 1: кластер / цел / порци / минимальн'
-      accepted_values:
-      - кластер
-      - цел
-      - порци
-      - минимальн
-      accepted_patterns: []
-    - id: observed_win_fsutil_bytes_per_cluster_2
-      label: 'Наблюдаемый факт 2: килобайт / скобк / дублир / то же'
-      accepted_values:
-      - килобайт
-      - скобк
-      - дублир
-      - то же
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -5961,25 +4771,9 @@ challenges:
     prompt: Что сейчас лежит в этом файле с точки зрения потоков данных?
     sample_answer: Пока только один поток, основной и безымянный. Именно его содержимое видно при открытии
       файла, и именно его размер печатает листинг.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_copy_single_file_1=один
-
-      observed_win_copy_single_file_2=поток'
-    fields:
-    - id: observed_win_copy_single_file_1
-      label: 'Наблюдаемый факт 1: один / основн / безымян'
-      accepted_values:
-      - один
-      - основн
-      - безымян
-      accepted_patterns: []
-    - id: observed_win_copy_single_file_2
-      label: 'Наблюдаемый факт 2: поток / данн'
-      accepted_values:
-      - поток
-      - данн
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6026,28 +4820,9 @@ challenges:
     sample_answer: 'Не изменились ни размер в листинге, ни дата изменения, ни содержимое при открытии:
       они относятся к основному потоку. Файл выглядит нетронутым, а данные в нём есть, и именно поэтому
       приём попал в курс.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_type_into_alternate_stream_1=размер
-
-      observed_win_type_into_alternate_stream_2=выгляд'
-    fields:
-    - id: observed_win_type_into_alternate_stream_1
-      label: 'Наблюдаемый факт 1: размер / дата / содержим'
-      accepted_values:
-      - размер
-      - дата
-      - содержим
-      accepted_patterns: []
-    - id: observed_win_type_into_alternate_stream_2
-      label: 'Наблюдаемый факт 2: выгляд / нетронут / не видно / скрыт / спрят'
-      accepted_values:
-      - выгляд
-      - нетронут
-      - не видно
-      - скрыт
-      - спрят
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6092,26 +4867,9 @@ challenges:
     prompt: Из каких трёх частей состоит строка потока и что означает последняя?
     sample_answer: Строка состоит из имени файла, имени потока и типа атрибута. Последняя часть $DATA
       это и есть тип атрибута, а не часть имени.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_dir_show_streams_1=имя файла
-
-      observed_win_dir_show_streams_2=$data'
-    fields:
-    - id: observed_win_dir_show_streams_1
-      label: 'Наблюдаемый факт 1: имя файла / имя потока / три'
-      accepted_values:
-      - имя файла
-      - имя потока
-      - три
-      accepted_patterns: []
-    - id: observed_win_dir_show_streams_2
-      label: 'Наблюдаемый факт 2: $data / тип / атрибут'
-      accepted_values:
-      - $data
-      - тип
-      - атрибут
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6155,26 +4913,9 @@ challenges:
     prompt: Почему обычная команда печати файла здесь не работает?
     sample_answer: 'Потому что она не принимает синтаксис с двоеточием: имя вида файл:поток она за имя
       файла не считает. Поэтому поток читают перенаправлением на вход другой команды.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_more_read_stream_1=двоеточ
-
-      observed_win_more_read_stream_2=не приним'
-    fields:
-    - id: observed_win_more_read_stream_1
-      label: 'Наблюдаемый факт 1: двоеточ / синтаксис / :'
-      accepted_values:
-      - двоеточ
-      - синтаксис
-      - ':'
-      accepted_patterns: []
-    - id: observed_win_more_read_stream_2
-      label: 'Наблюдаемый факт 2: не приним / не понима / не работ'
-      accepted_values:
-      - не приним
-      - не понима
-      - не работ
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6218,27 +4959,9 @@ challenges:
     prompt: Что произойдёт с этим потоком при копировании файла на FAT32 или в архив?
     sample_answer: 'Поток молча потеряется: именованные потоки существуют только на NTFS. Это же свойство
       используют как проверку: если поток исчез, файл где-то прошёл через не-NTFS носитель.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_more_stream_count_lines_1=потеря
-
-      observed_win_more_stream_count_lines_2=ntfs'
-    fields:
-    - id: observed_win_more_stream_count_lines_1
-      label: 'Наблюдаемый факт 1: потеря / исчез / не сохран / молча'
-      accepted_values:
-      - потеря
-      - исчез
-      - не сохран
-      - молча
-      accepted_patterns: []
-    - id: observed_win_more_stream_count_lines_2
-      label: 'Наблюдаемый факт 2: ntfs / только на / не поддерж'
-      accepted_values:
-      - ntfs
-      - только на
-      - не поддерж
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6282,32 +5005,16 @@ challenges:
     prompt: Какая часть идентификатора отвечает на вопрос о RID и с какого номера идут локальные записи?
     sample_answer: RID это часть после последнего дефиса. Локальные записи получают номера с 1000 по порядку
       создания, а 500 и 501 закреплены за встроенным администратором и гостем.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_powershell_get_localuser_sid_1=последн
-
-      observed_win_powershell_get_localuser_sid_2=1000'
-    fields:
-    - id: observed_win_powershell_get_localuser_sid_1
-      label: 'Наблюдаемый факт 1: последн / после дефис / хвост / конц'
-      accepted_values:
-      - последн
-      - после дефис
-      - хвост
-      - конц
-      accepted_patterns: []
-    - id: observed_win_powershell_get_localuser_sid_2
-      label: 'Наблюдаемый факт 2: 1000 / тысяч'
-      accepted_values:
-      - '1000'
-      - тысяч
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
     working_directory: C:\Training
     named_inputs:
-      target_path: (Get-LocalUser auditor).SID.Value
+      user: auditor
+      property: SID
     constraints:
     - Используйте только именованные синтетические исходные данные условия.
     - Ответ вводится как текст и не исполняется приложением Coach.
@@ -6345,28 +5052,9 @@ challenges:
     prompt: Считается ли отключённая запись при подсчёте состава группы?
     sample_answer: Считается. Встроенная Administrator присутствует в составе группы даже когда она выключена,
       и при подсчёте её не выбрасывают.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_localgroup_add_member_1=да
-
-      observed_win_net_localgroup_add_member_2=administrator'
-    fields:
-    - id: observed_win_net_localgroup_add_member_1
-      label: 'Наблюдаемый факт 1: да / счита / не выбрас / наравне'
-      accepted_values:
-      - да
-      - счита
-      - не выбрас
-      - наравне
-      accepted_patterns: []
-    - id: observed_win_net_localgroup_add_member_2
-      label: 'Наблюдаемый факт 2: administrator / встроен / отключ / выключ'
-      accepted_values:
-      - administrator
-      - встроен
-      - отключ
-      - выключ
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6412,28 +5100,9 @@ challenges:
     prompt: Вернулось ли к вам управление, и что это говорит о связи окна программы с этим окном?
     sample_answer: Управление вернулось немедленно. Окно программы живёт отдельно от командной строки,
       и та не ждёт его закрытия.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_start_detached_program_1=вернул
-
-      observed_win_start_detached_program_2=своей жизнью'
-    fields:
-    - id: observed_win_start_detached_program_1
-      label: 'Наблюдаемый факт 1: вернул / сразу / немедлен / свободн'
-      accepted_values:
-      - вернул
-      - сразу
-      - немедлен
-      - свободн
-      accepted_patterns: []
-    - id: observed_win_start_detached_program_2
-      label: 'Наблюдаемый факт 2: своей жизнью / отдельн / не ждёт / независим'
-      accepted_values:
-      - своей жизнью
-      - отдельн
-      - не ждёт
-      - независим
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6478,28 +5147,9 @@ challenges:
     prompt: Почему колонка владельца важнее имени программы?
     sample_answer: Потому что один и тот же файл, запущенный вами и запущенный системой, это две разные
       величины риска. Имя программы об этом не говорит ничего.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_tasklist_verbose_filter_1=владел
-
-      observed_win_tasklist_verbose_filter_2=риск'
-    fields:
-    - id: observed_win_tasklist_verbose_filter_1
-      label: 'Наблюдаемый факт 1: владел / user name / от чьего / кто запуст'
-      accepted_values:
-      - владел
-      - user name
-      - от чьего
-      - кто запуст
-      accepted_patterns: []
-    - id: observed_win_tasklist_verbose_filter_2
-      label: 'Наблюдаемый факт 2: риск / систем / разн / не одно и то же'
-      accepted_values:
-      - риск
-      - систем
-      - разн
-      - не одно и то же
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6543,28 +5193,9 @@ challenges:
     prompt: Как единственно надёжно доказать, что процесс снят?
     sample_answer: 'Выполнить ту же команду второй раз. Если процесса больше нет, вместо SUCCESS придёт
       ERROR: The process not found. Это и есть доказательство, что первая команда сработала.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_taskkill_force_by_image_1=повтор
-
-      observed_win_taskkill_force_by_image_2=not found'
-    fields:
-    - id: observed_win_taskkill_force_by_image_1
-      label: 'Наблюдаемый факт 1: повтор / дважды / второй раз / ещё раз'
-      accepted_values:
-      - повтор
-      - дважды
-      - второй раз
-      - ещё раз
-      accepted_patterns: []
-    - id: observed_win_taskkill_force_by_image_2
-      label: 'Наблюдаемый факт 2: not found / не найд / error / ошибк'
-      accepted_values:
-      - not found
-      - не найд
-      - error
-      - ошибк
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6611,27 +5242,9 @@ challenges:
     prompt: Записали 4242. Что вы увидите при обратном чтении и почему?
     sample_answer: 'Увидите 0x1092: тип REG_DWORD печатается в шестнадцатеричном виде. Это то же самое
       число, но скрипт, сравнивающий строки, об этом не знает.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_add_dword_1=0x
-
-      observed_win_reg_add_dword_2=то же число'
-    fields:
-    - id: observed_win_reg_add_dword_1
-      label: 'Наблюдаемый факт 1: 0x / шестнадцат / hex'
-      accepted_values:
-      - 0x
-      - шестнадцат
-      - hex
-      accepted_patterns: []
-    - id: observed_win_reg_add_dword_2
-      label: 'Наблюдаемый факт 2: то же число / одно и то же / reg_dword / печата'
-      accepted_values:
-      - то же число
-      - одно и то же
-      - reg_dword
-      - печата
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6682,27 +5295,9 @@ challenges:
     sample_answer: 'Тип говорит, как значение хранится и как его прочитает программа, а данные говорят,
       что там лежит. Одно без другого ведёт к ошибке: единица в строке REG_SZ и единица в числе REG_DWORD
       это разные вещи для читающего скрипта.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_query_value_1=тип
-
-      observed_win_reg_query_value_2=как читать'
-    fields:
-    - id: observed_win_reg_query_value_1
-      label: 'Наблюдаемый факт 1: тип / reg_'
-      accepted_values:
-      - тип
-      - reg_
-      accepted_patterns: []
-    - id: observed_win_reg_query_value_2
-      label: 'Наблюдаемый факт 2: как читать / как хранит / скрипт / сравн / интерпрет'
-      accepted_values:
-      - как читать
-      - как хранит
-      - скрипт
-      - сравн
-      - интерпрет
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6752,30 +5347,9 @@ challenges:
     sample_answer: 'Ничего: главный выключатель отменяет табличку. Если он равен 0x0, механизма нет, и
       сколько бы ни было написано в политиках запроса, система спрашивать не будет. Любая запущенная программа
       сразу работает с полными правами администратора.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_query_enablelua_1=ничего
-
-      observed_win_reg_query_enablelua_2=выключ'
-    fields:
-    - id: observed_win_reg_query_enablelua_1
-      label: 'Наблюдаемый факт 1: ничего / не увид / не спрос / молч / без окна'
-      accepted_values:
-      - ничего
-      - не увид
-      - не спрос
-      - молч
-      - без окна
-      accepted_patterns: []
-    - id: observed_win_reg_query_enablelua_2
-      label: 'Наблюдаемый факт 2: выключ / 0x0 / главн / обесцен / отмен'
-      accepted_values:
-      - выключ
-      - '0x0'
-      - главн
-      - обесцен
-      - отмен
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6822,28 +5396,9 @@ challenges:
     prompt: Почему образцом взяли начало имени типа, а не слово HKEY?
     sample_answer: Потому что начало имени типа стоит в каждой строке значения и его нет в строке заголовка
       с путём ветки. Слово HKEY, наоборот, есть именно в заголовке, и счёт получился бы неверным.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_count_values_in_key_1=заголов
-
-      observed_win_reg_count_values_in_key_2=каждой'
-    fields:
-    - id: observed_win_reg_count_values_in_key_1
-      label: 'Наблюдаемый факт 1: заголов / путь / ветк / строка с путём'
-      accepted_values:
-      - заголов
-      - путь
-      - ветк
-      - строка с путём
-      accepted_patterns: []
-    - id: observed_win_reg_count_values_in_key_2
-      label: 'Наблюдаемый факт 2: каждой / все значен / только значен / нет в заголовке'
-      accepted_values:
-      - каждой
-      - все значен
-      - только значен
-      - нет в заголовке
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6889,27 +5444,9 @@ challenges:
     prompt: В какую группу попадает новая запись и что означает звёздочка перед её именем?
     sample_answer: Новая запись автоматически попадает в группу Users. Звёздочка это пометка членства,
       которую Windows ставит перед именем группы, и она является частью значения, а не украшением.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_user_show_account_1=users
-
-      observed_win_net_user_show_account_2=звёздочк'
-    fields:
-    - id: observed_win_net_user_show_account_1
-      label: 'Наблюдаемый факт 1: users / групп'
-      accepted_values:
-      - users
-      - групп
-      accepted_patterns: []
-    - id: observed_win_net_user_show_account_2
-      label: 'Наблюдаемый факт 2: звёздочк / * / член / часть значен / пометк'
-      accepted_values:
-      - звёздочк
-      - '*'
-      - член
-      - часть значен
-      - пометк
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -6954,29 +5491,9 @@ challenges:
     prompt: Чем именно опасна эта группа с точки зрения разбора инцидента?
     sample_answer: Членство в ней это право войти на машину по RDP. Для атакующего добавление своей записи
       превращает разовый доступ в постоянный, поэтому изменения в этой группе отслеживают в журналах безопасности.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_localgroup_add_quoted_group_1=rdp
-
-      observed_win_net_localgroup_add_quoted_group_2=постоян'
-    fields:
-    - id: observed_win_net_localgroup_add_quoted_group_1
-      label: 'Наблюдаемый факт 1: rdp / вход / удалён / по сети'
-      accepted_values:
-      - rdp
-      - вход
-      - удалён
-      - по сети
-      accepted_patterns: []
-    - id: observed_win_net_localgroup_add_quoted_group_2
-      label: 'Наблюдаемый факт 2: постоян / закреп / разов / журнал / отслеж'
-      accepted_values:
-      - постоян
-      - закреп
-      - разов
-      - журнал
-      - отслеж
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7023,28 +5540,9 @@ challenges:
       команды?
     sample_answer: Он доказывает фактический состав группы на этот момент. Сообщение об успехе говорит
       только о том, что команда не завершилась ошибкой, а это не одно и то же.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_localgroup_show_quoted_group_1=состав
-
-      observed_win_net_localgroup_show_quoted_group_2=факт'
-    fields:
-    - id: observed_win_net_localgroup_show_quoted_group_1
-      label: 'Наблюдаемый факт 1: состав / член / есть в групп / список'
-      accepted_values:
-      - состав
-      - член
-      - есть в групп
-      - список
-      accepted_patterns: []
-    - id: observed_win_net_localgroup_show_quoted_group_2
-      label: 'Наблюдаемый факт 2: факт / результат / проверк / на самом деле'
-      accepted_values:
-      - факт
-      - результат
-      - проверк
-      - на самом деле
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7091,30 +5589,9 @@ challenges:
     sample_answer: 'Остаются идентификатор, членство в группах и доступ к файлам: достаточно снова включить
       запись, и всё вернётся. Это готовая дверь, которую закрыли, но не заложили, поэтому смотреть надо
       не только на тех, кто есть, но и на тех, кто выключен.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_user_disable_account_1=sid
-
-      observed_win_net_user_disable_account_2=включ'
-    fields:
-    - id: observed_win_net_user_disable_account_1
-      label: 'Наблюдаемый факт 1: sid / идентификатор / прав / членств / групп'
-      accepted_values:
-      - sid
-      - идентификатор
-      - прав
-      - членств
-      - групп
-      accepted_patterns: []
-    - id: observed_win_net_user_disable_account_2
-      label: 'Наблюдаемый факт 2: включ / вернуть / дверь / готов / обратно'
-      accepted_values:
-      - включ
-      - вернуть
-      - дверь
-      - готов
-      - обратно
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7160,28 +5637,9 @@ challenges:
     prompt: 'Что означает ответ No в этом поле: запись удалена или существует?'
     sample_answer: Запись существует, войти под ней нельзя. Отключение и удаление это два разных состояния,
       и путать их при подсчёте записей нельзя.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_user_active_field_1=существ
-
-      observed_win_net_user_active_field_2=войти нельзя'
-    fields:
-    - id: observed_win_net_user_active_field_1
-      label: 'Наблюдаемый факт 1: существ / остал / есть / не удал'
-      accepted_values:
-      - существ
-      - остал
-      - есть
-      - не удал
-      accepted_patterns: []
-    - id: observed_win_net_user_active_field_2
-      label: 'Наблюдаемый факт 2: войти нельзя / отключ / неактивн / вход'
-      accepted_values:
-      - войти нельзя
-      - отключ
-      - неактивн
-      - вход
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7230,28 +5688,9 @@ challenges:
     sample_answer: Maximum password age это срок действия пароля, а Minimum password age это срок, в течение
       которого пароль нельзя менять после смены. Их путают потому, что строки стоят в выводе рядом и различаются
       одним словом.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_accounts_password_policy_1=срок действ
-
-      observed_win_net_accounts_password_policy_2=нельзя менять'
-    fields:
-    - id: observed_win_net_accounts_password_policy_1
-      label: 'Наблюдаемый факт 1: срок действ / сколько живёт / истека / максимальн'
-      accepted_values:
-      - срок действ
-      - сколько живёт
-      - истека
-      - максимальн
-      accepted_patterns: []
-    - id: observed_win_net_accounts_password_policy_2
-      label: 'Наблюдаемый факт 2: нельзя менять / после смены / минимальн / рядом'
-      accepted_values:
-      - нельзя менять
-      - после смены
-      - минимальн
-      - рядом
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7295,29 +5734,9 @@ challenges:
     prompt: Чем результат этой команды отличается от отключения записи?
     sample_answer: При отключении запись остаётся со своим идентификатором и правами, и её достаточно
       включить обратно. При удалении она исчезает, и вернуть её включением нельзя.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_user_delete_account_1=sid
-
-      observed_win_net_user_delete_account_2=включ'
-    fields:
-    - id: observed_win_net_user_delete_account_1
-      label: 'Наблюдаемый факт 1: sid / идентификатор / не остаётся / исчез / совсем'
-      accepted_values:
-      - sid
-      - идентификатор
-      - не остаётся
-      - исчез
-      - совсем
-      accepted_patterns: []
-    - id: observed_win_net_user_delete_account_2
-      label: 'Наблюдаемый факт 2: включ / вернуть / нельзя / не восстанов'
-      accepted_values:
-      - включ
-      - вернуть
-      - нельзя
-      - не восстанов
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7364,27 +5783,9 @@ challenges:
     prompt: Почему образцом взяли именно эту пометку?
     sample_answer: Потому что она стоит перед каждым именем группы и её нет ни в заголовке, ни в итоговой
       строке. Счёт получается ровно по числу групп.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_net_localgroup_count_1=перед кажд
-
-      observed_win_net_localgroup_count_2=заголов'
-    fields:
-    - id: observed_win_net_localgroup_count_1
-      label: 'Наблюдаемый факт 1: перед кажд / каждой групп / у всех'
-      accepted_values:
-      - перед кажд
-      - каждой групп
-      - у всех
-      accepted_patterns: []
-    - id: observed_win_net_localgroup_count_2
-      label: 'Наблюдаемый факт 2: заголов / нет / успешн / не попад'
-      accepted_values:
-      - заголов
-      - нет
-      - успешн
-      - не попад
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7430,30 +5831,9 @@ challenges:
     prompt: Что реально попало в реестр и почему тип REG_EXPAND_SZ здесь бесполезен?
     sample_answer: 'В реестр попал уже готовый путь: интерпретатор подставил значение переменной ещё до
       того, как команда её увидела. Тип REG_EXPAND_SZ сохранился, но раскрывать в нём больше нечего.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_add_expand_sz_1=готов
-
-      observed_win_reg_add_expand_sz_2=до'
-    fields:
-    - id: observed_win_reg_add_expand_sz_1
-      label: 'Наблюдаемый факт 1: готов / раскрыт / c:\ / путь / подстав'
-      accepted_values:
-      - готов
-      - раскрыт
-      - c:\
-      - путь
-      - подстав
-      accepted_patterns: []
-    - id: observed_win_reg_add_expand_sz_2
-      label: 'Наблюдаемый факт 2: до / раньше / cmd / интерпретатор / нечего'
-      accepted_values:
-      - до
-      - раньше
-      - cmd
-      - интерпретатор
-      - нечего
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7502,28 +5882,9 @@ challenges:
     prompt: Почему тип нельзя выбрать наугад, если данные всё равно записываются?
     sample_answer: Потому что читающая программа ищет значение конкретного типа. Единица в строке REG_SZ
       и единица в числе REG_DWORD для неё разные вещи, и при неверном типе она просто ничего не найдёт.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_add_string_1=скрипт
-
-      observed_win_reg_add_string_2=не найд'
-    fields:
-    - id: observed_win_reg_add_string_1
-      label: 'Наблюдаемый факт 1: скрипт / программ / чита / сравн'
-      accepted_values:
-      - скрипт
-      - программ
-      - чита
-      - сравн
-      accepted_patterns: []
-    - id: observed_win_reg_add_string_2
-      label: 'Наблюдаемый факт 2: не найд / не то / ошибк / другой тип'
-      accepted_values:
-      - не найд
-      - не то
-      - ошибк
-      - другой тип
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7571,27 +5932,9 @@ challenges:
     prompt: Строка с полным путём ветки в начале вывода это значение?
     sample_answer: Нет, это заголовок с путём ветки. При подсчёте значений его не учитывают, иначе число
       окажется на единицу больше.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_query_whole_branch_1=нет
-
-      observed_win_reg_query_whole_branch_2=заголов'
-    fields:
-    - id: observed_win_reg_query_whole_branch_1
-      label: 'Наблюдаемый факт 1: нет / не значен / не карточк'
-      accepted_values:
-      - нет
-      - не значен
-      - не карточк
-      accepted_patterns: []
-    - id: observed_win_reg_query_whole_branch_2
-      label: 'Наблюдаемый факт 2: заголов / путь / не учит / не счита'
-      accepted_values:
-      - заголов
-      - путь
-      - не учит
-      - не счита
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7636,27 +5979,9 @@ challenges:
     prompt: Что произойдёт, если выполнить ту же команду без ключа имени?
     sample_answer: Удалится весь раздел вместе со вложенными. Разница ровно в одном ключе, поэтому перед
       правкой ветку принято выгружать в файл.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_delete_one_value_1=весь раздел
-
-      observed_win_reg_delete_one_value_2=вложен'
-    fields:
-    - id: observed_win_reg_delete_one_value_1
-      label: 'Наблюдаемый факт 1: весь раздел / вся ветк / всю папк / целиком'
-      accepted_values:
-      - весь раздел
-      - вся ветк
-      - всю папк
-      - целиком
-      accepted_patterns: []
-    - id: observed_win_reg_delete_one_value_2
-      label: 'Наблюдаемый факт 2: вложен / вместе / со всем'
-      accepted_values:
-      - вложен
-      - вместе
-      - со всем
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7703,27 +6028,9 @@ challenges:
     prompt: Что представляет собой полученный файл и что стоит в его первой строке?
     sample_answer: Это обычный текстовый файл. Его первая строка это заголовок формата Windows Registry
       Editor Version 5.00, а не ваши данные. Дальше идут раздел в квадратных скобках и значения.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_reg_export_branch_1=текстов
-
-      observed_win_reg_export_branch_2=заголов'
-    fields:
-    - id: observed_win_reg_export_branch_1
-      label: 'Наблюдаемый факт 1: текстов / обычн / текст'
-      accepted_values:
-      - текстов
-      - обычн
-      - текст
-      accepted_patterns: []
-    - id: observed_win_reg_export_branch_2
-      label: 'Наблюдаемый факт 2: заголов / windows registry editor / формат / не данн'
-      accepted_values:
-      - заголов
-      - windows registry editor
-      - формат
-      - не данн
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7770,29 +6077,9 @@ challenges:
       чтение реестра?
     sample_answer: 'Числовое значение записано как dword: с шестнадцатеричным числом и ведущими нулями.
       Это то же самое число, что печатает чтение реестра, только записано в другом формате.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_type_read_exported_file_1=dword:
-
-      observed_win_type_read_exported_file_2=то же'
-    fields:
-    - id: observed_win_type_read_exported_file_1
-      label: 'Наблюдаемый факт 1: dword: / шестнадцат / нол / 000003e8'
-      accepted_values:
-      - 'dword:'
-      - шестнадцат
-      - нол
-      - 000003e8
-      accepted_patterns: []
-    - id: observed_win_type_read_exported_file_2
-      label: 'Наблюдаемый факт 2: то же / одно и то же / число / по-разному / формат'
-      accepted_values:
-      - то же
-      - одно и то же
-      - число
-      - по-разному
-      - формат
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7837,26 +6124,9 @@ challenges:
     prompt: Что означает прочерк в колонке служб и как его пишут в ответе?
     sample_answer: Прочерк означает, что процесс не обслуживает служб. Windows пишет вместо пустого значения
       три символа N/A, и в ответе их пишут ровно так.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_tasklist_services_column_1=не обслуж
-
-      observed_win_tasklist_services_column_2=n/a'
-    fields:
-    - id: observed_win_tasklist_services_column_1
-      label: 'Наблюдаемый факт 1: не обслуж / нет служб / ни одной'
-      accepted_values:
-      - не обслуж
-      - нет служб
-      - ни одной
-      accepted_patterns: []
-    - id: observed_win_tasklist_services_column_2
-      label: 'Наблюдаемый факт 2: n/a / три символ / ровно так'
-      accepted_values:
-      - n/a
-      - три символ
-      - ровно так
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7901,28 +6171,9 @@ challenges:
     sample_answer: 'Колонки идут в порядке имя образа, PID, имя сессии, номер сессии, память. Диспетчер
       сеансов живёт в сессии с именем Services и номером 0: службы и системные процессы всегда изолированы
       от рабочего стола пользователя.'
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_tasklist_no_header_1=имя
-
-      observed_win_tasklist_no_header_2=0'
-    fields:
-    - id: observed_win_tasklist_no_header_1
-      label: 'Наблюдаемый факт 1: имя / pid / сесси / памят'
-      accepted_values:
-      - имя
-      - pid
-      - сесси
-      - памят
-      accepted_patterns: []
-    - id: observed_win_tasklist_no_header_2
-      label: 'Наблюдаемый факт 2: 0 / services / нол / служб'
-      accepted_values:
-      - '0'
-      - services
-      - нол
-      - служб
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -7967,28 +6218,9 @@ challenges:
     prompt: Пометка каталога и пометка символической ссылки на каталог это одно и то же?
     sample_answer: Нет. У обычного каталога и у символической ссылки на каталог в листинге разные пометки,
       а рядом со ссылкой в квадратных скобках указывается её цель.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_dir_plain_listing_1=нет
-
-      observed_win_dir_plain_listing_2=<dir>'
-    fields:
-    - id: observed_win_dir_plain_listing_1
-      label: 'Наблюдаемый факт 1: нет / разн / не одно'
-      accepted_values:
-      - нет
-      - разн
-      - не одно
-      accepted_patterns: []
-    - id: observed_win_dir_plain_listing_2
-      label: 'Наблюдаемый факт 2: <dir> / ссылк / помет / цель / скобк'
-      accepted_values:
-      - <dir>
-      - ссылк
-      - помет
-      - цель
-      - скобк
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd
@@ -8032,29 +6264,9 @@ challenges:
     prompt: Что в этом списке поставила система, а что заслуживает отдельного внимания?
     sample_answer: Всё, что лежит в ветке \Microsoft\Windows\, поставила система при установке. Задания
       в корне поставил кто-то ещё, и именно они интересны при разборе.
-    example_output: 'SYNTHETIC RESULT
-
-      observed_win_schtasks_query_all_1=microsoft
-
-      observed_win_schtasks_query_all_2=корн'
-    fields:
-    - id: observed_win_schtasks_query_all_1
-      label: 'Наблюдаемый факт 1: microsoft / windows / заводск / систем'
-      accepted_values:
-      - microsoft
-      - windows
-      - заводск
-      - систем
-      accepted_patterns: []
-    - id: observed_win_schtasks_query_all_2
-      label: 'Наблюдаемый факт 2: корн / кто-то / интересн / человек / программ'
-      accepted_values:
-      - корн
-      - кто-то
-      - интересн
-      - человек
-      - программ
-      accepted_patterns: []
+    example_output: Пример вывода появится после снимка со стенда.
+    fields: []
+    output_source: pending
   version: 2
   context:
     shell: cmd

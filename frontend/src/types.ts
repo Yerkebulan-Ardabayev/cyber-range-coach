@@ -23,6 +23,15 @@ export interface Preflight {
   generated_at: string
 }
 
+export interface SimpleTheory {
+  analogy: string
+  what_it_does: string[]
+  words: Array<{ term: string; meaning: string }>
+  picture: string
+  check_question: string
+  check_answer: string
+}
+
 export interface Lesson {
   id: string
   order: number
@@ -34,6 +43,7 @@ export interface Lesson {
   target_tags: string[]
   requires_target: boolean
   term: { name: string; definition: string }
+  simple_theory?: SimpleTheory | null
   worked_example: string
   prediction_question: string
   command: string
@@ -259,6 +269,7 @@ export interface CommandPracticeResult {
   completed: boolean
   observation_example: string | null
   observation_fields: Array<{ id: string; label: string; required: boolean }>
+  correction?: { answer: string; purpose: string; typical_error: string } | null
 }
 
 export interface CommandObservationResult {
@@ -295,6 +306,8 @@ export interface MissionPlanItem {
   variant_id: string
   scenario: string
   prepared_data: MissionPreparedDataEntry[]
+  delivery?: 'screen' | 'terminal'
+  mission_directory?: string | null
   fact_fields: Array<{ id: string; label: string; required: boolean }>
   draft_attempt_key: string | null
   draft_artifact: string

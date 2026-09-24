@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import io
+import tarfile
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Literal
 
 import yaml
@@ -13,6 +15,8 @@ from ..errors import AppError
 from ..models import MissionRun
 from .command_practice import CommandCatalog
 from .mission_grader import MissionGradeStatus, MissionGradingContract, grade_mission
+
+MISSION_ROOT = "missions"
 
 
 class PreparedDataEntry(BaseModel):
@@ -40,6 +44,9 @@ class InvestigationMission(BaseModel):
     technique_ids: list[str] = Field(min_length=1)
     variant_rule: str = Field(min_length=1)
     requires_free_text: bool = True
+    # "terminal": files are written into the learner Linux and never shown on
+    # screen, so the answer has to be found with commands (spec.md 11.3 Б).
+    delivery: Literal["screen", "terminal"] = "screen"
     version: int = Field(ge=1)
     variants: list[MissionVariant] = Field(min_length=2)
 
@@ -73,6 +80,8 @@ class MissionPlanItem(BaseModel):
     variant_id: str
     scenario: str
     prepared_data: list[PreparedDataEntry]
+    delivery: Literal["screen", "terminal"] = "screen"
+    mission_directory: str | None = None
     fact_fields: list[dict[str, str | bool]]
     draft_attempt_key: str | None
     draft_artifact: str
@@ -197,7 +206,11 @@ def plan_missions(session: Session, catalog: MissionCatalog) -> MissionPlan:
                 version=mission.version,
                 variant_id=variant.id,
                 scenario=variant.scenario,
-                prepared_data=variant.prepared_data,
+                prepared_data=[] if mission.delivery == "terminal" else variant.prepared_data,
+                delivery=mission.delivery,
+                mission_directory=(
+                    f"~/{MISSION_ROOT}/{variant.id}" if mission.delivery == "terminal" else None
+                ),
                 fact_fields=[
                     {"id": field.id, "label": field.label, "required": True}
                     for field in variant.grading.facts
@@ -355,3 +368,27 @@ def complete_mission_run(
     result = _completion_from_run(run, variant, duplicate=False)
     result.field_errors = grade.field_errors
     return result
+
+
+def mission_seed_archive(mission: InvestigationMission, variant: MissionVariant) -> bytes:
+    """Pack the variant files as a gzip tar for the learner home directory."""
+    if mission.delivery != "terminal":
+        raise AppError(409, "mission_not_terminal", "Эта миссия показывает данные на экране.")
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz") as archive:
+        for entry in variant.prepared_data:
+            parts = PurePosixPath(entry.path).parts
+            if not parts or any(part in {"..", "."} for part in parts):
+                raise AppError(500, "mission_path_invalid", "Путь файла миссии недопустим.")
+            info = tarfile.TarInfo(entry.path)
+            info.mtime = 0
+            if entry.kind == "directory":
+                info.type = tarfile.DIRTYPE
+                info.mode = 0o755
+                archive.addfile(info)
+                continue
+            data = (entry.content.replace("\\n", "\n").rstrip("\n") + "\n").encode()
+            info.size = len(data)
+            info.mode = 0o644
+            archive.addfile(info, io.BytesIO(data))
+    return buffer.getvalue()
