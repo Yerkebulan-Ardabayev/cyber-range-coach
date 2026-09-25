@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 root = Path(SPECPATH).parents[1]
 datas = [
@@ -11,6 +11,8 @@ datas = [
     (str(root / "backend" / "migrations"), "backend/migrations"),
     (str(root / "alembic.ini"), "."),
 ]
+# Windows has no IANA time zone database; zoneinfo reads it from tzdata.
+datas += collect_data_files("tzdata")
 tesseract = root / "vendor" / "tesseract"
 if tesseract.is_dir():
     datas.append((str(tesseract), "vendor/tesseract"))
@@ -20,7 +22,11 @@ a = Analysis(
     pathex=[str(root / "backend" / "src")],
     binaries=[],
     datas=datas,
-    hiddenimports=collect_submodules("uvicorn") + collect_submodules("asyncssh"),
+    hiddenimports=(
+        collect_submodules("uvicorn")
+        + collect_submodules("asyncssh")
+        + collect_submodules("tzdata")
+    ),
     hookspath=[],
     runtime_hooks=[],
     excludes=["tkinter", "pytest", "playwright"],

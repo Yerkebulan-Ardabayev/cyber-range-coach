@@ -66,6 +66,7 @@ jobs:
           backend/tests/test_certificate_follows_address.py
           backend/tests/test_academy_stop.py
           backend/tests/test_wsl_wake_and_host_key.py
+          backend/tests/test_timezone_data.py
           -rA -s
       - name: Parse real Windows integration test
         shell: powershell
@@ -86,6 +87,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Application frozen smoke failed with $LASTEXITCODE" }
           & $Doctor --help
           if ($LASTEXITCODE -ne 0) { throw "Doctor frozen smoke failed with $LASTEXITCODE" }
+          # Browser time zones must resolve in the frozen build (25.09.2026: 422 on Windows).
+          $Zone = Get-ChildItem -Path "dist\CyberRangeCoach" -Recurse -Filter "Almaty" | Where-Object { $_.FullName -match "tzdata\\zoneinfo\\Asia\\Almaty$" }
+          if (-not $Zone) { throw "tzdata zoneinfo/Asia/Almaty is missing in the frozen build" }
 
   windows-installer:
     if: github.event_name == 'workflow_dispatch' && inputs.build_windows_installer

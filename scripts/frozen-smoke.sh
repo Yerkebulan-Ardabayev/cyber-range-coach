@@ -30,5 +30,9 @@ mkdir -p "$SMOKE_DATA_DIR"
 
 "$APP" --help >/dev/null
 "$DOCTOR" --help >/dev/null
+if ! /usr/bin/find "$SMOKE_ROOT/dist" -path '*tzdata/zoneinfo/Asia/Almaty' -type f | /usr/bin/grep -q .; then
+  printf '%s\n' "В сборке нет данных часовых поясов tzdata (нужны Windows, 25.09.2026: 422)." >&2
+  exit 1
+fi
 CRC_DATA_DIR="$SMOKE_DATA_DIR" "$DOCTOR" >"$SMOKE_DATA_DIR/doctor.json"
 uv run python -c 'import json, pathlib, sys; payload=json.loads(pathlib.Path(sys.argv[1]).read_text()); assert {"ready", "checks", "platform"} <= payload.keys()' "$SMOKE_DATA_DIR/doctor.json"
