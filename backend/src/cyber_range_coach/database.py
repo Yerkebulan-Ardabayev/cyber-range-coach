@@ -30,6 +30,9 @@ class Database:
 
     def initialize(self) -> None:
         migration_config = Config(str(project_root() / "alembic.ini"))
+        # The academy has already set up logging (file handler); alembic.ini's
+        # console config must not replace it when migrations run in-process.
+        migration_config.attributes["configure_logger"] = False
         migration_config.set_main_option(
             "script_location", str(project_root() / "backend" / "migrations")
         )

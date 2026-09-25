@@ -100,7 +100,7 @@ jobs:
         shell: powershell
         run: .\scripts\package-windows.ps1 -PrepareOcr
       - name: Smoke install and canonical executable
-        shell: powershell
+        shell: pwsh
         run: |
           $InstallDir = Join-Path $env:RUNNER_TEMP "CyberRangeCoach-Smoke"
           $Installer = Resolve-Path "dist\installer\CyberRangeCoach-Setup.exe"
@@ -110,6 +110,27 @@ jobs:
           if (-not (Test-Path -LiteralPath $Application -PathType Leaf)) { throw "Installed executable is missing" }
           $Cli = Start-Process -FilePath $Application -ArgumentList "--help" -Wait -PassThru
           if ($Cli.ExitCode -ne 0) { throw "Installed CLI smoke exited with $($Cli.ExitCode)" }
+          # Start the academy exactly like the Start menu shortcut ("serve --lan",
+          # windowed exe without console) and require a real HTTPS answer: a crash
+          # dialog keeps the process alive, so "still running" proves nothing.
+          $env:CRC_DATA_DIR = Join-Path $env:RUNNER_TEMP "CyberRangeCoach-Data"
+          $Setup = Start-Process -FilePath $Application -ArgumentList "setup", "--generate-certificate" -Wait -PassThru
+          if ($Setup.ExitCode -ne 0) { throw "Certificate setup exited with $($Setup.ExitCode)" }
+          $Academy = Start-Process -FilePath $Application -ArgumentList "serve", "--lan", "--no-browser" -PassThru
+          $answered = $false
+          for ($i = 0; $i -lt 90 -and -not $answered; $i++) {
+            Start-Sleep -Seconds 1
+            if ($Academy.HasExited) { throw "Academy exited during start with $($Academy.ExitCode)" }
+            try {
+              $response = Invoke-WebRequest -Uri "https://127.0.0.1:8443/api/v2/devices/me" -SkipCertificateCheck -TimeoutSec 3
+              $answered = $response.StatusCode -lt 500
+            } catch { if ($_.Exception.Response) { $answered = [int]$_.Exception.Response.StatusCode -lt 500 } }
+          }
+          Stop-Process -Id $Academy.Id -Force -ErrorAction SilentlyContinue
+          if (-not $answered) { throw "Academy did not answer on https://127.0.0.1:8443 within 90 s" }
+          $Log = Join-Path $env:CRC_DATA_DIR "logs\academy.log"
+          if (-not (Test-Path -LiteralPath $Log) -or (Get-Item -LiteralPath $Log).Length -eq 0) { throw "academy.log is missing or empty" }
+          Remove-Item Env:CRC_DATA_DIR
           $Uninstaller = Join-Path $InstallDir "unins000.exe"
           $Uninstall = Start-Process -FilePath $Uninstaller -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait -PassThru
           if ($Uninstall.ExitCode -ne 0) { throw "Uninstaller exited with $($Uninstall.ExitCode)" }

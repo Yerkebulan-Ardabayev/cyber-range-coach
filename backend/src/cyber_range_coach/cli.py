@@ -53,15 +53,23 @@ def parser() -> argparse.ArgumentParser:
     return root
 
 
+def has_console() -> bool:
+    """False in the windowed Windows build (PyInstaller console=False): no std streams."""
+    return sys.stdout is not None and sys.stderr is not None
+
+
 def configure_logging(settings: Settings) -> None:
     settings.logs_dir.mkdir(parents=True, exist_ok=True)
+    handlers: list[logging.Handler] = [
+        logging.FileHandler(settings.logs_dir / "academy.log", encoding="utf-8")
+    ]
+    if has_console():
+        handlers.append(logging.StreamHandler())
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
-        handlers=[
-            logging.FileHandler(settings.logs_dir / "academy.log", encoding="utf-8"),
-            logging.StreamHandler(),
-        ],
+        handlers=handlers,
+        force=True,
     )
 
 
@@ -97,6 +105,10 @@ def serve(lan: bool, no_browser: bool) -> int:
                 ssl_certfile=ssl_certfile,
                 ssl_keyfile=ssl_keyfile,
                 access_log=True,
+                # Without a console uvicorn's own log config probes
+                # sys.stdout.isatty() and the windowed exe dies at start;
+                # None keeps uvicorn on the root logger set up above.
+                log_config=None if not has_console() else uvicorn.config.LOGGING_CONFIG,
             )
     except InstanceAlreadyRunning as exc:
         print(str(exc), file=sys.stderr)
