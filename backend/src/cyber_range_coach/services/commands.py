@@ -3,7 +3,16 @@ from __future__ import annotations
 import asyncio
 import os
 import shutil
+import sys
 from dataclasses import dataclass
+
+# subprocess.CREATE_NO_WINDOW exists only on Windows; the value is fixed by Win32.
+CREATE_NO_WINDOW = 0x08000000
+
+
+def hidden_window_flags() -> int:
+    """Windowed academy: console tools (powershell, wsl, docker) must not flash a window."""
+    return CREATE_NO_WINDOW if sys.platform == "win32" else 0
 
 
 @dataclass(frozen=True)
@@ -59,6 +68,7 @@ class SafeCommandRunner:
             stderr=asyncio.subprocess.PIPE,
             cwd=cwd,
             env=safe_env,
+            creationflags=hidden_window_flags(),
         )
         try:
             stdout_bytes, stderr_bytes = await asyncio.wait_for(

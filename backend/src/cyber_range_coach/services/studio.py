@@ -20,6 +20,7 @@ from ..config import Settings, project_root
 from ..errors import AppError
 from ..models import Draft, SourceBlock, StudioSource
 from ..schemas import DraftResponse, StudioSourceResponse
+from .commands import hidden_window_flags
 
 ALLOWED_EXTENSIONS = {".docx", ".md", ".txt", ".log", ".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
@@ -145,6 +146,7 @@ def extract_blocks(path: Path, suffix: str) -> tuple[list[tuple[int, str, str]],
                 timeout=60,
                 check=False,
                 env=safe_env,
+                creationflags=hidden_window_flags(),
             )
             if result.returncode == 0 and result.stdout.strip():
                 blocks = [

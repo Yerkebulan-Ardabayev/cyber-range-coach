@@ -17,6 +17,7 @@ from .app import create_app
 from .config import Settings
 from .doctor import collect
 from .instance import InstanceAlreadyRunning, SingleInstanceLock
+from .services.commands import hidden_window_flags
 from .services.migration import write_v1_export
 from .services.secrets import SecretProtectionError, build_secret_protector
 from .services.tls import (
@@ -163,6 +164,7 @@ def main() -> None:
                 check=False,
                 capture_output=True,
                 text=True,
+                creationflags=hidden_window_flags(),
             )
             if completed.returncode != 0:
                 print("Windows отклонила добавление доверия локальному CA.", file=sys.stderr)
