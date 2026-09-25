@@ -109,6 +109,7 @@ def test_relay_start_endpoint_uses_live_wsl_address(client, monkeypatch) -> None
         session.commit()
         target_id = target.id
     client.app.state.runner = FakeRunner("172.27.80.5")
+    client.app.state.settings.relay_advertised_host = "127.0.0.1"
     client.app.state.range_runner.relay = AsyncMock(return_value={"reachable": True})
     response = client.post(
         f"/api/v2/targets/{target_id}/relay/start",
@@ -118,6 +119,7 @@ def test_relay_start_endpoint_uses_live_wsl_address(client, monkeypatch) -> None
     try:
         assert response.status_code == 200, response.text
         assert response.json()["allowed_source_ip"] == "172.27.80.5"
+        assert response.json()["bind_host"] == "127.0.0.1"
         assert _stored(client) == "172.27.80.5"
         stale = client.post(
             f"/api/v2/targets/{target_id}/relay/start",
@@ -165,6 +167,7 @@ def test_lesson_start_after_reboot_opens_relay_for_live_wsl_address(client, monk
     )
     assert created.status_code == 201, created.text
     client.app.state.runner = FakeRunner("172.27.80.5")
+    client.app.state.settings.relay_advertised_host = "127.0.0.1"
     client.app.state.terminals.verify_student_boundary = AsyncMock(return_value={"safe": True})
     client.app.state.range_runner.tools = AsyncMock(
         return_value={
@@ -196,7 +199,22 @@ def test_lesson_start_after_reboot_opens_relay_for_live_wsl_address(client, monk
     )
     try:
         assert response.status_code == 201, response.text
-        assert client.app.state.relays.get(target_id).allowed_source_ip == "172.27.80.5"
+        handle = client.app.state.relays.get(target_id)
+        assert handle.allowed_source_ip == "172.27.80.5"
+        assert handle.bind_host == "127.0.0.1"
+        assert {sock.getsockname()[0] for sock in handle.server.sockets} == {"127.0.0.1"}
         assert _stored(client) == "172.27.80.5"
     finally:
         client.post(f"/api/v2/targets/{target_id}/relay/stop", headers={"x-test-role": "owner"})
+
+
+@pytest.mark.asyncio
+async def test_relay_listens_only_on_requested_address() -> None:
+    port = _free_port()
+    manager = RelayManager("0.0.0.0", port, port, ttl_seconds=60)
+    handle = await manager.start(1, "127.0.0.1", 9, "172.30.164.100", bind_host="127.0.0.1")
+    try:
+        assert handle.bind_host == "127.0.0.1"
+        assert {sock.getsockname()[0] for sock in handle.server.sockets} == {"127.0.0.1"}
+    finally:
+        await manager.stop_all()

@@ -239,6 +239,7 @@ async def _new_run_unlocked(
             upstream_host,
             upstream_port,
             relay_source_ip,
+            bind_host=_connect_host(request),
         )
         try:
             runner_check = await request.app.state.range_runner.relay(handle.port)

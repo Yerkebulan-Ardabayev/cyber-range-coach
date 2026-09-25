@@ -53,8 +53,16 @@ class RelayManager:
         upstream_host: str,
         upstream_port: int,
         allowed_source_ip: str,
+        bind_host: str | None = None,
     ) -> RelayHandle:
+        """Start or reuse the relay of a target.
+
+        bind_host narrows the listener to the Windows address the Linux VM
+        reaches (spec 11.3 Zh): the WSL firewall rule allows 172.16.0.0/12 in
+        any profile, so a listener on 0.0.0.0 would also be open on Wi-Fi.
+        """
         allowed_source_ip = validate_relay_source_ip(allowed_source_ip)
+        listen_host = bind_host or self.bind_host
         parsed_upstream = ipaddress.ip_address(upstream_host)
         if not parsed_upstream.is_loopback:
             raise AppError(
@@ -63,7 +71,10 @@ class RelayManager:
         async with self._lock:
             existing = self._handles.get(target_id)
             if existing:
-                if existing.allowed_source_ip == allowed_source_ip:
+                if (
+                    existing.allowed_source_ip == allowed_source_ip
+                    and existing.bind_host == listen_host
+                ):
                     return existing
                 # WSL came back with a new address (spec 11.3 Zh): the old
                 # relay only accepts the previous one, so it is replaced.
@@ -79,7 +90,7 @@ class RelayManager:
                             upstream_port,
                             allowed_source_ip,
                         ),
-                        self.bind_host,
+                        listen_host,
                         port,
                         reuse_address=False,
                     )
@@ -87,7 +98,7 @@ class RelayManager:
                     continue
                 handle = RelayHandle(
                     target_id=target_id,
-                    bind_host=self.bind_host,
+                    bind_host=listen_host,
                     port=port,
                     upstream_host=upstream_host,
                     upstream_port=upstream_port,

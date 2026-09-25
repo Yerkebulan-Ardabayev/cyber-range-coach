@@ -45,22 +45,29 @@ if ($Mode -eq "Academy") {
     exit 0
 }
 
-# Relay rule is bound to the WSL virtual adapter, not to the WSL address:
-# WSL gets a new NAT address on every reboot, the adapter name stays. Checked on
-# the owner's laptop 25.09.2026: without a rule WSL cannot reach the port, a rule
-# on the Wi-Fi adapter does not help, a rule on the WSL adapter does. The WSL
-# adapter has no network profile, so the rule uses Profile Any; the adapter is
-# internal to this machine, and the academy still accepts relay connections only
-# from the current WSL address.
+# Relay rule allows the WSL NAT address range, not one WSL address and not the
+# WSL adapter. Checked on the owner's laptop 25.09.2026 with a reboot: a rule
+# bound to the WSL adapter stopped working after the reboot, a rule for
+# 172.16.0.0/12 kept working; without a rule WSL cannot reach the port. The
+# WSL adapter has no network profile, so the rule uses Profile Any. That is
+# safe only because the academy binds each relay to the Windows address on the
+# WSL adapter (not 0.0.0.0) and accepts only the current WSL address.
+$wslRange = "172.16.0.0/12"
 if (-not $WslAdapterAlias) {
     $WslAdapterAlias = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
         Where-Object { $_.InterfaceAlias -like "vEthernet (WSL*" } |
         Select-Object -First 1 -ExpandProperty InterfaceAlias
 }
-if (-not $WslAdapterAlias -or -not (Get-NetIPInterface -InterfaceAlias $WslAdapterAlias -AddressFamily IPv4 -ErrorAction SilentlyContinue)) {
+$wslAddress = Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias $WslAdapterAlias -ErrorAction SilentlyContinue |
+    Select-Object -First 1 -ExpandProperty IPAddress
+if (-not $wslAddress) {
     throw "Виртуальный адаптер WSL не найден. Запустите Ubuntu в WSL и повторите."
 }
-$name = "Cyber Range Coach Relay 47000-47100 on WSL adapter"
+$octets = $wslAddress.Split(".")
+if ([int]$octets[0] -ne 172 -or [int]$octets[1] -lt 16 -or [int]$octets[1] -gt 31) {
+    throw "Адрес WSL $wslAddress вне диапазона $wslRange. Правило relay не создано."
+}
+$name = "Cyber Range Coach Relay 47000-47100 from WSL $wslRange"
 Get-NetFirewallRule -Group $ruleGroup -ErrorAction SilentlyContinue |
     Where-Object { $_.DisplayName -like "Cyber Range Coach Relay *" } |
     Remove-NetFirewallRule
@@ -72,6 +79,6 @@ New-NetFirewallRule `
     -Program $ApplicationPath `
     -Protocol TCP `
     -LocalPort 47000-47100 `
-    -InterfaceAlias $WslAdapterAlias `
+    -RemoteAddress $wslRange `
     -Profile Any | Out-Null
-Write-Output "Создано правило relay только на адаптере $WslAdapterAlias. Адрес WSL после перезагрузки академия берёт сама."
+Write-Output "Создано правило relay для адресов WSL $wslRange. Адрес WSL после перезагрузки академия берёт сама."

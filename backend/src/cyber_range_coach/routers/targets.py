@@ -182,7 +182,7 @@ async def start_relay(
     upstream_host = parsed.hostname or "127.0.0.1"
     upstream_port = parsed.port or (443 if parsed.scheme == "https" else 80)
     handle = await request.app.state.relays.start(
-        target.id, upstream_host, upstream_port, relay_source_ip
+        target.id, upstream_host, upstream_port, relay_source_ip, bind_host=_connect_host(request)
     )
     try:
         runner_check = await request.app.state.range_runner.relay(handle.port)
