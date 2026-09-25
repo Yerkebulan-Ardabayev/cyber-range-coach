@@ -50,6 +50,7 @@ ensure_crc_user() {
     current_comment="$(getent passwd "$user_name" | cut -d: -f5)"
     if [[ "$current_comment" != "Cyber Range Coach" ]]; then
       printf '%s\n' "Существующий пользователь $user_name не принадлежит Cyber Range Coach, изменение запрещено." >&2
+      printf '%s\n' "Если этого пользователя можно отдать академии, выполните: sudo usermod -c 'Cyber Range Coach' $user_name, затем запустите команду снова." >&2
       exit 73
     fi
   else
@@ -98,7 +99,12 @@ run_as_student() {
 }
 
 if command -v sudo >/dev/null 2>&1; then
-  if sudo -n -l -U "$student_user" >/dev/null 2>&1; then
+  # sudo 1.9.15 (Ubuntu 24.04) returns 0 for "is not allowed to run sudo" too,
+  # so the listing text decides; an unrecognised successful answer stops setup.
+  sudo_listing_status=0
+  sudo_listing="$(LC_ALL=C sudo -n -l -U "$student_user" 2>&1)" || sudo_listing_status=$?
+  if grep -Fq "may run the following commands" <<<"$sudo_listing" \
+    || { (( sudo_listing_status == 0 )) && ! grep -Fq "is not allowed to run sudo" <<<"$sudo_listing"; }; then
     printf '%s\n' "Небезопасная настройка остановлена: для student найдено правило sudo." >&2
     exit 78
   fi
