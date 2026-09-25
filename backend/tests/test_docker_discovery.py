@@ -9,8 +9,9 @@ from cyber_range_coach.services.docker import DockerDiscovery
 
 
 class FakeRunner:
-    def __init__(self) -> None:
+    def __init__(self, bindings: list[dict[str, str]] | None = None) -> None:
         self.calls: list[tuple[str, ...]] = []
+        self.bindings = bindings or [{"HostIp": "0.0.0.0", "HostPort": "3000"}]
 
     async def run(self, executable: str, *args: str, **_kwargs: object) -> CommandResult:
         argv = (executable, *args)
@@ -41,7 +42,7 @@ class FakeRunner:
                     "Config": {"Image": "bkimminich/juice-shop"},
                     "State": {"Status": "running", "StartedAt": "2026-08-20T00:00:00Z"},
                     "NetworkSettings": {
-                        "Ports": {"3000/tcp": [{"HostIp": "0.0.0.0", "HostPort": "3000"}]}
+                        "Ports": {"3000/tcp": self.bindings}
                     },
                 }
             ]
@@ -63,3 +64,26 @@ async def test_discovery_is_read_only_and_warns_about_all_interfaces() -> None:
     mutating = {"run", "start", "stop", "restart", "rm", "pull", "volume", "compose"}
     assert not any(mutating.intersection(call[1:]) for call in runner.calls)
     assert ("docker", "port", "a" * 64) in runner.calls
+
+
+@pytest.mark.asyncio
+async def test_same_port_on_ipv4_and_ipv6_is_one_binding() -> None:
+    """Owner's laptop 25.09.2026: Docker Desktop lists 0.0.0.0:3000 and :::3000."""
+    runner = FakeRunner(
+        [{"HostIp": "0.0.0.0", "HostPort": "3000"}, {"HostIp": "::", "HostPort": "3000"}]
+    )
+    binding = await DockerDiscovery(runner).resolve_binding("a" * 12, 3000)
+    assert binding.port.host_ip == "0.0.0.0"
+    assert binding.port.loopback_endpoint == "http://127.0.0.1:3000"
+
+
+@pytest.mark.asyncio
+async def test_different_host_ports_stay_ambiguous() -> None:
+    from cyber_range_coach.errors import AppError
+
+    runner = FakeRunner(
+        [{"HostIp": "0.0.0.0", "HostPort": "3000"}, {"HostIp": "0.0.0.0", "HostPort": "3001"}]
+    )
+    with pytest.raises(AppError) as error:
+        await DockerDiscovery(runner).resolve_binding("a" * 12, 3000)
+    assert error.value.code == "port_not_published"

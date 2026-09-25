@@ -194,6 +194,12 @@ class DockerDiscovery:
             for port in container.ports
             if port.container_port == container_port and port.protocol == protocol
         ]
+        # Docker Desktop publishes one port twice, for IPv4 (0.0.0.0) and IPv6
+        # (::), with the same host port. That is one binding for the relay,
+        # which always connects to 127.0.0.1:<host port>; only different host
+        # ports are ambiguous.
+        if len({port.host_port for port in ports}) == 1:
+            ports = sorted(ports, key=lambda port: ":" in port.host_ip)[:1]
         if len(ports) != 1:
             raise AppError(
                 400,
