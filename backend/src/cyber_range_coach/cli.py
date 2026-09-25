@@ -10,8 +10,10 @@ import sys
 import threading
 import webbrowser
 from pathlib import Path
+from typing import Any
 
 import uvicorn
+from fastapi import FastAPI
 
 from .app import create_app
 from .config import Settings
@@ -81,10 +83,9 @@ def configure_logging(settings: Settings) -> None:
     )
 
 
-def run_server(app: object, stop_request: Path, **kwargs: object) -> None:
+def run_server(app: FastAPI, stop_request: Path, **kwargs: Any) -> None:
     """uvicorn.run plus a watcher: the stop-request file ends the academy cleanly."""
-    stop_request.unlink(missing_ok=True)
-    server = uvicorn.Server(uvicorn.Config(app, **kwargs))  # type: ignore[arg-type]
+    server = uvicorn.Server(uvicorn.Config(app, **kwargs))
     finished = threading.Event()
 
     def watch() -> None:
@@ -111,6 +112,9 @@ def serve(lan: bool, no_browser: bool) -> int:
     settings.ensure_directories()
     configure_logging(settings)
     runtime_key: Path | None = None
+    # A request left by an interrupted `stop` must not end this start. Cleared
+    # before taking the lock, so a request sent after that is never lost.
+    (settings.runtime_dir / STOP_REQUEST_NAME).unlink(missing_ok=True)
     try:
         with SingleInstanceLock(settings.runtime_dir / "academy.lock"):
             ssl_certfile: str | None = None

@@ -11,7 +11,8 @@ from ..config import Settings, project_root
 from ..database import Database
 from ..models import LinuxHost
 from ..schemas import WslUbuntuPrepareResponse
-from .commands import SafeCommandRunner, hidden_window_flags
+from .commands import SafeCommandRunner, hidden_window_flags, safe_environment
+from .lifetime import ChildLifetime
 from .network import tcp_connect
 from .relay import configured_relay_source_ip, validate_relay_source_ip
 
@@ -399,6 +400,7 @@ class WslKeepAlive:
         self.ssh_wait_seconds = ssh_wait_seconds
         self._process: asyncio.subprocess.Process | None = None
         self._lock = asyncio.Lock()
+        self._lifetime = ChildLifetime()
 
     def _alive(self) -> bool:
         return self._process is not None and self._process.returncode is None
@@ -416,26 +418,29 @@ class WslKeepAlive:
                 return
             await asyncio.sleep(0.5)
 
+    def _command(self, distribution: str) -> list[str] | None:
+        executable = shutil.which("wsl.exe")
+        if executable is None:
+            return None
+        return [executable, "--distribution", distribution, "--exec", "sleep", "infinity"]
+
     async def _start(self) -> None:
         listed = await self.runner.run(
             "wsl.exe", "--list", "--quiet", timeout_seconds=self.timeout_seconds
         )
         distribution = select_ubuntu_distribution(listed.stdout) if listed.returncode == 0 else None
-        executable = shutil.which("wsl.exe")
-        if distribution is None or executable is None:
+        command = self._command(distribution) if distribution is not None else None
+        if command is None:
             return
         self._process = await asyncio.create_subprocess_exec(
-            executable,
-            "--distribution",
-            distribution,
-            "--exec",
-            "sleep",
-            "infinity",
+            *command,
             stdin=asyncio.subprocess.DEVNULL,
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
+            env=safe_environment(),
             creationflags=hidden_window_flags(),
         )
+        self._lifetime.bind(self._process.pid)
 
     async def close(self) -> None:
         process, self._process = self._process, None

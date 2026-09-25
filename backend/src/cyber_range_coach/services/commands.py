@@ -15,6 +15,28 @@ def hidden_window_flags() -> int:
     return CREATE_NO_WINDOW if sys.platform == "win32" else 0
 
 
+SAFE_ENV_KEYS = frozenset(
+    {
+        "PATH",
+        "PATHEXT",
+        "SYSTEMROOT",
+        "WINDIR",
+        "TEMP",
+        "TMP",
+        "LOCALAPPDATA",
+        "APPDATA",
+        "USERPROFILE",
+        "DOCKER_HOST",
+        "DOCKER_CONTEXT",
+    }
+)
+
+
+def safe_environment(extra_keys: set[str] | None = None) -> dict[str, str]:
+    allowed = SAFE_ENV_KEYS | (extra_keys or set())
+    return {key: value for key, value in os.environ.items() if key in allowed}
+
+
 @dataclass(frozen=True)
 class CommandResult:
     argv: tuple[str, ...]
@@ -45,21 +67,7 @@ class SafeCommandRunner:
         resolved = shutil.which(executable)
         if resolved is None:
             return CommandResult((executable, *args), 127, "", f"{executable} is not installed")
-        allowed_env = {
-            "PATH",
-            "PATHEXT",
-            "SYSTEMROOT",
-            "WINDIR",
-            "TEMP",
-            "TMP",
-            "LOCALAPPDATA",
-            "APPDATA",
-            "USERPROFILE",
-            "DOCKER_HOST",
-            "DOCKER_CONTEXT",
-        }
-        allowed_env.update(extra_env_keys or set())
-        safe_env = {key: value for key, value in os.environ.items() if key in allowed_env}
+        safe_env = safe_environment(extra_env_keys)
         process = await asyncio.create_subprocess_exec(
             resolved,
             *args,

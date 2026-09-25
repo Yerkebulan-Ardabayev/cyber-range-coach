@@ -59,7 +59,10 @@ begin
     { Restart Manager cannot close the windowed academy (25.09.2026), so the
       installed academy is asked to exit first. Builds older than "stop" exit
       with an argparse error and are closed with taskkill instead. }
-    if not ExecAsOriginalUser(AppPath, 'stop', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) or (ResultCode <> 0) then
+    if ExecAsOriginalUser(AppPath, 'stop', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0) then
+      { The lock is released a moment before the process is gone. }
+      Sleep(2000)
+    else
     begin
       Log('Академия не закрылась по запросу, закрываем принудительно.');
       Exec(ExpandConstant('{sys}\taskkill.exe'), '/IM {#AppExeName} /F', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);

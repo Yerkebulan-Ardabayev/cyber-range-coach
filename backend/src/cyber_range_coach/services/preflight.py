@@ -230,6 +230,9 @@ class PreflightService:
                 )
             )
         else:
+            # WSL stops without a wsl.exe process and a refused 127.0.0.1:22
+            # would block the whole preflight (owner's laptop, 25.09.2026).
+            await self.range_runner.wake(linux_host)
             reachable, detail = await tcp_connect(
                 linux_host.host, linux_host.port, self.settings.ssh_connect_timeout_seconds
             )

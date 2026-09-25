@@ -5,16 +5,19 @@ while the page asked to compare the ed25519 one."""
 from __future__ import annotations
 
 import asyncio
-import stat
+import subprocess
+import sys
+import textwrap
 from pathlib import Path
 
 import asyncssh
 import pytest
 
+from cyber_range_coach.errors import AppError
 from cyber_range_coach.models import LinuxHost
 from cyber_range_coach.services import ssh as ssh_service
 from cyber_range_coach.services import wsl as wsl_service
-from cyber_range_coach.services.commands import CommandResult
+from cyber_range_coach.services.commands import CommandResult, SafeCommandRunner
 from cyber_range_coach.services.ssh import host_key_check_command, probe_linux_host
 
 
@@ -41,22 +44,24 @@ def _host(port: int, private_key: str = "unused", public_key: str = "unused") ->
     )
 
 
-class _ListRunner:
+class _ListRunner(SafeCommandRunner):
     async def run(self, *_argv: str, **_kwargs: object) -> CommandResult:
         return CommandResult(("wsl.exe",), 0, "Ubuntu\n", "")
 
 
-def _fake_wsl(tmp_path: Path) -> Path:
-    script = tmp_path / "wsl.exe"
-    script.write_text("#!/bin/sh\nexec sleep 1000\n", encoding="utf-8")
-    script.chmod(script.stat().st_mode | stat.S_IXUSR)
-    return script
+SLEEPER = [sys.executable, "-c", "import time; time.sleep(1000)"]
 
 
-async def test_keepalive_starts_one_process_and_waits_for_sshd(tmp_path, monkeypatch) -> None:
+def _keepalive(monkeypatch, ssh_wait_seconds: float) -> wsl_service.WslKeepAlive:
+    """Real subprocess on every platform; only the wsl.exe argv is replaced."""
     monkeypatch.setattr(wsl_service, "follows_wsl_address", lambda _host: True)
-    monkeypatch.setattr(wsl_service.shutil, "which", lambda _name: str(_fake_wsl(tmp_path)))
-    keepalive = wsl_service.WslKeepAlive(_ListRunner(), 5.0, ssh_wait_seconds=10.0)  # type: ignore[arg-type]
+    keepalive = wsl_service.WslKeepAlive(_ListRunner(), 5.0, ssh_wait_seconds=ssh_wait_seconds)
+    monkeypatch.setattr(keepalive, "_command", lambda _distribution: SLEEPER)
+    return keepalive
+
+
+async def test_keepalive_starts_one_process_and_waits_for_sshd(monkeypatch) -> None:
+    keepalive = _keepalive(monkeypatch, ssh_wait_seconds=10.0)
 
     async def accept(_reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         writer.close()
@@ -87,10 +92,8 @@ async def test_keepalive_starts_one_process_and_waits_for_sshd(tmp_path, monkeyp
     assert first.returncode is not None, "academy exit stops the keep-alive"
 
 
-async def test_keepalive_restarts_after_wsl_process_dies(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr(wsl_service, "follows_wsl_address", lambda _host: True)
-    monkeypatch.setattr(wsl_service.shutil, "which", lambda _name: str(_fake_wsl(tmp_path)))
-    keepalive = wsl_service.WslKeepAlive(_ListRunner(), 5.0, ssh_wait_seconds=0.0)  # type: ignore[arg-type]
+async def test_keepalive_restarts_after_wsl_process_dies(monkeypatch) -> None:
+    keepalive = _keepalive(monkeypatch, ssh_wait_seconds=0.0)
     try:
         await keepalive.ensure(_host(1))
         first = keepalive._process
@@ -105,7 +108,7 @@ async def test_keepalive_restarts_after_wsl_process_dies(tmp_path, monkeypatch) 
 
 async def test_keepalive_ignores_non_wsl_hosts(monkeypatch) -> None:
     monkeypatch.setattr(wsl_service, "follows_wsl_address", lambda _host: False)
-    keepalive = wsl_service.WslKeepAlive(_ListRunner(), 5.0)  # type: ignore[arg-type]
+    keepalive = wsl_service.WslKeepAlive(_ListRunner(), 5.0)
     await keepalive.ensure(_host(22))
     assert keepalive._process is None
 
@@ -121,7 +124,7 @@ async def test_probe_wakes_linux_before_connecting(monkeypatch) -> None:
         return False, "refused"
 
     monkeypatch.setattr(ssh_service, "tcp_connect", refused)
-    await probe_linux_host(_host(22), _Protector(), 1.0, waker)  # type: ignore[arg-type]
+    await probe_linux_host(_host(22), _Protector(), 1.0, waker)
     assert woken == ["127.0.0.1"]
 
 
@@ -147,7 +150,7 @@ async def test_probe_reports_ed25519_and_the_matching_check_command() -> None:
     private = client_key.export_private_key(format_name="openssh").decode("utf-8")
     try:
         result = await probe_linux_host(
-            _host(port, private_key=private), _Protector(), 5.0  # type: ignore[arg-type]
+            _host(port, private_key=private), _Protector(), 5.0
         )
     finally:
         server.close()
@@ -196,7 +199,102 @@ async def test_runner_check_wakes_linux_before_ssh(client, monkeypatch) -> None:
         session.commit()
     monkeypatch.setattr(ssh_service.asyncssh, "connect", fake_connect)
     monkeypatch.setattr(ssh_service, "import_runner_private_key", lambda *_args: object())
-    runner = RangeRunner(client.app.state.settings, db, _Protector(), waker)  # type: ignore[arg-type]
+    runner = RangeRunner(client.app.state.settings, db, _Protector(), waker)
     with pytest.raises(Exception, match="недоступна"):
         await runner.tools()
     assert events == ["wake", "connect"]
+
+
+
+def _confirmed_host(db) -> None:
+    from datetime import UTC, datetime
+
+    with db.session_factory() as session:
+        host = _host(22)
+        host.id = None
+        host.host_key = "ssh-ed25519 AAAA"
+        host.host_key_fingerprint = "SHA256:test"
+        host.confirmed_at = datetime.now(UTC)
+        session.add(host)
+        session.commit()
+
+
+async def test_every_ssh_entry_point_wakes_linux_first(client, monkeypatch) -> None:
+    from cyber_range_coach.services.ssh import RangeRunner, TerminalManager, seed_student_missions
+
+    events: list[str] = []
+
+    async def waker(_host: LinuxHost) -> None:
+        events.append("wake")
+
+    async def fake_connect(*_args: object, **_kwargs: object) -> object:
+        events.append("connect")
+        raise OSError("stop here")
+
+    db = client.app.state.db
+    _confirmed_host(db)
+    monkeypatch.setattr(ssh_service.asyncssh, "connect", fake_connect)
+    monkeypatch.setattr(ssh_service, "import_private_key", lambda *_args: object())
+    monkeypatch.setattr(ssh_service, "import_runner_private_key", lambda *_args: object())
+    settings = client.app.state.settings
+    terminals = TerminalManager(settings, db, _Protector(), waker)
+    runner = RangeRunner(settings, db, _Protector(), waker)
+
+    with pytest.raises((AppError, OSError)):
+        await terminals.verify_student_boundary()
+    assert events == ["wake", "connect"]
+    events.clear()
+    with pytest.raises((AppError, OSError)):
+        await seed_student_missions(runner, "magpie-aurora", b"")
+    assert events == ["wake", "connect"]
+
+
+async def test_preflight_wakes_linux_before_tcp_check(client, monkeypatch) -> None:
+    from cyber_range_coach.services import preflight as preflight_service
+
+    events: list[str] = []
+
+    async def waker(_host: LinuxHost) -> None:
+        events.append("wake")
+
+    async def tcp(*_args: object) -> tuple[bool, str]:
+        events.append("tcp")
+        return False, "refused"
+
+    _confirmed_host(client.app.state.db)
+    monkeypatch.setattr(client.app.state.range_runner, "wake", waker)
+    monkeypatch.setattr(preflight_service, "tcp_connect", tcp)
+    await client.app.state.preflight.run()
+    assert events[:2] == ["wake", "tcp"]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Job Object есть только в Windows")
+def test_keepalive_child_dies_with_a_killed_academy(tmp_path: Path) -> None:
+    """taskkill /F on the academy must not leave wsl.exe keeping WSL up."""
+    import ctypes
+
+    parent_code = textwrap.dedent(
+        f"""
+        import subprocess, sys, time
+        from cyber_range_coach.services.lifetime import ChildLifetime
+        child = subprocess.Popen({SLEEPER!r})
+        assert ChildLifetime().bind(child.pid)
+        print(child.pid, flush=True)
+        time.sleep(1000)
+        """
+    )
+    parent = subprocess.Popen(
+        [sys.executable, "-c", parent_code], stdout=subprocess.PIPE, text=True
+    )
+    assert parent.stdout is not None
+    child_pid = int(parent.stdout.readline())
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    synchronize = 0x00100000
+    child = kernel32.OpenProcess(synchronize, False, child_pid)
+    assert child, "child must be running before the academy is killed"
+    try:
+        parent.kill()
+        parent.wait(timeout=10)
+        assert kernel32.WaitForSingleObject(child, 10000) == 0, "orphaned keep-alive"
+    finally:
+        kernel32.CloseHandle(child)
