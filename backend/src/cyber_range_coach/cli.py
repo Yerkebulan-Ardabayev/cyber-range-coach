@@ -16,7 +16,12 @@ import uvicorn
 from .app import create_app
 from .config import Settings
 from .doctor import collect
-from .instance import InstanceAlreadyRunning, SingleInstanceLock
+from .instance import (
+    STOP_REQUEST_NAME,
+    InstanceAlreadyRunning,
+    SingleInstanceLock,
+    request_stop,
+)
 from .services.commands import hidden_window_flags
 from .services.migration import write_v1_export
 from .services.secrets import SecretProtectionError, build_secret_protector
@@ -49,6 +54,7 @@ def parser() -> argparse.ArgumentParser:
     setup.add_argument("--force-certificate", action="store_true")
     setup.add_argument("--trust-certificate", action="store_true")
     subcommands.add_parser("doctor", help="Вывести read-only preflight в JSON")
+    subcommands.add_parser("stop", help="Попросить запущенную академию закрыться")
     export = subcommands.add_parser("export-v1-notes", help="Экспортировать только полевые заметки из v1")
     export.add_argument("database", type=Path)
     export.add_argument("output", type=Path)
@@ -73,6 +79,27 @@ def configure_logging(settings: Settings) -> None:
         handlers=handlers,
         force=True,
     )
+
+
+def run_server(app: object, stop_request: Path, **kwargs: object) -> None:
+    """uvicorn.run plus a watcher: the stop-request file ends the academy cleanly."""
+    stop_request.unlink(missing_ok=True)
+    server = uvicorn.Server(uvicorn.Config(app, **kwargs))  # type: ignore[arg-type]
+    finished = threading.Event()
+
+    def watch() -> None:
+        while not finished.wait(1.0):
+            if stop_request.exists():
+                logging.getLogger(__name__).info("Получен запрос остановки, академия закрывается.")
+                stop_request.unlink(missing_ok=True)
+                server.should_exit = True
+                return
+
+    threading.Thread(target=watch, name="stop-request-watch", daemon=True).start()
+    try:
+        server.run()
+    finally:
+        finished.set()
 
 
 def serve(lan: bool, no_browser: bool) -> int:
@@ -111,8 +138,9 @@ def serve(lan: bool, no_browser: bool) -> int:
             local_url = f"{scheme}://127.0.0.1:{settings.port}"
             if not no_browser:
                 threading.Timer(1.0, lambda: webbrowser.open(local_url)).start()
-            uvicorn.run(
+            run_server(
                 app,
+                stop_request=settings.runtime_dir / STOP_REQUEST_NAME,
                 host=settings.bind_host,
                 port=settings.port,
                 ssl_certfile=ssl_certfile,
@@ -143,6 +171,10 @@ def main() -> None:
     command = args.command or "serve"
     if command == "serve":
         raise SystemExit(serve(getattr(args, "lan", False), getattr(args, "no_browser", False)))
+    if command == "stop":
+        settings = Settings()
+        stopped = request_stop(settings.runtime_dir / "academy.lock")
+        raise SystemExit(0 if stopped else 1)
     if command == "doctor":
         print(json.dumps(asyncio.run(collect()), ensure_ascii=False, indent=2))
         return

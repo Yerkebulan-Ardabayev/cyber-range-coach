@@ -26,13 +26,13 @@ def windowed(monkeypatch, tmp_path):
 def test_academy_starts_without_console_and_logs_to_file(windowed, monkeypatch) -> None:
     started: dict[str, object] = {}
 
-    def fake_run(app, **kwargs):
-        # uvicorn.run builds Config first; that is where the windowed exe crashed
-        # with "Unable to configure formatter 'default'".
+    def fake_run(app, stop_request, **kwargs):
+        # run_server builds uvicorn.Config first; that is where the windowed exe
+        # crashed with "Unable to configure formatter 'default'".
         uvicorn.Config(app, **kwargs)
         started["ok"] = True
 
-    monkeypatch.setattr(cli.uvicorn, "run", fake_run)
+    monkeypatch.setattr(cli, "run_server", fake_run)
     # Set inside the test body: pytest re-installs its own capture streams
     # between fixture setup and the call phase.
     saved_streams = sys.stdout, sys.stderr
@@ -72,7 +72,7 @@ def test_lan_start_reissues_certificate_after_address_change(windowed, monkeypat
     monkeypatch.setattr(tls, "local_interfaces", lan("192.168.10.10"))
     tls.generate_certificates(settings, protector)
     monkeypatch.setattr(tls, "local_interfaces", lan("192.168.10.11"))
-    monkeypatch.setattr(cli.uvicorn, "run", lambda app, **kwargs: None)
+    monkeypatch.setattr(cli, "run_server", lambda app, **kwargs: None)
     assert cli.serve(lan=True, no_browser=True) == 0
     assert "192.168.10.11" in tls.certificate_ip_addresses(settings)
 
@@ -96,6 +96,6 @@ def test_failed_reissue_does_not_stop_the_academy(windowed, monkeypatch) -> None
 
     monkeypatch.setattr(cli, "ensure_certificate_covers_lan", broken)
     started: dict[str, object] = {}
-    monkeypatch.setattr(cli.uvicorn, "run", lambda app, **kwargs: started.update(kwargs))
+    monkeypatch.setattr(cli, "run_server", lambda app, **kwargs: started.update(kwargs))
     assert cli.serve(lan=True, no_browser=True) == 0
     assert started["ssl_certfile"]

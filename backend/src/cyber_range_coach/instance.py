@@ -56,3 +56,38 @@ class SingleInstanceLock:
         finally:
             self.handle.close()
             self.handle = None
+
+
+STOP_REQUEST_NAME = "stop-request"
+
+
+def request_stop(lock_path: Path, timeout_seconds: float = 20.0) -> bool:
+    """Ask a running academy to exit and wait until its instance lock is free.
+
+    The Windows installer runs this before replacing files: Restart Manager
+    cannot close the windowed academy (owner's laptop, 25.09.2026), so the
+    academy watches this file and shuts down on its own. True when no academy
+    is running any more.
+    """
+    import time
+
+    stop_file = lock_path.with_name(STOP_REQUEST_NAME)
+    deadline = time.monotonic() + timeout_seconds
+    requested = False
+    try:
+        while True:
+            try:
+                with SingleInstanceLock(lock_path):
+                    return True
+            except InstanceAlreadyRunning:
+                pass
+            if not requested:
+                stop_file.parent.mkdir(parents=True, exist_ok=True)
+                stop_file.write_text("stop\n", encoding="utf-8")
+                requested = True
+            if time.monotonic() >= deadline:
+                return False
+            time.sleep(0.25)
+    finally:
+        if requested:
+            stop_file.unlink(missing_ok=True)

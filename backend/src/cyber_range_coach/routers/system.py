@@ -149,7 +149,10 @@ async def probe(
             raise AppError(404, "linux_host_not_found", "Linux VM profile не найден.")
         session.expunge(host)
     result = await probe_linux_host(
-        host, protector, request.app.state.settings.ssh_connect_timeout_seconds
+        host,
+        protector,
+        request.app.state.settings.ssh_connect_timeout_seconds,
+        request.app.state.wsl_keepalive.ensure,
     )
     if result.ssh_authenticated and result.host_key:
         with request.app.state.db.session_factory() as session:

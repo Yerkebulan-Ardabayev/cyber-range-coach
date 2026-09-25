@@ -64,6 +64,8 @@ jobs:
           backend/tests/test_hidden_windows.py
           backend/tests/test_windowed_start.py
           backend/tests/test_certificate_follows_address.py
+          backend/tests/test_academy_stop.py
+          backend/tests/test_wsl_wake_and_host_key.py
           -rA -s
       - name: Parse real Windows integration test
         shell: powershell
@@ -130,8 +132,18 @@ jobs:
               $answered = $response.StatusCode -lt 500
             } catch { if ($_.Exception.Response) { $answered = [int]$_.Exception.Response.StatusCode -lt 500 } }
           }
+          if (-not $answered) {
+            Stop-Process -Id $Academy.Id -Force -ErrorAction SilentlyContinue
+            throw "Academy did not answer on https://127.0.0.1:8443 within 90 s"
+          }
+          # Upgrade over the running academy (owner's laptop 25.09.2026: Restart
+          # Manager could not close it and the install rolled back).
+          $Upgrade = Start-Process -FilePath $Installer -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/TASKS=", "/DIR=$InstallDir" -Wait -PassThru
+          $AcademyStopped = $Academy.WaitForExit(30000)
           Stop-Process -Id $Academy.Id -Force -ErrorAction SilentlyContinue
-          if (-not $answered) { throw "Academy did not answer on https://127.0.0.1:8443 within 90 s" }
+          if ($Upgrade.ExitCode -ne 0) { throw "Upgrade over the running academy exited with $($Upgrade.ExitCode)" }
+          if (-not $AcademyStopped) { throw "Installer did not stop the running academy" }
+          if (-not (Select-String -LiteralPath (Join-Path $env:CRC_DATA_DIR "logs\academy.log") -SimpleMatch "Получен запрос остановки" -Quiet)) { throw "Academy was not stopped through the stop request" }
           $Log = Join-Path $env:CRC_DATA_DIR "logs\academy.log"
           if (-not (Test-Path -LiteralPath $Log) -or (Get-Item -LiteralPath $Log).Length -eq 0) { throw "academy.log is missing or empty" }
           Remove-Item Env:CRC_DATA_DIR

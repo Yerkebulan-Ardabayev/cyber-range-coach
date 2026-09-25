@@ -47,6 +47,26 @@ Filename: "{app}\{#AppExeName}"; Parameters: "serve --lan"; Description: "Зап
 Filename: "powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\tools\remove-firewall.ps1"" -Approve"; Flags: runhidden waituntilterminated; RunOnceId: "RemoveCyberRangeCoachFirewall"
 
 [Code]
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  ResultCode: Integer;
+  AppPath: String;
+begin
+  Result := '';
+  AppPath := ExpandConstant('{app}\{#AppExeName}');
+  if FileExists(AppPath) then
+  begin
+    { Restart Manager cannot close the windowed academy (25.09.2026), so the
+      installed academy is asked to exit first. Builds older than "stop" exit
+      with an argparse error and are closed with taskkill instead. }
+    if not ExecAsOriginalUser(AppPath, 'stop', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) or (ResultCode <> 0) then
+    begin
+      Log('Академия не закрылась по запросу, закрываем принудительно.');
+      Exec(ExpandConstant('{sys}\taskkill.exe'), '/IM {#AppExeName} /F', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    end;
+  end;
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then

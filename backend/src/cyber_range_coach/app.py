@@ -33,6 +33,7 @@ from .services.preflight import PreflightService
 from .services.relay import RelayManager
 from .services.secrets import SecretProtectionError, build_secret_protector
 from .services.ssh import RangeRunner, TerminalManager
+from .services.wsl import WslKeepAlive
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +60,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         settings.relay_port_end,
         settings.relay_ttl_seconds,
     )
-    terminals = TerminalManager(settings, database, protector)
-    range_runner = RangeRunner(settings, database, protector)
+    wsl_keepalive = WslKeepAlive(runner, settings.subprocess_timeout_seconds)
+    terminals = TerminalManager(settings, database, protector, wsl_keepalive.ensure)
+    range_runner = RangeRunner(settings, database, protector, wsl_keepalive.ensure)
     ai = AIBroker(settings, runner)
     preflight = PreflightService(settings, database, runner, docker, range_runner, terminals)
 
@@ -69,6 +71,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         yield
         await terminals.stop_all()
         await relays.stop_all()
+        await wsl_keepalive.close()
 
     app = FastAPI(
         title="Cyber Range Coach",
@@ -88,6 +91,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.relays = relays
     app.state.terminals = terminals
     app.state.range_runner = range_runner
+    app.state.wsl_keepalive = wsl_keepalive
     app.state.ai = ai
     app.state.preflight = preflight
     app.state.run_start_lock = asyncio.Lock()

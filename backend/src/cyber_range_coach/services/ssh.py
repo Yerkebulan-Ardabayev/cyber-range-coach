@@ -6,6 +6,7 @@ import json
 import os
 import re
 import uuid
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -19,6 +20,37 @@ from ..models import LabRun, LinuxHost
 from ..schemas import LinuxProbeResponse
 from .network import tcp_connect
 from .secrets import SecretProtector
+
+LinuxWaker = Callable[[LinuxHost], Awaitable[None]]
+
+
+async def _no_wake(_host: LinuxHost) -> None:
+    return None
+
+
+# Probe prefers the key the owner is told to compare (ssh_host_ed25519_key.pub);
+# asyncssh's default order picked RSA on Ubuntu 24.04 (owner's laptop, 25.09.2026).
+PROBE_HOST_KEY_ALGS = (
+    "ssh-ed25519",
+    "ecdsa-sha2-nistp256",
+    "ecdsa-sha2-nistp384",
+    "ecdsa-sha2-nistp521",
+    "rsa-sha2-512",
+    "rsa-sha2-256",
+)
+HOST_KEY_FILES = {
+    "ssh-ed25519": "/etc/ssh/ssh_host_ed25519_key.pub",
+    "ssh-rsa": "/etc/ssh/ssh_host_rsa_key.pub",
+    "rsa-sha2-256": "/etc/ssh/ssh_host_rsa_key.pub",
+    "rsa-sha2-512": "/etc/ssh/ssh_host_rsa_key.pub",
+}
+
+
+def host_key_check_command(algorithm: str) -> str:
+    path = HOST_KEY_FILES.get(algorithm)
+    if path is None and algorithm.startswith("ecdsa-"):
+        path = "/etc/ssh/ssh_host_ecdsa_key.pub"
+    return f"ssh-keygen -lf {path or '/etc/ssh/ssh_host_*_key.pub'}"
 
 
 def create_linux_host_keypair(protector: SecretProtector) -> tuple[str, str]:
@@ -39,8 +71,12 @@ def import_runner_private_key(host: LinuxHost, protector: SecretProtector) -> as
 
 
 async def probe_linux_host(
-    host: LinuxHost, protector: SecretProtector, timeout: float
+    host: LinuxHost,
+    protector: SecretProtector,
+    timeout: float,
+    waker: LinuxWaker = _no_wake,
 ) -> LinuxProbeResponse:
+    await waker(host)
     reachable, detail = await tcp_connect(host.host, host.port, timeout)
     if not reachable:
         return LinuxProbeResponse(
@@ -61,6 +97,7 @@ async def probe_linux_host(
                 client_keys=[key],
                 known_hosts=None,
                 agent_path=None,
+                server_host_key_algs=list(PROBE_HOST_KEY_ALGS),
             ),
             timeout=timeout,
         )
@@ -86,7 +123,11 @@ async def probe_linux_host(
             ssh_authenticated=True,
             fingerprint=server_key.get_fingerprint(),
             host_key=exported.decode("utf-8").strip(),
-            detail="SSH-аутентификация по ключу прошла. Сверьте показанный отпечаток хоста.",
+            detail=(
+                "SSH-аутентификация по ключу прошла. Сверьте отпечаток "
+                f"{server_key.get_algorithm()} с выводом "
+                f"`{host_key_check_command(server_key.get_algorithm())}` внутри Linux."
+            ),
         )
     finally:
         connection.close()
@@ -113,10 +154,12 @@ class RangeRunner:
         settings: Settings,
         database: Database,
         protector: SecretProtector | None,
+        waker: LinuxWaker = _no_wake,
     ) -> None:
         self.settings = settings
         self.database = database
         self.protector = protector
+        self.wake = waker
 
     def _host(self) -> LinuxHost:
         with self.database.session_factory() as session:
@@ -159,6 +202,7 @@ class RangeRunner:
         if self.protector is None:
             raise AppError(503, "secret_storage_unavailable", "SSH secret storage недоступно.")
         host = self._host()
+        await self.wake(host)
         known_hosts = write_known_hosts(self.settings, host)
         key = import_runner_private_key(host, self.protector)
         try:
@@ -608,10 +652,12 @@ class TerminalManager:
         settings: Settings,
         database: Database,
         protector: SecretProtector | None,
+        waker: LinuxWaker = _no_wake,
     ) -> None:
         self.settings = settings
         self.database = database
         self.protector = protector
+        self.wake = waker
         self.sessions: dict[int, TerminalSession] = {}
         self._lock = asyncio.Lock()
 
@@ -625,6 +671,7 @@ class TerminalManager:
             if host is None:
                 raise AppError(409, "linux_host_missing", "Linux VM ещё не настроена.")
             session.expunge(host)
+        await self.wake(host)
         known_hosts = write_known_hosts(self.settings, host)
         key = import_private_key(host, self.protector)
         command = (
@@ -703,6 +750,7 @@ class TerminalManager:
                 initial_command_offsets = list(run.terminal_input_offsets or [])
                 initial_input_kinds = list(run.terminal_input_kinds or [])
                 session.expunge(host)
+            await self.wake(host)
             known_hosts = write_known_hosts(self.settings, host)
             key = import_private_key(host, self.protector)
             try:
@@ -811,6 +859,7 @@ async def seed_student_missions(runner: RangeRunner, variant_id: str, archive: b
     if runner.protector is None:
         raise AppError(503, "secret_storage_unavailable", "SSH secret storage недоступно.")
     host = runner._host()
+    await runner.wake(host)
     known_hosts = write_known_hosts(runner.settings, host)
     key = import_private_key(host, runner.protector)
     command = (

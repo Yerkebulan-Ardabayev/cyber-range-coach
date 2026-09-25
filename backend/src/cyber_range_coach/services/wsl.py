@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 import shlex
+import shutil
 import sys
 from pathlib import Path
 
@@ -9,7 +11,7 @@ from ..config import Settings, project_root
 from ..database import Database
 from ..models import LinuxHost
 from ..schemas import WslUbuntuPrepareResponse
-from .commands import SafeCommandRunner
+from .commands import SafeCommandRunner, hidden_window_flags
 from .network import tcp_connect
 from .relay import configured_relay_source_ip, validate_relay_source_ip
 
@@ -374,3 +376,74 @@ async def prepare_wsl_ubuntu(
             else f"Bootstrap выполнен, но SSH на 127.0.0.1:22 пока недоступен: {detail}"
         ),
     )
+
+
+class WslKeepAlive:
+    """Keep WSL Ubuntu running while the academy talks to it over SSH.
+
+    WSL stops a distribution seconds after its last wsl.exe process exits, and a
+    TCP connection to 127.0.0.1:22 does not start it again (owner's laptop,
+    25.09.2026: ConnectionRefusedError on probe and runner-check). The academy
+    therefore owns one hidden `wsl.exe --exec sleep infinity` process for its
+    lifetime and waits for sshd before every SSH connection.
+    """
+
+    def __init__(
+        self,
+        runner: SafeCommandRunner,
+        timeout_seconds: float,
+        ssh_wait_seconds: float = 20.0,
+    ) -> None:
+        self.runner = runner
+        self.timeout_seconds = timeout_seconds
+        self.ssh_wait_seconds = ssh_wait_seconds
+        self._process: asyncio.subprocess.Process | None = None
+        self._lock = asyncio.Lock()
+
+    def _alive(self) -> bool:
+        return self._process is not None and self._process.returncode is None
+
+    async def ensure(self, host: LinuxHost) -> None:
+        if not follows_wsl_address(host):
+            return
+        async with self._lock:
+            if not self._alive():
+                await self._start()
+        deadline = asyncio.get_running_loop().time() + self.ssh_wait_seconds
+        while True:
+            reachable, _ = await tcp_connect(host.host, host.port, 1.0)
+            if reachable or asyncio.get_running_loop().time() >= deadline:
+                return
+            await asyncio.sleep(0.5)
+
+    async def _start(self) -> None:
+        listed = await self.runner.run(
+            "wsl.exe", "--list", "--quiet", timeout_seconds=self.timeout_seconds
+        )
+        distribution = select_ubuntu_distribution(listed.stdout) if listed.returncode == 0 else None
+        executable = shutil.which("wsl.exe")
+        if distribution is None or executable is None:
+            return
+        self._process = await asyncio.create_subprocess_exec(
+            executable,
+            "--distribution",
+            distribution,
+            "--exec",
+            "sleep",
+            "infinity",
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+            creationflags=hidden_window_flags(),
+        )
+
+    async def close(self) -> None:
+        process, self._process = self._process, None
+        if process is None or process.returncode is not None:
+            return
+        process.terminate()
+        try:
+            await asyncio.wait_for(process.wait(), timeout=5)
+        except TimeoutError:
+            process.kill()
+            await process.wait()
