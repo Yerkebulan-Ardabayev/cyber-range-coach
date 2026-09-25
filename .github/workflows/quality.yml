@@ -63,6 +63,7 @@ jobs:
           backend/tests/test_windows_integration.py
           backend/tests/test_hidden_windows.py
           backend/tests/test_windowed_start.py
+          backend/tests/test_certificate_follows_address.py
           -rA -s
       - name: Parse real Windows integration test
         shell: powershell

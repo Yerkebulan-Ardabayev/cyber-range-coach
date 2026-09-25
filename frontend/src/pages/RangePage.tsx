@@ -11,11 +11,12 @@ const targetTagLabels: Record<string, string> = { web: 'веб', authentication:
 const containerStateLabels: Record<string, string> = { running: 'работает', exited: 'остановлен', created: 'создан', restarting: 'перезапускается' }
 const exposureLabels: Record<string, string> = { loopback: 'только Windows', lan: 'локальная сеть', unknown: 'неизвестно' }
 
-function DiscoveryCard({ item }: { item: DiscoveredTarget }) {
+function DiscoveryCard({ item, targets }: { item: DiscoveredTarget; targets: Target[] }) {
   const queryClient = useQueryClient()
   const firstTcp = item.ports.find((port) => port.protocol === 'tcp') ?? null
   const [selected, setSelected] = useState<PublishedPort | null>(firstTcp)
   const [tags, setTags] = useState<string[]>(item.detected_kind === 'generic' ? ['web'] : targetTags)
+  const isRegistered = (port: PublishedPort | null) => port !== null && targets.some((target) => target.container_reference === item.container_id && target.container_port === port.container_port)
   const add = useMutation({
     mutationFn: () => api<Target>('/api/v2/targets', {
       method: 'POST',
@@ -32,7 +33,7 @@ function DiscoveryCard({ item }: { item: DiscoveredTarget }) {
       {item.warnings.map((warning) => <p className="inline-warning" key={warning}>{warning}</p>)}
       <div className="tag-picker"><span>Разрешить уроки:</span>{targetTags.map((tag) => <label key={tag}><input type="checkbox" checked={tags.includes(tag)} onChange={() => setTags((current) => current.includes(tag) ? current.filter((value) => value !== tag) : [...current, tag])} />{targetTagLabels[tag]}</label>)}</div>
       {add.error ? <ErrorNotice error={add.error} /> : null}
-      <button className="button button--ink" disabled={!selected || add.isPending} onClick={() => add.mutate()}>{add.isPending ? 'Сверяем Docker inspect…' : 'Подтвердить профиль'} <ArrowIcon /></button>
+      {isRegistered(selected) ? <StatusPill status="ok">Уже подтверждена</StatusPill> : <button className="button button--ink" disabled={!selected || add.isPending} onClick={() => add.mutate()}>{add.isPending ? 'Сверяем Docker inspect…' : 'Подтвердить профиль'} <ArrowIcon /></button>}
     </article>
   )
 }
@@ -68,7 +69,7 @@ export function RangePage({ principal }: { principal: Principal }) {
         <div className="registered-grid">{targets.data?.map((target) => <RegisteredTarget key={target.id} target={target} owner={owner} />)}</div>
         {!targets.isPending && !targets.data?.length ? <EmptyState index="00" title="Пока нет подтверждённых целей" text={owner ? 'Запустите read-only discovery. Docker Compose и volumes не изменятся.' : 'Владелец Windows ещё не подтвердил ни один контейнер.'} /> : null}
       </section>
-      {owner && (discovery.data || discovery.error) ? <section className="section-block section-block--dark"><div className="section-title"><div><Eyebrow>ПОИСК DOCKER-ЦЕЛЕЙ</Eyebrow><h2>Найдено в текущем контексте Windows</h2></div><span>docker ps + inspect</span></div>{discovery.error ? <ErrorNotice error={discovery.error} /> : null}<div className="discovery-grid">{discovery.data?.map((item) => <DiscoveryCard key={item.container_id} item={item} />)}</div></section> : null}
+      {owner && (discovery.data || discovery.error) ? <section className="section-block section-block--dark"><div className="section-title"><div><Eyebrow>ПОИСК DOCKER-ЦЕЛЕЙ</Eyebrow><h2>Найдено в текущем контексте Windows</h2></div><span>docker ps + inspect</span></div>{discovery.error ? <ErrorNotice error={discovery.error} /> : null}<div className="discovery-grid">{discovery.data?.map((item) => <DiscoveryCard key={item.container_id} item={item} targets={targets.data ?? []} />)}</div></section> : null}
     </div>
   )
 }

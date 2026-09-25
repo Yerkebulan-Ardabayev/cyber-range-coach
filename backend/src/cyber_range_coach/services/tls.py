@@ -13,7 +13,7 @@ from cryptography.x509.oid import NameOID
 
 from ..config import Settings
 from .network import local_interfaces
-from .secrets import SecretProtector
+from .secrets import SecretProtectionError, SecretProtector
 
 CA_CERT = "cyber-range-coach-ca.crt"
 CA_KEY = "cyber-range-coach-ca.key.enc"
@@ -196,7 +196,7 @@ def server_pair_matches(settings: Settings, protector: SecretProtector) -> bool:
             protector.unprotect((settings.certificates_dir / SERVER_KEY).read_text(encoding="utf-8")),
             password=None,
         )
-    except (OSError, ValueError, TypeError):
+    except (OSError, ValueError, TypeError, SecretProtectionError):
         return False
     public = serialization.PublicFormat.SubjectPublicKeyInfo
     return certificate.public_key().public_bytes(

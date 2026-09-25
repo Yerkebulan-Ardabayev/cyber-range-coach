@@ -85,4 +85,4 @@
 1. На ноутбуке: «Система» → мастер WSL Ubuntu (student, range-runner, SSH fingerprint). Возможен запрос sudo-пароля в Ubuntu.
 2. Урок tcp-reachability с Juice Shop: живой relay из WSL через правило 172.16.0.0/12 → закрыть D5.
 3. Доверие root CA (setup --trust-certificate) для входа с Mac/телефона.
-4. Мелочи: кнопка «Подтвердить профиль» у уже подтверждённой цели; SecretProtectionError в server_pair_matches; test_certificate_follows_address в Windows-списке CI.
+4. ~~Мелочи~~ сделано 25.09: у подтверждённой цели вместо кнопки «Уже подтверждена»; ключ, который не расшифровывается, ведёт к перевыпуску сертификата; test_certificate_follows_address в Windows-списке CI (результат на Windows виден после push). quality.sh PASS.

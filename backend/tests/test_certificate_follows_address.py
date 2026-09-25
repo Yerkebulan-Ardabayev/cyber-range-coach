@@ -156,3 +156,21 @@ def test_crash_between_swaps_then_old_address_is_repaired(client, monkeypatch) -
     certificate, key = materialize_server_key(settings, protector)
     ssl.create_default_context(ssl.Purpose.CLIENT_AUTH).load_cert_chain(certificate, key)
     assert (settings.certificates_dir / SERVER_KEY).exists()
+
+
+def test_undecryptable_server_key_counts_as_mismatch(client, monkeypatch) -> None:
+    """A key the protector cannot decrypt (DPAPI of another user, damaged file)
+    must lead to a reissue, not crash startup."""
+    from cyber_range_coach.services.secrets import SecretProtectionError
+
+    settings = client.app.state.settings
+    settings.lan_mode = True
+    protector = client.app.state.protector
+    monkeypatch.setattr(tls, "local_interfaces", lambda: _lan("192.168.10.10"))
+    generate_certificates(settings, protector)
+
+    def refuse(_value: str) -> bytes:
+        raise SecretProtectionError("CryptUnprotectData failed")
+
+    monkeypatch.setattr(protector, "unprotect", refuse)
+    assert tls.server_pair_matches(settings, protector) is False
