@@ -163,31 +163,59 @@ def reissue_server_certificate(settings: Settings, protector: SecretProtector) -
         serialization.NoEncryption(),
     )
     # Everything that can fail (DPAPI protect) happens before any file changes.
-    # Both files go to temporary names and are swapped with os.replace, key
-    # first: if the process dies between the two swaps, the old certificate
-    # still lacks the new address, so the next start reissues and repairs.
+    # Both files go to synced temporary names and are swapped with os.replace.
+    # A crash between the two swaps leaves a key that does not match the
+    # certificate; ensure_certificate_covers_lan detects that and reissues.
     protected_key = protector.protect(server_private)
     server_key_path = settings.certificates_dir / SERVER_KEY
     server_cert_path = settings.certificates_dir / SERVER_CERT
     key_tmp = server_key_path.with_name(server_key_path.name + ".new")
     cert_tmp = server_cert_path.with_name(server_cert_path.name + ".new")
-    key_tmp.write_text(protected_key, encoding="utf-8")
+    _write_synced(key_tmp, protected_key.encode("utf-8"))
     os.chmod(key_tmp, 0o600)
-    cert_tmp.write_bytes(server_cert.public_bytes(serialization.Encoding.PEM))
+    _write_synced(cert_tmp, server_cert.public_bytes(serialization.Encoding.PEM))
     os.replace(key_tmp, server_key_path)
     os.replace(cert_tmp, server_cert_path)
     return {"fingerprint": certificate_fingerprint(settings), "changed": "true"}
 
 
+def _write_synced(path: Path, data: bytes) -> None:
+    with open(path, "wb") as target:
+        target.write(data)
+        target.flush()
+        os.fsync(target.fileno())
+
+
+def server_pair_matches(settings: Settings, protector: SecretProtector) -> bool:
+    """True when the stored server key belongs to the stored server certificate."""
+    try:
+        certificate = x509.load_pem_x509_certificate(
+            (settings.certificates_dir / SERVER_CERT).read_bytes()
+        )
+        key = serialization.load_pem_private_key(
+            protector.unprotect((settings.certificates_dir / SERVER_KEY).read_text(encoding="utf-8")),
+            password=None,
+        )
+    except (OSError, ValueError, TypeError):
+        return False
+    public = serialization.PublicFormat.SubjectPublicKeyInfo
+    return certificate.public_key().public_bytes(
+        serialization.Encoding.DER, public
+    ) == key.public_key().public_bytes(serialization.Encoding.DER, public)
+
+
 def ensure_certificate_covers_lan(settings: Settings, protector: SecretProtector) -> bool:
-    """Reissue the server certificate when the LAN address is not in it. True if reissued."""
+    """Reissue the server certificate when the LAN address is not in it or the
+    stored key no longer matches it (interrupted reissue). True if reissued."""
     complete = all(
         (settings.certificates_dir / name).exists()
         for name in (CA_CERT, CA_KEY, SERVER_CERT, SERVER_KEY)
     )
     if not settings.lan_mode or not complete:
         return False
-    if not lan_addresses_missing_from_certificate(settings):
+    if not lan_addresses_missing_from_certificate(settings) and server_pair_matches(
+        settings, protector
+    ):
         return False
     reissue_server_certificate(settings, protector)
     return True

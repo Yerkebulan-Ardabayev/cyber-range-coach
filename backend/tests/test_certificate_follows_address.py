@@ -117,3 +117,42 @@ def test_incomplete_set_is_not_reissued(client, monkeypatch) -> None:
     (settings.certificates_dir / CA_KEY).unlink()
     monkeypatch.setattr(tls, "local_interfaces", lambda: _lan("192.168.10.11"))
     assert ensure_certificate_covers_lan(settings, client.app.state.protector) is False
+
+
+def test_crash_between_swaps_then_old_address_is_repaired(client, monkeypatch) -> None:
+    """Key replaced, certificate not (process died), then DHCP returns the old address."""
+    import os
+    import ssl
+
+    from cyber_range_coach.services.tls import SERVER_KEY, materialize_server_key
+
+    settings = client.app.state.settings
+    settings.lan_mode = True
+    protector = client.app.state.protector
+    monkeypatch.setattr(tls, "local_interfaces", lambda: _lan("192.168.10.10"))
+    generate_certificates(settings, protector)
+    old_cert = (settings.certificates_dir / SERVER_CERT).read_bytes()
+    monkeypatch.setattr(tls, "local_interfaces", lambda: _lan("192.168.10.11"))
+
+    real_replace = os.replace
+    calls = {"n": 0}
+
+    def crash_after_key(src, dst):
+        calls["n"] += 1
+        real_replace(src, dst)
+        if calls["n"] == 1:
+            raise SystemExit("power loss")
+
+    monkeypatch.setattr(tls.os, "replace", crash_after_key)
+    with pytest.raises(SystemExit):
+        ensure_certificate_covers_lan(settings, protector)
+    monkeypatch.setattr(tls.os, "replace", real_replace)
+    assert (settings.certificates_dir / SERVER_CERT).read_bytes() == old_cert
+    assert not tls.server_pair_matches(settings, protector)
+
+    monkeypatch.setattr(tls, "local_interfaces", lambda: _lan("192.168.10.10"))
+    assert ensure_certificate_covers_lan(settings, protector) is True
+    assert tls.server_pair_matches(settings, protector)
+    certificate, key = materialize_server_key(settings, protector)
+    ssl.create_default_context(ssl.Purpose.CLIENT_AUTH).load_cert_chain(certificate, key)
+    assert (settings.certificates_dir / SERVER_KEY).exists()
