@@ -75,11 +75,28 @@ def test_every_process_launch_in_the_academy_hides_its_window() -> None:
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="real hidden console start needs Windows")
+@pytest.mark.parametrize("hidden", [False, True])
 @pytest.mark.asyncio
-async def test_real_powershell_runs_hidden_and_returns_output() -> None:
-    """No mock: powershell.exe with CREATE_NO_WINDOW still answers through the pipe."""
+async def test_real_powershell_runs_hidden_and_returns_output(monkeypatch, hidden: bool) -> None:
+    """No mock: powershell.exe started by the academy runner answers through the pipe.
+
+    Both variants run so a failure shows whether the hidden-window flag or the
+    slow first PowerShell start on the machine is the cause.
+    """
+    import time
+
+    if not hidden:
+        monkeypatch.setattr(commands, "hidden_window_flags", lambda: 0)
+    started = time.monotonic()
     result = await SafeCommandRunner().run(
-        "powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "Write-Output 'crc-hidden-ok'"
+        "powershell.exe",
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        "Write-Output 'crc-hidden-ok'",
+        timeout_seconds=60,
     )
-    assert result.returncode == 0, result.stderr
+    elapsed = time.monotonic() - started
+    print(f"hidden={hidden} returncode={result.returncode} elapsed={elapsed:.1f}s")
+    assert result.returncode == 0, (result.stderr, elapsed)
     assert result.stdout.strip() == "crc-hidden-ok"
