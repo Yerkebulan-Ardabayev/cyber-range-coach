@@ -79,3 +79,10 @@
 - 25.09 11:30: окна PowerShell в «Полигоне» скрыты (CREATE_NO_WINDOW), CI run 36101959910 настоящий powershell на Windows с флагом и без (26 с / 40 с), critic-code PASS. Установщик `dist/releases/794adf5/` SHA-256 2f9a89eb8b62ad7a96b3d63b949d712d835a6ec2ab555584895b9af4828b9cfe. Старые установщики (3799772, 3e41897, 62b68b1, d217ecb) перемещены в Корзину по просьбе владельца; одноразовые crc-*.cmd удалены из репо (есть в истории), оставлен crc-relay-rule.cmd. Открыто: таймаут SafeCommandRunner 8 с против холодного старта PowerShell 25-40 с на раннере.
 - 25.09: владелец подтвердил на ноутбуке с установщиком 794adf5: при открытии «Полигона» окна PowerShell не мигают.
 - 25.09 ~13:00: «Подтвердить профиль» падал на двойной публикации порта Docker (0.0.0.0 и ::) — исправлено; сертификат сайта перевыпускается тем же CA при смене адреса и при несовпадении пары (атомарно, fsync), сбой перевыпуска не мешает запуску; Docker показывает причину; таймаут 45 с только PowerShell. critic-code PASS с 3-го раза, CI 36106946017 success. Установщик `dist/releases/e1f189d/`. Открыто: SecretProtectionError в server_pair_matches, test_certificate_follows_address в Windows-списке CI, приёмка у владельца.
+- 25.09 приёмка у владельца на установщике e1f189d: Docker Desktop зелёный; Juice Shop и WebGoat подтверждены, «Проверить без изменения» HTTP 200 / 302; урок tcp-reachability открывается, при старте «Linux VM и SSH fingerprint ещё не подтверждены». «Локальный HTTPS»: root CA не в CurrentUser\Root.
+
+### NEXT (новый чат)
+1. На ноутбуке: «Система» → мастер WSL Ubuntu (student, range-runner, SSH fingerprint). Возможен запрос sudo-пароля в Ubuntu.
+2. Урок tcp-reachability с Juice Shop: живой relay из WSL через правило 172.16.0.0/12 → закрыть D5.
+3. Доверие root CA (setup --trust-certificate) для входа с Mac/телефона.
+4. Мелочи: кнопка «Подтвердить профиль» у уже подтверждённой цели; SecretProtectionError в server_pair_matches; test_certificate_follows_address в Windows-списке CI.
