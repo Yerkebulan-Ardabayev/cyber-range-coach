@@ -313,14 +313,18 @@ async def test_keepalive_binds_its_process_to_the_academy(monkeypatch) -> None:
         await keepalive.close()
 
 
-async def test_doctor_stops_the_keepalive_it_started(monkeypatch) -> None:
+async def test_doctor_stops_the_keepalive_it_started(settings, monkeypatch) -> None:
     from cyber_range_coach import doctor
+
+    # Test settings with a temporary data directory: never the owner's academy.
+    monkeypatch.setattr(doctor, "doctor_settings", lambda: settings)
 
     closed: list[bool] = []
     real_create_app = doctor.create_app
 
-    def create_app(settings):
-        app = real_create_app(settings)
+    def create_app(app_settings):
+        assert app_settings is settings
+        app = real_create_app(app_settings)
 
         async def close() -> None:
             closed.append(True)
