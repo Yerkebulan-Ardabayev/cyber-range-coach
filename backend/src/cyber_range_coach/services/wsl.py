@@ -6,10 +6,12 @@ import sys
 from pathlib import Path
 
 from ..config import Settings, project_root
+from ..database import Database
 from ..models import LinuxHost
 from ..schemas import WslUbuntuPrepareResponse
 from .commands import SafeCommandRunner
 from .network import tcp_connect
+from .relay import configured_relay_source_ip, validate_relay_source_ip
 
 WSL_STAGE_DIRECTORY = ".local/share/cyber-range-coach"
 WSL_FILES = ("bootstrap-linux.sh", "bootstrap-wsl-ubuntu.sh", "crc-range-check")
@@ -91,6 +93,46 @@ async def current_wsl_source_ip(
         select_wsl_source_ip(source_result.stdout) if source_result.returncode == 0 else None
     )
     return distribution, relay_source_ip
+
+
+def follows_wsl_address(host: LinuxHost) -> bool:
+    """WSL on Windows is reached by SSH on loopback and gets a new NAT address on every boot."""
+    return sys.platform == "win32" and host.host == "127.0.0.1"
+
+
+def acceptable_wsl_source_ip(value: str | None) -> str | None:
+    if not value:
+        return None
+    address = ipaddress.ip_address(value)
+    return str(address) if address.version == 4 and address.is_private and not address.is_loopback else None
+
+
+async def relay_source_ip_for_start(
+    database: Database,
+    runner: SafeCommandRunner,
+    timeout_seconds: float,
+    host: LinuxHost,
+) -> str:
+    """Source address the relay must accept for this start (spec 11.3 Zh).
+
+    For WSL the live address comes from wsl.exe on this machine and is saved, so
+    a reboot needs no owner action; the relay firewall rule is bound to the WSL
+    adapter, not to the address. Other Linux VMs keep their configured address.
+    """
+    if not follows_wsl_address(host):
+        return configured_relay_source_ip(host)
+    _, current = await current_wsl_source_ip(runner, timeout_seconds, start_if_stopped=True)
+    accepted = acceptable_wsl_source_ip(current)
+    if accepted is None:
+        return configured_relay_source_ip(host)
+    if accepted != host.relay_source_ip:
+        with database.session_factory() as session:
+            stored = session.get(LinuxHost, host.id)
+            if stored is not None:
+                stored.relay_source_ip = accepted
+                session.commit()
+        host.relay_source_ip = accepted
+    return validate_relay_source_ip(accepted)
 
 
 def _manual_sudo_command(

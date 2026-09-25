@@ -63,13 +63,11 @@ class RelayManager:
         async with self._lock:
             existing = self._handles.get(target_id)
             if existing:
-                if existing.allowed_source_ip != allowed_source_ip:
-                    raise AppError(
-                        409,
-                        "relay_already_active",
-                        "Relay уже активен для другого IP Linux VM.",
-                    )
-                return existing
+                if existing.allowed_source_ip == allowed_source_ip:
+                    return existing
+                # WSL came back with a new address (spec 11.3 Zh): the old
+                # relay only accepts the previous one, so it is replaced.
+                await self._close(existing)
             for port in range(self.port_start, self.port_end + 1):
                 try:
                     server = await asyncio.start_server(
@@ -160,6 +158,10 @@ class RelayManager:
             handle = self._handles.pop(target_id, None)
         if handle is None:
             return
+        await self._close(handle)
+
+    async def _close(self, handle: RelayHandle) -> None:
+        self._handles.pop(handle.target_id, None)
         handle.server.close()
         await handle.server.wait_closed()
         if handle.timeout_task and handle.timeout_task is not asyncio.current_task():

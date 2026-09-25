@@ -14,7 +14,7 @@ from cyber_range_coach.services.tls import generate_certificates
 
 @pytest.mark.parametrize(
     ("current_wsl_source_ip", "expected_ready"),
-    [("172.24.64.22", True), ("172.24.64.99", False)],
+    [("172.24.64.22", True), ("172.24.64.99", True), ("8.8.8.8", False)],
 )
 @pytest.mark.asyncio
 async def test_private_wifi_ca_firewall_wsl_ssh_makes_doctor_ready(
@@ -104,5 +104,9 @@ async def test_private_wifi_ca_firewall_wsl_ssh_makes_doctor_ready(
     assert checks["windows_firewall"].status == "ok"
     assert checks["linux_vm"].status == ("ok" if expected_ready else "blocked")
     assert checks["linux_vm"].evidence["stored_relay_source_ip"] == "172.24.64.22"
+    assert checks["linux_vm"].evidence["relay_source_follows_wsl"] is True
+    with client.app.state.db.session_factory() as session:
+        stored = session.query(LinuxHost).one().relay_source_ip
+    assert stored == "172.24.64.22", "preflight must stay read-only"
     assert checks["linux_vm"].evidence["current_wsl_source_ip"] == current_wsl_source_ip
     assert result.ready is expected_ready

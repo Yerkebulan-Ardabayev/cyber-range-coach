@@ -21,6 +21,7 @@ from ..schemas import (
 from ..security import Principal, require_role
 from ..services.network import local_interfaces, source_address_toward, verify_target
 from ..services.relay import configured_relay_source_ip
+from ..services.wsl import relay_source_ip_for_start
 
 router = APIRouter(prefix="/api/v2/targets", tags=["targets"])
 
@@ -167,10 +168,16 @@ async def start_relay(
             raise AppError(404, "target_not_found", "Учебная цель не найдена.")
         if linux_host is None:
             raise AppError(409, "vm_ip_mismatch", "Relay разрешён только для настроенной Linux VM.")
-        relay_source_ip = configured_relay_source_ip(linux_host)
-        if payload.linux_vm_ip != relay_source_ip:
-            raise AppError(409, "vm_ip_mismatch", "Relay разрешён только для настроенной Linux VM.")
         session.expunge(target)
+        session.expunge(linux_host)
+    relay_source_ip = await relay_source_ip_for_start(
+        request.app.state.db,
+        request.app.state.runner,
+        request.app.state.settings.subprocess_timeout_seconds,
+        linux_host,
+    )
+    if payload.linux_vm_ip != relay_source_ip:
+        raise AppError(409, "vm_ip_mismatch", "Relay разрешён только для настроенной Linux VM.")
     parsed = urlparse(target.host_endpoint)
     upstream_host = parsed.hostname or "127.0.0.1"
     upstream_port = parsed.port or (443 if parsed.scheme == "https" else 80)

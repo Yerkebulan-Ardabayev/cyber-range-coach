@@ -94,13 +94,14 @@ Token потребляется один раз. Mac получает `operator` 
 ## Firewall и откат
 
 Installer может создать только UI rule TCP 8443 для Private LAN. Relay rule
-создаётся отдельно после определения точного IPv4 Linux VM:
+создаётся один раз и привязан к виртуальному адаптеру WSL, а не к адресу WSL:
+адрес меняется при каждой перезагрузке, академия берёт его сама при каждом
+запуске relay (урока с целью) и при необходимости сама запускает Ubuntu. Права администратора нужны только для этой команды:
 
 ```powershell
 powershell -NoProfile -File "C:\Program Files\Cyber Range Coach\tools\configure-firewall.ps1" `
   -Mode Relay `
   -ApplicationPath "C:\Program Files\Cyber Range Coach\CyberRangeCoach.exe" `
-  -LinuxVmIp 192.168.x.x `
   -Approve
 ```
 

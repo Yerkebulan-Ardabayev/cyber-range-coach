@@ -25,7 +25,7 @@ from .tls import (
     certificate_fingerprint,
     certificate_ip_addresses,
 )
-from .wsl import current_wsl_source_ip
+from .wsl import acceptable_wsl_source_ip, current_wsl_source_ip
 
 REQUIRED_LEARNING_TOOLS = frozenset(
     {
@@ -245,7 +245,10 @@ class PreflightService:
                     self.runner, self.settings.subprocess_timeout_seconds
                 )
                 if current_source_ip != relay_source_ip:
-                    relay_source_ip = None
+                    # WSL gets a new NAT address on every boot (spec 11.3 Zh).
+                    # Preflight only reads: the relay start saves the live
+                    # address itself, so a private WSL address is accepted here.
+                    relay_source_ip = acceptable_wsl_source_ip(current_source_ip)
             confirmed = bool(
                 linux_host.confirmed_at and linux_host.host_key and relay_source_ip
             )
@@ -271,6 +274,9 @@ class PreflightService:
                         "ssh_endpoint": f"{linux_host.host}:{linux_host.port}",
                         "stored_relay_source_ip": linux_host.relay_source_ip,
                         "current_wsl_source_ip": current_source_ip,
+                        "relay_source_follows_wsl": bool(
+                            is_windows and linux_host.host == "127.0.0.1"
+                        ),
                     },
                 )
             )

@@ -154,3 +154,15 @@ async def test_doctor_checks_root_ca_thumbprint_not_leaf_fingerprint(client) -> 
     assert Path(called[-1]).name == "cyber-range-coach-ca.crt"
     assert Path(called[-1]).name != "cyber-range-coach.crt"
     assert called[-1] != leaf_fingerprint
+
+
+def test_relay_firewall_rule_follows_wsl_adapter_not_address() -> None:
+    source = (ROOT / "installer" / "windows" / "configure-firewall.ps1").read_text(
+        encoding="utf-8"
+    )
+    relay = source[source.index('$name = "Cyber Range Coach Relay'):]
+    assert "-InterfaceAlias $WslAdapterAlias" in relay
+    assert "-LocalPort 47000-47100" in relay
+    assert "-Program $ApplicationPath" in relay
+    assert "RemoteAddress" not in relay
+    assert "LinuxVmIp" not in source

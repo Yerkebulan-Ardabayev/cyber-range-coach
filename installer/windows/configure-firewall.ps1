@@ -8,7 +8,7 @@ param(
     [ValidateScript({ Test-Path -LiteralPath $_ -PathType Leaf })]
     [string]$ApplicationPath,
 
-    [string]$LinuxVmIp,
+    [string]$WslAdapterAlias,
 
     [switch]$Approve
 )
@@ -45,11 +45,22 @@ if ($Mode -eq "Academy") {
     exit 0
 }
 
-$parsedIp = $null
-if (-not [System.Net.IPAddress]::TryParse($LinuxVmIp, [ref]$parsedIp) -or $parsedIp.AddressFamily -ne [System.Net.Sockets.AddressFamily]::InterNetwork) {
-    throw "Для режима relay требуется точный IPv4-адрес Linux VM."
+# Relay rule is bound to the WSL virtual adapter, not to the WSL address:
+# WSL gets a new NAT address on every reboot, the adapter name stays. Checked on
+# the owner's laptop 25.09.2026: without a rule WSL cannot reach the port, a rule
+# on the Wi-Fi adapter does not help, a rule on the WSL adapter does. The WSL
+# adapter has no network profile, so the rule uses Profile Any; the adapter is
+# internal to this machine, and the academy still accepts relay connections only
+# from the current WSL address.
+if (-not $WslAdapterAlias) {
+    $WslAdapterAlias = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+        Where-Object { $_.InterfaceAlias -like "vEthernet (WSL*" } |
+        Select-Object -First 1 -ExpandProperty InterfaceAlias
 }
-$name = "Cyber Range Coach Relay 47000-47100 from $LinuxVmIp"
+if (-not $WslAdapterAlias -or -not (Get-NetIPInterface -InterfaceAlias $WslAdapterAlias -AddressFamily IPv4 -ErrorAction SilentlyContinue)) {
+    throw "Виртуальный адаптер WSL не найден. Запустите Ubuntu в WSL и повторите."
+}
+$name = "Cyber Range Coach Relay 47000-47100 on WSL adapter"
 Get-NetFirewallRule -Group $ruleGroup -ErrorAction SilentlyContinue |
     Where-Object { $_.DisplayName -like "Cyber Range Coach Relay *" } |
     Remove-NetFirewallRule
@@ -61,6 +72,6 @@ New-NetFirewallRule `
     -Program $ApplicationPath `
     -Protocol TCP `
     -LocalPort 47000-47100 `
-    -RemoteAddress $LinuxVmIp `
-    -Profile Private | Out-Null
-Write-Output "Создано правило relay только для частного профиля и точного источника $LinuxVmIp."
+    -InterfaceAlias $WslAdapterAlias `
+    -Profile Any | Out-Null
+Write-Output "Создано правило relay только на адаптере $WslAdapterAlias. Адрес WSL после перезагрузки академия берёт сама."

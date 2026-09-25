@@ -21,3 +21,4 @@ vendor/tesseract/*
 .DS_Store
 range_host.json
 range_host.json.tmp
+windows-laptop/

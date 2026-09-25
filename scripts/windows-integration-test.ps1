@@ -90,8 +90,9 @@ if ($doctor.ready -ne $true) {
     throw "Doctor ready=false. Blocked checks: $($blocked -join ', ')"
 }
 $linuxDoctorCheck = $doctor.checks | Where-Object { $_.id -eq "linux_vm" } | Select-Object -First 1
-if ($linuxDoctorCheck.evidence.stored_relay_source_ip -ne $wslSourceIp -or
-    $linuxDoctorCheck.evidence.current_wsl_source_ip -ne $wslSourceIp) {
+# The stored address may lag after a reboot until the next relay start saves the
+# live one (spec 11.3 Zh), so only the live address is compared here.
+if ($linuxDoctorCheck.evidence.current_wsl_source_ip -ne $wslSourceIp) {
     throw "Doctor relay source does not match the current WSL IPv4 address $wslSourceIp."
 }
 
