@@ -36,6 +36,23 @@ def local_interfaces() -> list[NetworkInterface]:
     return interfaces
 
 
+def source_address_toward(peer: str) -> str | None:
+    """IPv4 of the interface the OS routes to peer through; no packet is sent."""
+    try:
+        if ipaddress.ip_address(peer).version != 4:
+            return None
+    except ValueError:
+        return None
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        probe.connect((peer, 9))
+        return str(probe.getsockname()[0])
+    except OSError:
+        return None
+    finally:
+        probe.close()
+
+
 async def tcp_connect(host: str, port: int, timeout: float = 3.0) -> tuple[bool, str]:
     try:
         reader, writer = await asyncio.wait_for(

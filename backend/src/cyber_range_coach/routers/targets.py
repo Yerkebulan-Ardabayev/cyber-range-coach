@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 from datetime import UTC, datetime
 from typing import cast
 from urllib.parse import urlparse
@@ -18,7 +19,7 @@ from ..schemas import (
     TargetVerifyResponse,
 )
 from ..security import Principal, require_role
-from ..services.network import local_interfaces, verify_target
+from ..services.network import local_interfaces, source_address_toward, verify_target
 from ..services.relay import configured_relay_source_ip
 
 router = APIRouter(prefix="/api/v2/targets", tags=["targets"])
@@ -29,9 +30,27 @@ def _target_response(target: TargetProfile) -> TargetResponse:
 
 
 def _connect_host(request: Request) -> str:
+    """Windows address that the Linux VM reaches the relay on.
+
+    The first private address is wrong on a laptop with Wi-Fi, Ethernet and the
+    WSL adapter: the VM only sees the interface its own traffic is routed
+    through, so that interface is asked from the OS routing table first.
+    """
     configured = request.app.state.settings.relay_advertised_host
     if configured:
         return cast(str, configured)
+    with request.app.state.db.session_factory() as session:
+        linux_host = session.scalars(select(LinuxHost).order_by(LinuxHost.id)).first()
+        try:
+            vm_ip = configured_relay_source_ip(linux_host) if linux_host else None
+        except AppError:
+            vm_ip = None
+    if vm_ip:
+        routed = source_address_toward(vm_ip)
+        if routed:
+            parsed = ipaddress.ip_address(routed)
+            if parsed.is_private and not parsed.is_loopback:
+                return routed
     candidates = [
         item.address
         for item in local_interfaces()

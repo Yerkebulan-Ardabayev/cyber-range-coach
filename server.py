@@ -2,7 +2,9 @@
 """Cyber Range Coach local server.
 
 The server intentionally has no target-operation endpoints. Its only network
-activity is the four range health checks defined below.
+activity is the four range health checks defined below and, when the range
+moved, the fingerprint search in range_discovery.py (own /24, ports 8080 and
+3000, at most one full sweep per minute).
 """
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -14,6 +16,7 @@ import sys
 from pathlib import Path
 from urllib.parse import urlparse
 from parsers import parse
+from range_discovery import RangeLocator, localize
 
 ROOT = Path(__file__).resolve().parent
 WEB_ROOT = ROOT / "web"
@@ -21,7 +24,10 @@ CONTENT_ROOT = ROOT / "content"
 DB_PATH = Path(os.environ.get("CYBER_RANGE_COACH_DB", str(ROOT / "state.sqlite")))
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("CYBER_RANGE_COACH_PORT", "8899"))
-RANGE_HOST = "192.168.10.10"
+RANGE_LOCATOR = RangeLocator(
+    DB_PATH.parent / "range_host.json",
+    pinned_host=os.environ.get("CYBER_RANGE_COACH_RANGE_HOST") or None,
+)
 RANGE_PORTS = (8080, 3000)
 TIMEOUT_SECONDS = 1.5
 
@@ -113,6 +119,8 @@ def load_content(category, item_id=None):
     for path in sorted(directory.glob("*.json")):
         with path.open(encoding="utf-8") as source:
             item = json.load(source)
+        if category == "labs":
+            item = localize(item, RANGE_LOCATOR.current())
         if item_id is None or item.get("id") == item_id:
             items.append(item)
     if item_id is not None:
@@ -191,6 +199,7 @@ def public_step(lab_id, step, attempt_id=None, reveal=None):
 
 def public_lab(lab, attempt_id=None, reveal=None):
     visible = dict(lab)
+    visible.pop("target_id", None)
     if assistance_for_lab(lab) == 0 and open_attempt_for_step(lab["id"], lab["steps"][0]["id"], attempt_id):
         return {"id": lab["id"], "mission": lab["mission"], "objective": lab["objective"], "steps": []}
     visible["steps"] = [public_step(lab["id"], step, attempt_id, reveal) for step in lab.get("steps", [])]
@@ -281,14 +290,14 @@ def close_learning(connection, lab, attempt_id):
     for skill_id in lab.get("skills", []):
         progress = connection.execute("SELECT level, assistance_level FROM skill_progress WHERE skill_id = ?", (skill_id,)).fetchone() or (0, 4)
         old_level, assistance = progress
-        target_seen = connection.execute("SELECT 1 FROM skill_target WHERE skill_id = ? AND target = ?", (skill_id, lab["target"])).fetchone() is not None
+        target_seen = connection.execute("SELECT 1 FROM skill_target WHERE skill_id = ? AND target = ?", (skill_id, lab.get("target_id", lab["target"]))).fetchone() is not None
         prior_target = connection.execute("SELECT 1 FROM skill_target WHERE skill_id = ?", (skill_id,)).fetchone() is not None
         achieved = (5 if prior_target and not target_seen else 4) if assistance == 0 else 5 - assistance
         # Уровень навыка растёт только за чистое прохождение: с подсмотренным
         # решением или подсказкой 3 это не доказательство умения.
         level = max(old_level, achieved) if clean else old_level
         if assistance == 0 and not target_seen:
-            connection.execute("INSERT INTO skill_target(skill_id, target) VALUES (?, ?)", (skill_id, lab["target"]))
+            connection.execute("INSERT INTO skill_target(skill_id, target) VALUES (?, ?)", (skill_id, lab.get("target_id", lab["target"])))
         if clean and assistance > 0:
             assistance -= 1
         elif not clean:
@@ -430,34 +439,34 @@ def decision_feedback(step, choice):
     return {"correct": correct, "why": why, "next_step": "debrief" if correct else "analyse"}
 
 
-def record_check(port, ok, detail):
+def record_check(host, port, ok, detail):
     with database() as connection:
         connection.execute(
             "INSERT INTO range_check(host, port, ok, detail) VALUES (?, ?, ?, ?)",
-            (RANGE_HOST, port, int(ok), detail),
+            (host, port, int(ok), detail),
         )
 
 
-def tcp_check(port):
+def tcp_check(host, port):
     try:
-        with socket.create_connection((RANGE_HOST, port), timeout=TIMEOUT_SECONDS):
+        with socket.create_connection((host, port), timeout=TIMEOUT_SECONDS):
             detail = "TCP connect succeeded"
-            record_check(port, True, detail)
+            record_check(host, port, True, detail)
             return True, detail
     except OSError as error:
         detail = "TCP connect failed: " + str(error)
-        record_check(port, False, detail)
+        record_check(host, port, False, detail)
         return False, detail
 
 
-def http_get(port, path):
+def http_get(host, port, path):
     """Perform the explicitly allowed HTTP GET using the already-permitted socket."""
     try:
-        with socket.create_connection((RANGE_HOST, port), timeout=TIMEOUT_SECONDS) as connection:
+        with socket.create_connection((host, port), timeout=TIMEOUT_SECONDS) as connection:
             connection.settimeout(TIMEOUT_SECONDS)
             request = (
                 "GET " + path + " HTTP/1.1\r\n"
-                "Host: " + RANGE_HOST + ":" + str(port) + "\r\n"
+                "Host: " + host + ":" + str(port) + "\r\n"
                 "Connection: close\r\n\r\n"
             )
             connection.sendall(request.encode("ascii"))
@@ -479,8 +488,24 @@ def http_get(port, path):
 
 
 def health():
-    webgoat_tcp, webgoat_tcp_detail = tcp_check(8080)
-    juice_tcp, juice_tcp_detail = tcp_check(3000)
+    located = RANGE_LOCATOR.locate()
+    host = located["host"]
+    if host is None:
+        # An address that failed the fingerprint is never probed or shown:
+        # a foreign device there could otherwise answer 200 and look ONLINE.
+        detail = "Стенд не найден в своей подсети" if located["source"] != "rate_limited" else "Поиск стенда был меньше минуты назад"
+        checks = [
+            {"service": service, "port": port, "stage": stage, "ok": False, "detail": detail}
+            for service, port in (("WebGoat", 8080), ("Juice Shop", 3000)) for stage in ("tcp", "http")
+        ]
+        diagnosis = [{"level": "error", "message": "WebGoat и Juice Shop не найдены ни по прежнему адресу, ни в своей подсети."}]
+        if located["source"] == "rate_limited":
+            diagnosis.append({"level": "action", "message": "Поиск стенда в своей подсети уже был меньше минуты назад. Повторите проверку через минуту."})
+        else:
+            diagnosis.append({"level": "action", "message": "Проверьте, что Windows включён, подключён к той же сети, и что WebGoat и Juice Shop запущены."})
+        return {"host": None, "discovery": located["source"], "checks": checks, "verdict": "OFFLINE", "diagnosis": diagnosis}
+    webgoat_tcp, webgoat_tcp_detail = tcp_check(host, 8080)
+    juice_tcp, juice_tcp_detail = tcp_check(host, 3000)
     checks = [
         {"service": "WebGoat", "port": 8080, "stage": "tcp", "ok": webgoat_tcp, "detail": webgoat_tcp_detail},
         {"service": "Juice Shop", "port": 3000, "stage": "tcp", "ok": juice_tcp, "detail": juice_tcp_detail},
@@ -488,31 +513,31 @@ def health():
     webgoat_http_ok = False
     juice_http_ok = False
     if webgoat_tcp:
-        status, _body, detail = http_get(8080, "/WebGoat/")
+        status, _body, detail = http_get(host, 8080, "/WebGoat/")
         webgoat_http_ok = status in (200, 302)
-        record_check(8080, webgoat_http_ok, detail)
+        record_check(host, 8080, webgoat_http_ok, detail)
         checks.append({"service": "WebGoat", "port": 8080, "stage": "http", "path": "/WebGoat/", "status": status, "ok": webgoat_http_ok, "detail": detail})
     else:
         detail = "Skipped because TCP connect failed"
-        record_check(8080, False, detail)
+        record_check(host, 8080, False, detail)
         checks.append({"service": "WebGoat", "port": 8080, "stage": "http", "path": "/WebGoat/", "ok": False, "detail": detail})
     if juice_tcp:
-        status, body, detail = http_get(3000, "/")
+        status, body, detail = http_get(host, 3000, "/")
         # Juice Shop's landing HTML should be a real document, not an empty response.
         content_present = "<html" in body.lower() or "juice" in body.lower()
         juice_http_ok = status == 200 and content_present
         suffix = "; content marker present" if content_present else "; expected HTML/Juice Shop content marker missing"
-        record_check(3000, juice_http_ok, detail + suffix)
+        record_check(host, 3000, juice_http_ok, detail + suffix)
         checks.append({"service": "Juice Shop", "port": 3000, "stage": "http", "path": "/", "status": status, "content_present": content_present, "ok": juice_http_ok, "detail": detail + suffix})
     else:
         detail = "Skipped because TCP connect failed"
-        record_check(3000, False, detail)
+        record_check(host, 3000, False, detail)
         checks.append({"service": "Juice Shop", "port": 3000, "stage": "http", "path": "/", "ok": False, "detail": detail})
 
     diagnosis = []
     if not webgoat_tcp and not juice_tcp:
         diagnosis.append({"level": "error", "message": "Оба порта 8080 и 3000 недоступны: хост выключен, сменил IP или трафик блокирует firewall."})
-        diagnosis.append({"level": "action", "message": "Проверьте Windows, текущий IP через ipconfig, правила Windows Firewall и запуск обоих сервисов."})
+        diagnosis.append({"level": "action", "message": "Проверьте Windows, правила Windows Firewall и запуск обоих сервисов."})
     elif webgoat_tcp and not juice_tcp:
         diagnosis.append({"level": "error", "message": "Сеть и адрес доступны через WebGoat: конкретно Juice Shop на порту 3000 не отвечает."})
         diagnosis.append({"level": "action", "message": "Перезапустите Juice Shop на Windows и проверьте правило Firewall для TCP 3000."})
@@ -526,7 +551,7 @@ def health():
     if webgoat_http_ok and juice_http_ok:
         diagnosis.append({"level": "ok", "message": "WebGoat и Juice Shop отвечают ожидаемым образом."})
     verdict = "ONLINE" if webgoat_http_ok and juice_http_ok else "OFFLINE"
-    return {"host": RANGE_HOST, "checks": checks, "verdict": verdict, "diagnosis": diagnosis}
+    return {"host": host, "discovery": located["source"], "checks": checks, "verdict": verdict, "diagnosis": diagnosis}
 
 
 class Handler(SimpleHTTPRequestHandler):

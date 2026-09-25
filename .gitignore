@@ -19,3 +19,5 @@ build/
 vendor/tesseract/*
 !vendor/tesseract/README.md
 .DS_Store
+range_host.json
+range_host.json.tmp

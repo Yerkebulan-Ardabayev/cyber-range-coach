@@ -53,6 +53,7 @@ def main():
         environment = os.environ.copy()
         environment["CYBER_RANGE_COACH_PORT"] = str(port)
         environment["CYBER_RANGE_COACH_DB"] = str(Path(temporary) / "state.sqlite")
+        environment["CYBER_RANGE_COACH_RANGE_HOST"] = "192.168.10.10"
         server = subprocess.Popen(
             [sys.executable, "server.py"], cwd=str(ROOT), env=environment,
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
