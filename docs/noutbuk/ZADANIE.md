@@ -25,4 +25,10 @@
 
 ## Установщик
 
-Ещё собирается.
+Готов: сборка `6ec891a`, GitHub Actions run `36119130173`, артефакт `CyberRangeCoach-Windows-unsigned` (около 106 МБ).
+SHA-256 `CyberRangeCoach-Setup.exe`: `bea3bb977551e952ee84006bbea5f20d1d3eb04d0cfcbb810606efe6b2c20ca9`.
+
+Как скачать. Артефакт скачивается только после входа в GitHub:
+- Способ 1: если есть `gh` (иначе спроси владельца и после «да» поставь `winget install --id GitHub.cli -e`, вход `gh auth login --web` делает владелец), выполни `gh run download 36119130173 -R Yerkebulan-Ardabayev/cyber-range-coach -n CyberRangeCoach-Windows-unsigned -D %USERPROFILE%\crc-installer-6ec891a`.
+- Способ 2: открой владельцу страницу https://github.com/Yerkebulan-Ardabayev/cyber-range-coach/actions/runs/36119130173, он нажмёт на артефакт внизу страницы, затем распакуй zip из «Загрузок».
+Перед установкой сверь SHA-256 (`Get-FileHash`), не совпало → не ставить.
