@@ -20,7 +20,11 @@ def doctor_settings(platform_name: str | None = None) -> Settings:
 
 async def collect() -> dict[str, object]:
     app = create_app(doctor_settings())
-    result = await app.state.preflight.run()
+    try:
+        result = await app.state.preflight.run()
+    finally:
+        # No lifespan here: stop the WSL keep-alive the preflight may have started.
+        await app.state.wsl_keepalive.close()
     return cast(dict[str, object], result.model_dump(mode="json"))
 
 

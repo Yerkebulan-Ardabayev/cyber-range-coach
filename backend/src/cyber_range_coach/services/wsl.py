@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import ipaddress
+import logging
 import shlex
 import shutil
 import sys
@@ -440,7 +441,11 @@ class WslKeepAlive:
             env=safe_environment(),
             creationflags=hidden_window_flags(),
         )
-        self._lifetime.bind(self._process.pid)
+        if not self._lifetime.bind(self._process.pid) and sys.platform == "win32":
+            logging.getLogger(__name__).warning(
+                "Процесс, который держит WSL включённой, не привязан к академии: "
+                "после аварийного закрытия он может остаться до перезагрузки."
+            )
 
     async def close(self) -> None:
         process, self._process = self._process, None

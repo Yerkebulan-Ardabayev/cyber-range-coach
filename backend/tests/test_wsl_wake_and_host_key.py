@@ -298,3 +298,36 @@ def test_keepalive_child_dies_with_a_killed_academy(tmp_path: Path) -> None:
         assert kernel32.WaitForSingleObject(child, 10000) == 0, "orphaned keep-alive"
     finally:
         kernel32.CloseHandle(child)
+
+
+
+async def test_keepalive_binds_its_process_to_the_academy(monkeypatch) -> None:
+    keepalive = _keepalive(monkeypatch, ssh_wait_seconds=0.0)
+    bound: list[int] = []
+    monkeypatch.setattr(keepalive._lifetime, "bind", lambda pid: bound.append(pid) or True)
+    try:
+        await keepalive.ensure(_host(1))
+        assert keepalive._process is not None
+        assert bound == [keepalive._process.pid]
+    finally:
+        await keepalive.close()
+
+
+async def test_doctor_stops_the_keepalive_it_started(monkeypatch) -> None:
+    from cyber_range_coach import doctor
+
+    closed: list[bool] = []
+    real_create_app = doctor.create_app
+
+    def create_app(settings):
+        app = real_create_app(settings)
+
+        async def close() -> None:
+            closed.append(True)
+
+        monkeypatch.setattr(app.state.wsl_keepalive, "close", close)
+        return app
+
+    monkeypatch.setattr(doctor, "create_app", create_app)
+    await doctor.collect()
+    assert closed == [True]

@@ -44,6 +44,10 @@ async def test_private_wifi_ca_firewall_wsl_ssh_makes_doctor_ready(
         )
         session.commit()
 
+    # The keep-alive would start a real wsl.exe on the Windows runner; this
+    # test covers preflight decisions, not waking WSL.
+    monkeypatch.setattr(client.app.state.range_runner, "wake", AsyncMock())
+
     async def windows_command(_executable: str, *args: str, **_kwargs: object) -> CommandResult:
         if _executable == "wsl.exe":
             if "--exec" in args:

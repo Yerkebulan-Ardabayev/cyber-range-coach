@@ -112,11 +112,12 @@ def serve(lan: bool, no_browser: bool) -> int:
     settings.ensure_directories()
     configure_logging(settings)
     runtime_key: Path | None = None
-    # A request left by an interrupted `stop` must not end this start. Cleared
-    # before taking the lock, so a request sent after that is never lost.
-    (settings.runtime_dir / STOP_REQUEST_NAME).unlink(missing_ok=True)
     try:
         with SingleInstanceLock(settings.runtime_dir / "academy.lock"):
+            # A request left by an interrupted `stop` must not end this start.
+            # Cleared right after taking the lock: a second start that fails to
+            # get it never touches a live request, and a later one is kept.
+            (settings.runtime_dir / STOP_REQUEST_NAME).unlink(missing_ok=True)
             ssl_certfile: str | None = None
             ssl_keyfile: str | None = None
             if settings.tls_enabled:
