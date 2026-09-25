@@ -162,18 +162,30 @@ def reissue_server_certificate(settings: Settings, protector: SecretProtector) -
         serialization.PrivateFormat.PKCS8,
         serialization.NoEncryption(),
     )
-    (settings.certificates_dir / SERVER_CERT).write_bytes(
-        server_cert.public_bytes(serialization.Encoding.PEM)
-    )
+    # Everything that can fail (DPAPI protect) happens before any file changes.
+    # Both files go to temporary names and are swapped with os.replace, key
+    # first: if the process dies between the two swaps, the old certificate
+    # still lacks the new address, so the next start reissues and repairs.
+    protected_key = protector.protect(server_private)
     server_key_path = settings.certificates_dir / SERVER_KEY
-    server_key_path.write_text(protector.protect(server_private), encoding="utf-8")
-    os.chmod(server_key_path, 0o600)
+    server_cert_path = settings.certificates_dir / SERVER_CERT
+    key_tmp = server_key_path.with_name(server_key_path.name + ".new")
+    cert_tmp = server_cert_path.with_name(server_cert_path.name + ".new")
+    key_tmp.write_text(protected_key, encoding="utf-8")
+    os.chmod(key_tmp, 0o600)
+    cert_tmp.write_bytes(server_cert.public_bytes(serialization.Encoding.PEM))
+    os.replace(key_tmp, server_key_path)
+    os.replace(cert_tmp, server_cert_path)
     return {"fingerprint": certificate_fingerprint(settings), "changed": "true"}
 
 
 def ensure_certificate_covers_lan(settings: Settings, protector: SecretProtector) -> bool:
     """Reissue the server certificate when the LAN address is not in it. True if reissued."""
-    if not settings.lan_mode or not (settings.certificates_dir / SERVER_CERT).exists():
+    complete = all(
+        (settings.certificates_dir / name).exists()
+        for name in (CA_CERT, CA_KEY, SERVER_CERT, SERVER_KEY)
+    )
+    if not settings.lan_mode or not complete:
         return False
     if not lan_addresses_missing_from_certificate(settings):
         return False

@@ -74,3 +74,46 @@ async def test_docker_check_shows_the_real_reason() -> None:
     )
     ok, detail = await refused.available()
     assert ok is False and "dockerDesktopLinuxEngine" in detail and "more" not in detail
+
+
+def test_failed_reissue_leaves_a_working_certificate_pair(client, monkeypatch) -> None:
+    import ssl
+
+    from cyber_range_coach.services.tls import SERVER_KEY, materialize_server_key
+
+    settings = client.app.state.settings
+    settings.lan_mode = True
+    protector = client.app.state.protector
+    monkeypatch.setattr(tls, "local_interfaces", lambda: _lan("192.168.10.10"))
+    generate_certificates(settings, protector)
+    before = (settings.certificates_dir / SERVER_CERT).read_bytes()
+
+    class Failing:
+        def protect(self, _data: bytes) -> str:
+            raise OSError("simulated DPAPI failure")
+
+        def unprotect(self, text: str) -> bytes:
+            return protector.unprotect(text)
+
+    monkeypatch.setattr(tls, "local_interfaces", lambda: _lan("192.168.10.11"))
+    with pytest.raises(OSError):
+        ensure_certificate_covers_lan(settings, Failing())
+    assert (settings.certificates_dir / SERVER_CERT).read_bytes() == before
+    certificate, key = materialize_server_key(settings, protector)
+    ssl.create_default_context(ssl.Purpose.CLIENT_AUTH).load_cert_chain(certificate, key)
+    assert ensure_certificate_covers_lan(settings, protector) is True
+    certificate, key = materialize_server_key(settings, protector)
+    ssl.create_default_context(ssl.Purpose.CLIENT_AUTH).load_cert_chain(certificate, key)
+    assert (settings.certificates_dir / SERVER_KEY).exists()
+
+
+def test_incomplete_set_is_not_reissued(client, monkeypatch) -> None:
+    from cyber_range_coach.services.tls import CA_KEY
+
+    settings = client.app.state.settings
+    settings.lan_mode = True
+    monkeypatch.setattr(tls, "local_interfaces", lambda: _lan("192.168.10.10"))
+    generate_certificates(settings, client.app.state.protector)
+    (settings.certificates_dir / CA_KEY).unlink()
+    monkeypatch.setattr(tls, "local_interfaces", lambda: _lan("192.168.10.11"))
+    assert ensure_certificate_covers_lan(settings, client.app.state.protector) is False

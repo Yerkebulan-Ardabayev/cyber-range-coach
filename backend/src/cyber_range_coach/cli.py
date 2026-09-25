@@ -92,9 +92,16 @@ def serve(lan: bool, no_browser: bool) -> int:
                 protector = build_secret_protector(
                     settings.data_dir, settings.allow_insecure_dev_secrets
                 )
-                if ensure_certificate_covers_lan(settings, protector):
-                    logging.getLogger(__name__).info(
-                        "Сертификат сайта перевыпущен для текущих адресов (тот же локальный CA)."
+                try:
+                    if ensure_certificate_covers_lan(settings, protector):
+                        logging.getLogger(__name__).info(
+                            "Сертификат сайта перевыпущен для текущих адресов (тот же локальный CA)."
+                        )
+                except Exception:
+                    # Best effort: the old certificate still serves 127.0.0.1 and
+                    # the old address, so a failed reissue must not stop the academy.
+                    logging.getLogger(__name__).exception(
+                        "Перевыпуск сертификата сайта не удался, запуск на прежнем."
                     )
                 certificate, runtime_key = materialize_server_key(settings, protector)
                 ssl_certfile = str(certificate)

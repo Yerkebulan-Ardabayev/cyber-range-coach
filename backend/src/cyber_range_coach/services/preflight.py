@@ -196,6 +196,8 @@ class PreflightService:
                 action=(
                     None
                     if tls_ready
+                    else "Перезапустите академию: сертификат сайта перевыпускается для нового адреса сам."
+                    if missing_certificate_addresses
                     else "Создайте локальный сертификат и добавьте именно root CA в CurrentUser\\Root."
                 ),
                 evidence=ca_trust,
@@ -404,7 +406,12 @@ class PreflightService:
             "ConvertTo-Json -Compress"
         )
         result = await self.runner.run(
-            "powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script
+            "powershell.exe",
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            script,
+            timeout_seconds=self.settings.powershell_timeout_seconds,
         )
         if result.returncode != 0:
             return {"private": False, "detail": "Не удалось прочитать сетевой профиль Windows."}
@@ -446,6 +453,7 @@ class PreflightService:
             "-Command",
             script,
             str(ca_path),
+            timeout_seconds=self.settings.powershell_timeout_seconds,
         )
         if result.returncode != 0:
             return {
@@ -495,7 +503,12 @@ class PreflightService:
             "ConvertTo-Json -Compress"
         )
         result = await self.runner.run(
-            "powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script
+            "powershell.exe",
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            script,
+            timeout_seconds=self.settings.powershell_timeout_seconds,
         )
         if result.returncode != 0:
             return {

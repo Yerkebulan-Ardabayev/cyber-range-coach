@@ -75,3 +75,27 @@ def test_lan_start_reissues_certificate_after_address_change(windowed, monkeypat
     monkeypatch.setattr(cli.uvicorn, "run", lambda app, **kwargs: None)
     assert cli.serve(lan=True, no_browser=True) == 0
     assert "192.168.10.11" in tls.certificate_ip_addresses(settings)
+
+
+def test_failed_reissue_does_not_stop_the_academy(windowed, monkeypatch) -> None:
+    from cyber_range_coach.config import Settings
+    from cyber_range_coach.schemas import NetworkInterface
+    from cyber_range_coach.services import tls
+    from cyber_range_coach.services.secrets import build_secret_protector
+
+    settings = Settings()
+    settings.ensure_directories()
+    monkeypatch.setattr(
+        tls, "local_interfaces",
+        lambda: [NetworkInterface(address="192.168.10.10", private=True, loopback=False)],
+    )
+    tls.generate_certificates(settings, build_secret_protector(settings.data_dir, True))
+
+    def broken(*_args, **_kwargs):
+        raise ValueError("unexpected CA key type")
+
+    monkeypatch.setattr(cli, "ensure_certificate_covers_lan", broken)
+    started: dict[str, object] = {}
+    monkeypatch.setattr(cli.uvicorn, "run", lambda app, **kwargs: started.update(kwargs))
+    assert cli.serve(lan=True, no_browser=True) == 0
+    assert started["ssl_certfile"]

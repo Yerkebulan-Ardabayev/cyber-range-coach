@@ -100,3 +100,23 @@ async def test_real_powershell_runs_hidden_and_returns_output(monkeypatch, hidde
     print(f"hidden={hidden} returncode={result.returncode} elapsed={elapsed:.1f}s")
     assert result.returncode == 0, (result.stderr, elapsed)
     assert result.stdout.strip() == "crc-hidden-ok"
+
+
+def test_only_powershell_gets_the_long_timeout() -> None:
+    import ast
+    from pathlib import Path
+
+    from cyber_range_coach.config import Settings
+
+    settings = Settings()
+    assert settings.subprocess_timeout_seconds <= 10
+    assert settings.powershell_timeout_seconds >= 30
+    source = (Path(__file__).resolve().parents[1] / "src" / "cyber_range_coach" / "services" / "preflight.py").read_text(encoding="utf-8")
+    calls = [
+        node for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.Call) and node.args
+        and isinstance(node.args[0], ast.Constant) and node.args[0].value == "powershell.exe"
+    ]
+    assert len(calls) == 3
+    for call in calls:
+        assert any(k.arg == "timeout_seconds" and "powershell_timeout_seconds" in ast.unparse(k.value) for k in call.keywords)
