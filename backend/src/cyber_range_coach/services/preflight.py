@@ -136,11 +136,7 @@ class PreflightService:
                 id="docker",
                 status="ok" if docker_ok else "blocked",
                 title="Docker Desktop",
-                detail=(
-                    docker_detail
-                    if docker_ok
-                    else "Docker Engine не отвечает через локальный Docker CLI."
-                ),
+                detail=docker_detail,
                 action=None if docker_ok else "Запустите Docker Desktop и повторите preflight.",
                 evidence=context,
             )

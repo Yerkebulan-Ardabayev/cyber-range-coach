@@ -74,31 +74,7 @@ def generate_certificates(
         )
         .sign(ca_key, hashes.SHA256())
     )
-    server_key = rsa.generate_private_key(public_exponent=65537, key_size=3072)
-    host_name = socket.gethostname()
-    alt_names: list[x509.GeneralName] = [x509.DNSName("localhost"), x509.DNSName(host_name)]
-    for interface in local_interfaces():
-        try:
-            alt_names.append(x509.IPAddress(ipaddress.ip_address(interface.address)))
-        except ValueError:
-            continue
-    server_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, host_name)])
-    server_cert = (
-        x509.CertificateBuilder()
-        .subject_name(server_name)
-        .issuer_name(ca_name)
-        .public_key(server_key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(now - timedelta(minutes=5))
-        .not_valid_after(now + timedelta(days=825))
-        .add_extension(x509.SubjectAlternativeName(alt_names), critical=False)
-        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
-        .add_extension(
-            x509.ExtendedKeyUsage([x509.oid.ExtendedKeyUsageOID.SERVER_AUTH]),
-            critical=False,
-        )
-        .sign(ca_key, hashes.SHA256())
-    )
+    server_key, server_cert = _issue_server_certificate(ca_key, ca_name, now)
     ca_pem = ca_cert.public_bytes(serialization.Encoding.PEM)
     server_pem = server_cert.public_bytes(serialization.Encoding.PEM)
     ca_private = ca_key.private_bytes(
@@ -125,6 +101,84 @@ def generate_certificates(
         "fingerprint": certificate_fingerprint(settings),
         "changed": "true",
     }
+
+
+def _issue_server_certificate(
+    ca_key: rsa.RSAPrivateKey, ca_name: x509.Name, now: datetime
+) -> tuple[rsa.RSAPrivateKey, x509.Certificate]:
+    server_key = rsa.generate_private_key(public_exponent=65537, key_size=3072)
+    host_name = socket.gethostname()
+    alt_names: list[x509.GeneralName] = [x509.DNSName("localhost"), x509.DNSName(host_name)]
+    for interface in local_interfaces():
+        try:
+            alt_names.append(x509.IPAddress(ipaddress.ip_address(interface.address)))
+        except ValueError:
+            continue
+    server_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, host_name)])
+    server_cert = (
+        x509.CertificateBuilder()
+        .subject_name(server_name)
+        .issuer_name(ca_name)
+        .public_key(server_key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(minutes=5))
+        .not_valid_after(now + timedelta(days=825))
+        .add_extension(x509.SubjectAlternativeName(alt_names), critical=False)
+        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+        .add_extension(
+            x509.ExtendedKeyUsage([x509.oid.ExtendedKeyUsageOID.SERVER_AUTH]),
+            critical=False,
+        )
+        .sign(ca_key, hashes.SHA256())
+    )
+    return server_key, server_cert
+
+
+def lan_addresses_missing_from_certificate(settings: Settings) -> set[str]:
+    current = {
+        interface.address
+        for interface in local_interfaces()
+        if interface.private and not interface.loopback and ":" not in interface.address
+    }
+    return current - certificate_ip_addresses(settings)
+
+
+def reissue_server_certificate(settings: Settings, protector: SecretProtector) -> dict[str, str]:
+    """New server certificate for the current addresses, signed by the existing CA.
+
+    DHCP moves the laptop (spec 11.3 Zh). Keeping the CA means devices that
+    already trust it (Mac, phone) need no action; only the server leaf changes.
+    """
+    ca_cert = x509.load_pem_x509_certificate((settings.certificates_dir / CA_CERT).read_bytes())
+    ca_key = serialization.load_pem_private_key(
+        protector.unprotect((settings.certificates_dir / CA_KEY).read_text(encoding="utf-8")),
+        password=None,
+    )
+    if not isinstance(ca_key, rsa.RSAPrivateKey):
+        raise ValueError("Ключ локального CA имеет неожиданный тип")
+    server_key, server_cert = _issue_server_certificate(ca_key, ca_cert.subject, datetime.now(UTC))
+    server_private = server_key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    )
+    (settings.certificates_dir / SERVER_CERT).write_bytes(
+        server_cert.public_bytes(serialization.Encoding.PEM)
+    )
+    server_key_path = settings.certificates_dir / SERVER_KEY
+    server_key_path.write_text(protector.protect(server_private), encoding="utf-8")
+    os.chmod(server_key_path, 0o600)
+    return {"fingerprint": certificate_fingerprint(settings), "changed": "true"}
+
+
+def ensure_certificate_covers_lan(settings: Settings, protector: SecretProtector) -> bool:
+    """Reissue the server certificate when the LAN address is not in it. True if reissued."""
+    if not settings.lan_mode or not (settings.certificates_dir / SERVER_CERT).exists():
+        return False
+    if not lan_addresses_missing_from_certificate(settings):
+        return False
+    reissue_server_certificate(settings, protector)
+    return True
 
 
 def certificate_fingerprint(settings: Settings) -> str:

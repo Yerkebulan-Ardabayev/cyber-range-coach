@@ -55,3 +55,23 @@ def test_academy_starts_without_console_and_logs_to_file(windowed, monkeypatch) 
         handler.flush()
     log_files = list(windowed.rglob("academy.log"))
     assert log_files and "windowed start check" in log_files[0].read_text(encoding="utf-8")
+
+
+def test_lan_start_reissues_certificate_after_address_change(windowed, monkeypatch) -> None:
+    from cyber_range_coach.config import Settings
+    from cyber_range_coach.schemas import NetworkInterface
+    from cyber_range_coach.services import tls
+    from cyber_range_coach.services.secrets import build_secret_protector
+
+    def lan(address: str):
+        return lambda: [NetworkInterface(address=address, private=True, loopback=False)]
+
+    settings = Settings()
+    settings.ensure_directories()
+    protector = build_secret_protector(settings.data_dir, True)
+    monkeypatch.setattr(tls, "local_interfaces", lan("192.168.10.10"))
+    tls.generate_certificates(settings, protector)
+    monkeypatch.setattr(tls, "local_interfaces", lan("192.168.10.11"))
+    monkeypatch.setattr(cli.uvicorn, "run", lambda app, **kwargs: None)
+    assert cli.serve(lan=True, no_browser=True) == 0
+    assert "192.168.10.11" in tls.certificate_ip_addresses(settings)

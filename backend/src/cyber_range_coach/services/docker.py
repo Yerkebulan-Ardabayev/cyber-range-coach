@@ -30,8 +30,11 @@ class DockerDiscovery:
 
     async def available(self) -> tuple[bool, str]:
         result = await self.runner.run("docker", "version", "--format", "{{json .Server}}")
+        if result.returncode == 124:
+            return False, "Docker CLI не ответил за отведённое время (docker version)."
         if result.returncode != 0:
-            return False, result.stderr.strip() or "Docker Engine не отвечает"
+            reason = (result.stderr.strip() or result.stdout.strip()).splitlines()
+            return False, "Docker Engine не отвечает: " + (reason[0][:300] if reason else f"код {result.returncode}")
         return True, "Docker Engine отвечает через локальный Docker CLI."
 
     async def context(self) -> dict[str, Any]:

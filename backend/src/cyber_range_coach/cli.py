@@ -22,6 +22,7 @@ from .services.migration import write_v1_export
 from .services.secrets import SecretProtectionError, build_secret_protector
 from .services.tls import (
     CA_CERT,
+    ensure_certificate_covers_lan,
     generate_certificates,
     materialize_server_key,
     remove_materialized_key,
@@ -91,6 +92,10 @@ def serve(lan: bool, no_browser: bool) -> int:
                 protector = build_secret_protector(
                     settings.data_dir, settings.allow_insecure_dev_secrets
                 )
+                if ensure_certificate_covers_lan(settings, protector):
+                    logging.getLogger(__name__).info(
+                        "Сертификат сайта перевыпущен для текущих адресов (тот же локальный CA)."
+                    )
                 certificate, runtime_key = materialize_server_key(settings, protector)
                 ssl_certfile = str(certificate)
                 ssl_keyfile = str(runtime_key)

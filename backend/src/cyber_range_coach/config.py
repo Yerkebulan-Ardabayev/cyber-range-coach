@@ -40,7 +40,8 @@ class Settings(BaseSettings):
     relay_port_start: int = 47000
     relay_port_end: int = 47100
     relay_ttl_seconds: int = 2 * 60 * 60
-    subprocess_timeout_seconds: float = 8.0
+    # A cold PowerShell start took 25-40 s on the Windows CI runner (25.09.2026).
+    subprocess_timeout_seconds: float = 45.0
     ssh_connect_timeout_seconds: float = 8.0
     terminal_reconnect_grace_seconds: float = 30.0
     max_transcript_bytes: int = 262_144
