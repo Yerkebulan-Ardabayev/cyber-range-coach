@@ -46,14 +46,24 @@ def test_every_process_launch_in_the_academy_hides_its_window() -> None:
     missing: list[str] = []
     for path in source_root.rglob("*.py"):
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if isinstance(node, ast.ImportFrom) and node.module == "subprocess":
+                missing.append(f"{path.name}:{node.lineno} from subprocess import (not checkable)")
             if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
                 continue
             owner = node.func.value
-            if not isinstance(owner, ast.Name):
+            owner_name = owner.id if isinstance(owner, ast.Name) else ""
+            if owner_name == "os" and node.func.attr in {"system", "startfile", "popen"}:
+                missing.append(f"{path.name}:{node.lineno} os.{node.func.attr}")
                 continue
-            launch = (owner.id == "subprocess" and node.func.attr in {"run", "Popen", "call", "check_output"}) or (
-                owner.id == "asyncio" and node.func.attr in {"create_subprocess_exec", "create_subprocess_shell"}
-            )
+            launch = (
+                owner_name == "subprocess"
+                and node.func.attr in {"run", "Popen", "call", "check_call", "check_output"}
+            ) or node.func.attr in {
+                "create_subprocess_exec",
+                "create_subprocess_shell",
+                "subprocess_exec",
+                "subprocess_shell",
+            }
             if not launch:
                 continue
             where = f"{path.name}:{node.lineno}"
@@ -62,3 +72,14 @@ def test_every_process_launch_in_the_academy_hides_its_window() -> None:
                 missing.append(where)
     assert launches, "scan found no process launches"
     assert missing == []
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="real hidden console start needs Windows")
+@pytest.mark.asyncio
+async def test_real_powershell_runs_hidden_and_returns_output() -> None:
+    """No mock: powershell.exe with CREATE_NO_WINDOW still answers through the pipe."""
+    result = await SafeCommandRunner().run(
+        "powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "Write-Output 'crc-hidden-ok'"
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "crc-hidden-ok"
