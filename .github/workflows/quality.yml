@@ -67,6 +67,7 @@ jobs:
           backend/tests/test_academy_stop.py
           backend/tests/test_wsl_wake_and_host_key.py
           backend/tests/test_timezone_data.py
+          backend/tests/test_relay_restored_for_active_lab.py
           -rA -s
       - name: Parse real Windows integration test
         shell: powershell

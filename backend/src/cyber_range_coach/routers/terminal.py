@@ -4,7 +4,9 @@ from urllib.parse import urlparse
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from ..errors import AppError
 from ..security import ROLE_LEVEL, websocket_principal
+from .learning import ensure_run_relay
 
 router = APIRouter(tags=["terminal"])
 
@@ -30,6 +32,12 @@ async def terminal(websocket: WebSocket, run_id: int) -> None:
         await websocket.close(code=4403, reason="origin WebSocket не совпадает")
         return
     await websocket.accept()
+    try:
+        await ensure_run_relay(websocket, run_id)
+    except AppError as exc:
+        await websocket.send_json(
+            {"type": "error", "message": f"Связь с учебной целью не восстановлена: {exc.message}"}
+        )
     try:
         terminal_session = await websocket.app.state.terminals.get_or_start(run_id)
     except Exception:

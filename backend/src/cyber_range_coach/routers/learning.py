@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
+from starlette.requests import HTTPConnection
 
 from ..errors import AppError
 from ..models import (
@@ -290,6 +291,48 @@ async def _new_run_unlocked(
         return run
 
 
+async def ensure_run_relay(connection: HTTPConnection, run_id: int) -> None:
+    """Bring back the relay of an active lab on its recorded port.
+
+    Relays live only in memory: after an academy restart (installer update,
+    Task Manager) or after the relay TTL the lab still looked ready, but the
+    learner's `nc` to the relay port hung with nobody listening (owner's
+    laptop, 26.09.2026).
+    """
+    state = connection.app.state
+    with state.db.session_factory() as session:
+        run = session.get(LabRun, run_id)
+        if (
+            run is None
+            or run.status != RunStatus.active.value
+            or not run.relay_port
+            or not run.target_id
+        ):
+            return
+        relay_port = run.relay_port
+        target = session.get(TargetProfile, run.target_id)
+        linux_host = session.scalars(select(LinuxHost).order_by(LinuxHost.id)).first()
+        if target is None or linux_host is None:
+            return
+        session.expunge(target)
+        session.expunge(linux_host)
+    existing = state.relays.get(target.id)
+    if existing is not None and existing.port == relay_port:
+        return
+    parsed = urlparse(target.host_endpoint)
+    relay_source_ip = await relay_source_ip_for_start(
+        state.db, state.runner, state.settings.subprocess_timeout_seconds, linux_host
+    )
+    await state.relays.start(
+        target.id,
+        parsed.hostname or "127.0.0.1",
+        parsed.port or (443 if parsed.scheme == "https" else 80),
+        relay_source_ip,
+        bind_host=_connect_host(connection),
+        port=relay_port,
+    )
+
+
 async def _new_run(payload: LabRunCreate, request: Request) -> LabRun:
     async with request.app.state.run_start_lock:
         return await _new_run_unlocked(payload, request)
@@ -420,6 +463,7 @@ async def grade(
     _principal: Principal = Depends(require_role("operator")),
 ) -> GradeResponse:
     await request.app.state.terminals.flush(run_id)
+    await ensure_run_relay(request, run_id)
     with request.app.state.db.session_factory() as session:
         run = session.get(LabRun, run_id)
         if run is None or run.status != RunStatus.active.value:

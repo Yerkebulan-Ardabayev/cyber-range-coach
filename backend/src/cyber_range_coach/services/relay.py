@@ -54,6 +54,7 @@ class RelayManager:
         upstream_port: int,
         allowed_source_ip: str,
         bind_host: str | None = None,
+        port: int | None = None,
     ) -> RelayHandle:
         """Start or reuse the relay of a target.
 
@@ -74,12 +75,18 @@ class RelayManager:
                 if (
                     existing.allowed_source_ip == allowed_source_ip
                     and existing.bind_host == listen_host
+                    and (port is None or existing.port == port)
                 ):
                     return existing
                 # WSL came back with a new address (spec 11.3 Zh): the old
                 # relay only accepts the previous one, so it is replaced.
                 await self._close(existing)
-            for port in range(self.port_start, self.port_end + 1):
+            if port is not None and not self.port_start <= port <= self.port_end:
+                raise AppError(400, "relay_port_out_of_range", "Порт relay вне разрешённого диапазона.")
+            # An active lab tells the learner its relay port, so a restored
+            # relay must come back on exactly that port.
+            candidates = [port] if port is not None else range(self.port_start, self.port_end + 1)
+            for candidate in candidates:
                 try:
                     server = await asyncio.start_server(
                         lambda reader, writer: self._accept(
@@ -91,7 +98,7 @@ class RelayManager:
                             allowed_source_ip,
                         ),
                         listen_host,
-                        port,
+                        candidate,
                         reuse_address=False,
                     )
                 except OSError:
@@ -99,7 +106,7 @@ class RelayManager:
                 handle = RelayHandle(
                     target_id=target_id,
                     bind_host=listen_host,
-                    port=port,
+                    port=candidate,
                     upstream_host=upstream_host,
                     upstream_port=upstream_port,
                     allowed_source_ip=allowed_source_ip,
@@ -108,6 +115,12 @@ class RelayManager:
                 self._handles[target_id] = handle
                 handle.timeout_task = asyncio.create_task(self._expire(target_id))
                 return handle
+        if port is not None:
+            raise AppError(
+                503,
+                "relay_port_busy",
+                "Порт relay этой лабы занят другой программой. Начните чистую попытку.",
+            )
         raise AppError(503, "relay_ports_exhausted", "Нет свободного безопасного relay-порта.")
 
     async def _expire(self, target_id: int) -> None:

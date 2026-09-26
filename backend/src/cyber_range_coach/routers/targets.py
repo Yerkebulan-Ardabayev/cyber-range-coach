@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
+from starlette.requests import HTTPConnection
 
 from ..errors import AppError
 from ..models import LinuxHost, TargetProfile
@@ -30,7 +31,7 @@ def _target_response(target: TargetProfile) -> TargetResponse:
     return TargetResponse.model_validate(target)
 
 
-def _connect_host(request: Request) -> str:
+def _connect_host(request: HTTPConnection) -> str:
     """Windows address that the Linux VM reaches the relay on.
 
     The first private address is wrong on a laptop with Wi-Fi, Ethernet and the
