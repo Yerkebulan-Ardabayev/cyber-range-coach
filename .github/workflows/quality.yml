@@ -142,11 +142,23 @@ jobs:
           }
           # Upgrade over the running academy (owner's laptop 25.09.2026: Restart
           # Manager could not close it and the install rolled back).
-          $Upgrade = Start-Process -FilePath $Installer -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/TASKS=", "/DIR=$InstallDir" -Wait -PassThru
+          # An open lab page keeps a connection busy (26.09.2026: uvicorn waited
+          # for it forever); an unfinished request stands in for it.
+          $Hanging = New-Object System.Net.Sockets.TcpClient("127.0.0.1", 8443)
+          $AcceptAny = [System.Net.Security.RemoteCertificateValidationCallback] { $true }
+          $HangingTls = New-Object System.Net.Security.SslStream($Hanging.GetStream(), $false, $AcceptAny)
+          $HangingTls.AuthenticateAsClient("127.0.0.1")
+          $Partial = [System.Text.Encoding]::ASCII.GetBytes("POST /api/v2/devices/pairing-codes HTTP/1.1`r`nHost: 127.0.0.1`r`nContent-Type: application/json`r`nContent-Length: 1000`r`n`r`n{")
+          $HangingTls.Write($Partial, 0, $Partial.Length)
+          $HangingTls.Flush()
+          $UpgradeLog = Join-Path $env:RUNNER_TEMP "upgrade.log"
+          $Upgrade = Start-Process -FilePath $Installer -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/TASKS=", "/DIR=$InstallDir", "/LOG=$UpgradeLog" -Wait -PassThru
+          $Hanging.Close()
           $AcademyStopped = $Academy.WaitForExit(30000)
           Stop-Process -Id $Academy.Id -Force -ErrorAction SilentlyContinue
           if ($Upgrade.ExitCode -ne 0) { throw "Upgrade over the running academy exited with $($Upgrade.ExitCode)" }
           if (-not $AcademyStopped) { throw "Installer did not stop the running academy" }
+          if (Select-String -LiteralPath $UpgradeLog -SimpleMatch "закрываем принудительно" -Quiet) { throw "Academy ignored the stop request and was killed" }
           if (-not (Select-String -LiteralPath (Join-Path $env:CRC_DATA_DIR "logs\academy.log") -SimpleMatch "Получен запрос остановки" -Quiet)) { throw "Academy was not stopped through the stop request" }
           $Log = Join-Path $env:CRC_DATA_DIR "logs\academy.log"
           if (-not (Test-Path -LiteralPath $Log) -or (Get-Item -LiteralPath $Log).Length -eq 0) { throw "academy.log is missing or empty" }

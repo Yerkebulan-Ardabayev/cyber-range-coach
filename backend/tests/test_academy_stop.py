@@ -80,3 +80,54 @@ def test_stop_reports_failure_when_academy_ignores_it(tmp_path: Path) -> None:
     with SingleInstanceLock(lock):
         assert request_stop(lock, timeout_seconds=1) is False
     assert not (tmp_path / "stop-request").exists(), "no stale request for the next start"
+
+
+
+def test_stop_does_not_wait_for_a_hanging_browser_connection(tmp_path: Path) -> None:
+    """Owner's laptop 26.09.2026: with a lab page open, uvicorn logged
+    "Shutting down" and then waited for open connections forever; the
+    installer had to kill the academy. A request that never finishes stands
+    in for the open terminal WebSocket."""
+    port = _free_port()
+    env = _academy_env(tmp_path, port)
+    academy = subprocess.Popen(
+        [sys.executable, "-m", "cyber_range_coach", "serve", "--no-browser"],
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    hanging = socket.socket()
+    try:
+        deadline = time.monotonic() + 60
+        while True:
+            assert academy.poll() is None, "academy exited during start"
+            try:
+                urllib.request.urlopen(f"http://127.0.0.1:{port}/api/v2/devices/me", timeout=2)
+                break
+            except urllib.error.HTTPError:
+                break
+            except OSError:
+                assert time.monotonic() < deadline, "academy did not answer"
+                time.sleep(0.5)
+        hanging.connect(("127.0.0.1", port))
+        hanging.sendall(
+            b"POST /api/v2/devices/pairing-codes HTTP/1.1\r\nHost: 127.0.0.1\r\n"
+            b"Content-Type: application/json\r\nContent-Length: 1000\r\n\r\n{"
+        )
+        time.sleep(1)
+        started = time.monotonic()
+        stopped = subprocess.run(
+            [sys.executable, "-m", "cyber_range_coach", "stop"],
+            env=env,
+            capture_output=True,
+            timeout=60,
+            check=False,
+        )
+        assert stopped.returncode == 0, "academy still running after the stop wait"
+        assert academy.wait(timeout=5) == 0
+        assert time.monotonic() - started < 15
+    finally:
+        hanging.close()
+        if academy.poll() is None:
+            academy.kill()
+            academy.wait()

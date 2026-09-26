@@ -85,6 +85,10 @@ def configure_logging(settings: Settings) -> None:
 
 def run_server(app: FastAPI, stop_request: Path, **kwargs: Any) -> None:
     """uvicorn.run plus a watcher: the stop-request file ends the academy cleanly."""
+    # Open lab pages keep a terminal WebSocket and polls alive; without a limit
+    # uvicorn waits for them forever and the installer has to kill the academy
+    # (owner's laptop, 26.09.2026). Well inside request_stop's 20 s wait.
+    kwargs.setdefault("timeout_graceful_shutdown", 5)
     server = uvicorn.Server(uvicorn.Config(app, **kwargs))
     finished = threading.Event()
 
