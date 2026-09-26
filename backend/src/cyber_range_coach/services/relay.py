@@ -69,6 +69,8 @@ class RelayManager:
             raise AppError(
                 400, "unsafe_upstream", "Relay может обращаться только к loopback Windows."
             )
+        if port is not None and not self.port_start <= port <= self.port_end:
+            raise AppError(400, "relay_port_out_of_range", "Порт relay вне разрешённого диапазона.")
         async with self._lock:
             existing = self._handles.get(target_id)
             if existing:
@@ -81,8 +83,6 @@ class RelayManager:
                 # WSL came back with a new address (spec 11.3 Zh): the old
                 # relay only accepts the previous one, so it is replaced.
                 await self._close(existing)
-            if port is not None and not self.port_start <= port <= self.port_end:
-                raise AppError(400, "relay_port_out_of_range", "Порт relay вне разрешённого диапазона.")
             # An active lab tells the learner its relay port, so a restored
             # relay must come back on exactly that port.
             candidates = [port] if port is not None else range(self.port_start, self.port_end + 1)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime, timedelta
-from typing import cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, Request
@@ -291,46 +291,70 @@ async def _new_run_unlocked(
         return run
 
 
+def _run_still_owns_relay(state: Any, run_id: int, relay_port: int) -> bool:
+    with state.db.session_factory() as session:
+        run = session.get(LabRun, run_id)
+        return (
+            run is not None
+            and run.status == RunStatus.active.value
+            and run.relay_port == relay_port
+        )
+
+
 async def ensure_run_relay(connection: HTTPConnection, run_id: int) -> None:
     """Bring back the relay of an active lab on its recorded port.
 
     Relays live only in memory: after an academy restart (installer update,
-    Task Manager) or after the relay TTL the lab still looked ready, but the
-    learner's `nc` to the relay port hung with nobody listening (owner's
-    laptop, 26.09.2026).
+    Task Manager) the lab still looked ready, but the learner's `nc` to the
+    relay port hung with nobody listening (owner's laptop, 26.09.2026). It is
+    called when the lab terminal opens and before a probe grade, so a relay
+    that expired by TTL comes back only at one of those moments.
+
+    Relays are keyed by target, so a late restore must never touch the relay
+    of a newer lab or reopen one for a stopped lab: the whole restore runs
+    under the lab start lock and re-checks the run after every wait.
     """
     state = connection.app.state
-    with state.db.session_factory() as session:
-        run = session.get(LabRun, run_id)
-        if (
-            run is None
-            or run.status != RunStatus.active.value
-            or not run.relay_port
-            or not run.target_id
-        ):
+    async with state.run_start_lock:
+        with state.db.session_factory() as session:
+            run = session.get(LabRun, run_id)
+            if (
+                run is None
+                or run.status != RunStatus.active.value
+                or not run.relay_port
+                or not run.target_id
+            ):
+                return
+            relay_port = run.relay_port
+            target = session.get(TargetProfile, run.target_id)
+            linux_host = session.scalars(select(LinuxHost).order_by(LinuxHost.id)).first()
+            if target is None or linux_host is None:
+                return
+            session.expunge(target)
+            session.expunge(linux_host)
+        existing = state.relays.get(target.id)
+        if existing is not None and existing.port == relay_port:
             return
-        relay_port = run.relay_port
-        target = session.get(TargetProfile, run.target_id)
-        linux_host = session.scalars(select(LinuxHost).order_by(LinuxHost.id)).first()
-        if target is None or linux_host is None:
+        parsed = urlparse(target.host_endpoint)
+        relay_source_ip = await relay_source_ip_for_start(
+            state.db, state.runner, state.settings.subprocess_timeout_seconds, linux_host
+        )
+        # Stop and finalize do not take the start lock: the lab may have ended
+        # while WSL was asked for its address.
+        if not _run_still_owns_relay(state, run_id, relay_port):
             return
-        session.expunge(target)
-        session.expunge(linux_host)
-    existing = state.relays.get(target.id)
-    if existing is not None and existing.port == relay_port:
-        return
-    parsed = urlparse(target.host_endpoint)
-    relay_source_ip = await relay_source_ip_for_start(
-        state.db, state.runner, state.settings.subprocess_timeout_seconds, linux_host
-    )
-    await state.relays.start(
-        target.id,
-        parsed.hostname or "127.0.0.1",
-        parsed.port or (443 if parsed.scheme == "https" else 80),
-        relay_source_ip,
-        bind_host=_connect_host(connection),
-        port=relay_port,
-    )
+        handle = await state.relays.start(
+            target.id,
+            parsed.hostname or "127.0.0.1",
+            parsed.port or (443 if parsed.scheme == "https" else 80),
+            relay_source_ip,
+            bind_host=_connect_host(connection),
+            port=relay_port,
+        )
+        if not _run_still_owns_relay(state, run_id, relay_port) and state.relays.get(
+            target.id
+        ) is handle:
+            await state.relays.stop(target.id)
 
 
 async def _new_run(payload: LabRunCreate, request: Request) -> LabRun:
@@ -463,7 +487,16 @@ async def grade(
     _principal: Principal = Depends(require_role("operator")),
 ) -> GradeResponse:
     await request.app.state.terminals.flush(run_id)
-    await ensure_run_relay(request, run_id)
+    with request.app.state.db.session_factory() as session:
+        run = session.get(LabRun, run_id)
+        probe_lesson = (
+            run is not None
+            and request.app.state.curriculum.lesson(run.lesson_id).grader.source == "probe"
+        )
+    if probe_lesson:
+        # Only a probe grade talks to the relay; transcript grading must not
+        # fail because the relay could not come back.
+        await ensure_run_relay(request, run_id)
     with request.app.state.db.session_factory() as session:
         run = session.get(LabRun, run_id)
         if run is None or run.status != RunStatus.active.value:

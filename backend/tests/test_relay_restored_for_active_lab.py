@@ -108,5 +108,80 @@ def test_grading_restores_the_relay_first(client, monkeypatch) -> None:
         raise AppError(418, "restore_called", f"restore {run_id}")
 
     monkeypatch.setattr(learning, "ensure_run_relay", restore)
-    response = client.post("/api/v2/lab-runs/9/grade", headers={"x-test-role": "operator"})
+    run_id, _target_id = _active_run_with_relay(client, client.app.state.relays.port_start + 9)
+    response = client.post(f"/api/v2/lab-runs/{run_id}/grade", headers={"x-test-role": "operator"})
     assert response.status_code == 418, response.text
+
+
+async def _slow_restore(client, monkeypatch, run_id: int):
+    """Start a restore that waits for the WSL address like on Windows."""
+    from cyber_range_coach.routers import learning
+
+    gate = asyncio.Event()
+
+    async def slow_source_ip(*_args, **_kwargs) -> str:
+        await gate.wait()
+        return "10.20.30.40"
+
+    monkeypatch.setattr(learning, "relay_source_ip_for_start", slow_source_ip)
+    task = asyncio.create_task(ensure_run_relay(SimpleNamespace(app=client.app), run_id))
+    await asyncio.sleep(0.05)
+    return gate, task
+
+
+def _stop_in_db(client, run_id: int) -> None:
+    with client.app.state.db.session_factory() as session:
+        run = session.get(LabRun, run_id)
+        run.status = "stopped"
+        session.commit()
+
+
+async def test_stop_during_restore_leaves_no_relay(client, monkeypatch) -> None:
+    relays = client.app.state.relays
+    run_id, target_id = _active_run_with_relay(client, relays.port_start + 3)
+    gate, task = await _slow_restore(client, monkeypatch, run_id)
+    await relays.stop(target_id)
+    _stop_in_db(client, run_id)
+    gate.set()
+    await task
+    try:
+        assert relays.get(target_id) is None, "no relay may stay open for a stopped lab"
+    finally:
+        await relays.stop_all()
+
+
+async def test_late_restore_keeps_the_new_labs_relay(client, monkeypatch) -> None:
+    relays = client.app.state.relays
+    run_id, target_id = _active_run_with_relay(client, relays.port_start + 3)
+    gate, task = await _slow_restore(client, monkeypatch, run_id)
+    await relays.stop(target_id)
+    _stop_in_db(client, run_id)
+    new = await relays.start(target_id, "127.0.0.1", 3000, "10.20.30.40", bind_host="127.0.0.1")
+    gate.set()
+    await task
+    try:
+        assert relays.get(target_id) is new, "the newer lab keeps its relay and port"
+    finally:
+        await relays.stop_all()
+
+
+def test_transcript_grade_does_not_need_the_relay(client, monkeypatch) -> None:
+    from cyber_range_coach.routers import learning
+
+    async def restore(_connection, _run_id: int) -> None:
+        raise AppError(503, "relay_port_busy", "busy")
+
+    monkeypatch.setattr(learning, "ensure_run_relay", restore)
+    with client.app.state.db.session_factory() as session:
+        learning_session = LearningSession(duration_minutes=15, lesson_ids=["linux-navigation-pwd"])
+        session.add(learning_session)
+        session.flush()
+        run = LabRun(
+            session_id=learning_session.id, lesson_id="linux-navigation-pwd",
+            skill_id="linux-navigation", prediction="Ожидаю путь",
+        )
+        session.add(run)
+        session.commit()
+        run_id = run.id
+    response = client.post(f"/api/v2/lab-runs/{run_id}/grade", headers={"x-test-role": "operator"})
+    assert response.json().get("code") != "relay_port_busy", response.text
